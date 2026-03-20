@@ -1,0 +1,132 @@
+*{
+    font-family:"Roboto";
+    font-size: 100;
+}
+.logo-image img{
+    border-radius: 0 50px 50px 0;
+    width: 40%;
+    
+}
+header{
+    background: rgb(0, 204, 255);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: 0px;
+    z-index: 100;
+    height: 100px;
+    
+
+}
+.video-class{
+    position: relative;
+}
+video{
+    width: 100%;
+    margin-top: 50px;
+    border-radius: 50px/50px;
+}
+header h1{
+    position: absolute;
+    left: 120px;
+    
+}
+header nav{
+    position:absolute;
+    right: 2%;
+}
+nav a{
+    text-decoration: none;
+    font-size: 20px;
+
+}
+header h1{
+    
+    background:linear-gradient(90deg,blue,green) ;
+    background-clip: text;
+    color: transparent;
+    animation: animate 12s linear infinite;
+}
+@keyframes animate {
+    to{
+        background-position-x:500px;
+    }
+}
+.choosingOption{
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.patientChoose{
+    background-color: rgb(123, 123, 231);
+    font-size: 70px;
+    text-decoration: none;
+    padding: 50px;
+    border-radius: 200px 100px;
+    margin-right: 100px;
+    color: black;
+
+
+}
+.doctorChoose{
+    background-color: rgb(123, 123, 231);
+    text-decoration: none;
+    font-size: 70px;
+    padding: 50px;
+    border-radius: 200px 100px ;
+    color: black;
+    
+    
+}
+.choosingOption p{
+    font-size: 70px;
+    color: hsl(219, 80%, 39%);
+    position: absolute;
+    top:150px
+}
+.patientChoose:hover{
+    background-color: rgb(123, 123, 255);
+}
+.doctorChoose:hover{
+    background-color: rgb(123, 123, 255);
+}
+.patientChoose:active{
+    background-color: rgb(123, 123, 210);
+}
+.doctorChoose:active{
+    background-color: rgb(123, 123, 210);
+}
+.register-form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.pers-info{
+    font-size: 50px;
+
+}
+.personal-info{
+    background-color: rgba(238, 232, 232, 0.877);
+    padding: 50px;
+    border-radius: 30px;
+    height: 50vh;
+    width: 50%;
+}
+label{
+    font-size: 35px;
+    
+}
+input{
+    font-size: 1.5em;
+   
+}

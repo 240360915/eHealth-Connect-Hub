@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient registration</title>
+    <link rel="stylesheet" href="Style.css">
+</head>
+<body>
+
+    <form class="register-form">
+
+        <div class="pers-info">Personal Information</div>
+
+        <div class="personal-info">
+            <label for="fname" id="fname">First name</label>
+            <input type="text" placeholder="First name" required> <br>
+
+            <label for="lname" id="lname">Surname</label>
+            <input type="text" placeholder="Last name" required><br>
+            <label for="">Title</label>
+            <select name="Title"  id="">
+                <option value="">Mr</option>
+                <option value="">Mrs</option>
+                <option value="">Miss</option>
+                <option value="">Advocate</option>
+                <option value="">Doctor</option>
+                <option value="">Professor</option>
+            </select><br>
+            
+
+            <label for="dateOfBirth" id="dateofBirth">Date of Birth</label>
+            <input type="date" required><br>
+
+            <label for="idNumber">ID number</label>
+            <input type="text" required maxlength="13" placeholder="Enter ID number"><br>
+            <label for="">Home languege</label>
+            <select name="" id="">
+                <option value="">English</option>
+                <option value="">XiTsonga</option>
+                <option value="">IsiZulu</option>
+                <option value="">IsiXhosa</option>
+                <option value="">IsiSwati</option>
+            </select><br>
+
+            <label for="phoneNumber" id="phoneNumber">Phone number</label>
+            <input type="text" required maxlength="10" pattern="[0-9]{10}" placeholder="Enter cellphone number"><br>
+
+
+            <label for="email" id="email">email address</label>
+            <input type="email" placeholder="Enter email address" required>
+
+        </div>
+        
+        <div>Address Information</div>
+        <div class="address-info">
+
+            <label for="address1" id="address1">Address line 1(e.g. Street Name)</label>
+            <input type="text" required><br>
+
+            <label for="address2" id="address2">Street Address line 2(e.g Surbub Name)</label>
+            <input type="text" required><br>
+
+            <label for="address3" id="address3">Street Address line 3(e.g Town name)</label>
+            <input type="text"><br>
+
+            <label for="Province" id="province">Province</label>
+            <input type="text" required><br>
+
+            <label for="postalcode" id="postalcode">Postal Code</label>
+            <input type="text" required minlength="4"><br>
+
+
+        </div>
+
+        <div class="save-button">
+            <button>Save </button>
+        </div>
+        
+
+    </form>
+</body>
+</html>
