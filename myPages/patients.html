@@ -14,10 +14,10 @@
 
         <div class="personal-info">
             <label for="fname" id="fname">First name</label>
-            <input type="text" placeholder="First name" required> <br>
+            <input type="text" placeholder="First name" required class="firname"> <br><br>
 
             <label for="lname" id="lname">Surname</label>
-            <input type="text" placeholder="Last name" required><br>
+            <input type="text" placeholder="Last name" required class="lastname"><br><br>
             <label for="">Title</label>
             <select name="Title"  id="">
                 <option value="">Mr</option>
@@ -26,14 +26,13 @@
                 <option value="">Advocate</option>
                 <option value="">Doctor</option>
                 <option value="">Professor</option>
-            </select><br>
+            </select><br><br>
             
-
             <label for="dateOfBirth" id="dateofBirth">Date of Birth</label>
-            <input type="date" required><br>
+            <input type="date" required><br><br>
 
             <label for="idNumber">ID number</label>
-            <input type="text" required maxlength="13" placeholder="Enter ID number"><br>
+            <input type="text" required maxlength="13" placeholder="Enter ID number"><br><br>
             <label for="">Home languege</label>
             <select name="" id="">
                 <option value="">English</option>
@@ -41,10 +40,10 @@
                 <option value="">IsiZulu</option>
                 <option value="">IsiXhosa</option>
                 <option value="">IsiSwati</option>
-            </select><br>
+            </select><br><br>
 
             <label for="phoneNumber" id="phoneNumber">Phone number</label>
-            <input type="text" required maxlength="10" pattern="[0-9]{10}" placeholder="Enter cellphone number"><br>
+            <input type="text" required maxlength="10" pattern="[0-9]{10}" placeholder="Enter cellphone number"><br><br>
 
 
             <label for="email" id="email">email address</label>
@@ -52,29 +51,29 @@
 
         </div>
         
-        <div>Address Information</div>
-        <div class="address-info">
+        <div class="address-info">Address Information</div>
+        <div class="address-infomation">
 
-            <label for="address1" id="address1">Address line 1(e.g. Street Name)</label>
-            <input type="text" required><br>
+            <label for="address1" id="address1">Address line 1(e.g. Street Name):</label><br>
+            <input type="text" required><br><br><br><br>
 
-            <label for="address2" id="address2">Street Address line 2(e.g Surbub Name)</label>
-            <input type="text" required><br>
+            <label for="address2" id="address2">Street Address line 2(e.g Surbub Name):</label><br>
+            <input type="text" required><br><br><br><br>
 
-            <label for="address3" id="address3">Street Address line 3(e.g Town name)</label>
-            <input type="text"><br>
+            <label for="address3" id="address3">Street Address line 3(e.g Town name):</label><br>
+            <input type="text"><br><br><br>
 
-            <label for="Province" id="province">Province</label>
-            <input type="text" required><br>
+            <label for="Province" id="province">Province:</label><br>
+            <input type="text" required><br><br><br><br>
 
-            <label for="postalcode" id="postalcode">Postal Code</label>
-            <input type="text" required minlength="4"><br>
+            <label for="postalcode" id="postalcode">Postal Code:</label><br>
+            <input type="text" required minlength="4"><br><br><br>
 
 
         </div>
 
         <div class="save-button">
-            <button>Save </button>
+            <button id="registerButton">Save </button><br>
         </div>
         
 
