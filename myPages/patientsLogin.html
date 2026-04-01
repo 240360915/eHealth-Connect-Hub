@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="Style.css">
+</head>
+<body>
+
+    <form class="PatientForm">
+        <div class="heading">Skip the Queue. Get Care Faster.</div>
+        <div class="choosing">Please choose your role</div>
+        <div class="role-buttons">
+            <a href="patientsLogin.html" class="btn">Patient</a>
+            <a href="doctorLogin.html" class="btn">Doctor</a>
+            <a href="admin.html" class="btn">Administrator</a>
+        </div>
+
+        <div class="login-info">
+
+            <div class="input-group">
+                <input type="text" id="email" required minlength="5">
+                <label for="email">Phone number or Email</label>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" required minlength="6">
+                <label for="password">Password</label>
+            </div>
+
+        </div>
+
+        <div class="forgot">
+            <a href="forgotPassword.html">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="login-btn">Login</button>
+
+    </form>
+
+</body>
+</html>
