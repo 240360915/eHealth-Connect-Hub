@@ -4,8 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Doctor registration</title>
+    <link rel="stylesheet" href="Style.css">
 </head>
 <body>
-    
-</body>
+
+    <form action="" class="doctor-form">
+        
+        <div class="doc-heading" style="font-size: 3rem; margin-bottom: 2.5rem; margin-top: 1rem;">Doctor Registration</div>
+        <div class="prac-num">
+            <label for="number">Practice Number</label>
+            <input type="text" placeholder="Practice Number" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="name">
+            <label for="name">Practice Name</label>
+            <input type="text" placeholder="Practice Name" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="discipline">
+            <label for="discipline">Discipline</label>
+            <input type="text" placeholder="Enter Discipline" style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="title">
+            <label for="title">Title</label>
+            <select name="title" id="" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px; width: 370px; height: 5vh; ">
+                <option value="select" aria-selected="true" class="selection">Please select your Title</option>
+                <option value="mr">Mr</option>
+                <option value="mrs">Mrs</option>
+                <option value="ms">Ms</option>
+                <option value="miss">Miss</option>
+                <option value="dr">Dr</option>
+                <option value="prof">Prof</option>
+                <option value="aaster">Master</option>
+                
+            </select>
+        </div>
+        <div class="full-name">
+            <label for="name">Name</label>
+            <input type="text" placeholder="Name" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="sur-name">
+            <label for="surname">Surname</label>
+            <input type="text" placeholder="Surname" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+
+        </div>
+        <div class="cell-number">
+            <label for="cell">Cell phone Number</label>
+            <input type="text" placeholder="Cell phone Number" required maxlength="10" style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="id-num">
+            <label for="id">ID Number</label>
+            <input type="text" placeholder="Identity Number" required maxlength="13" style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="hours">
+            <label for="operating">Operating Hours</label>
+            <input type="text" placeholder="Operating Hours" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="qualify">
+            <label for="qual">Qualifications</label>
+            <input type="text" placeholder="Qualifications" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div e-mail>
+            <label for="email">Email Address</label>
+            <input type="email" placeholder="Email Address" required minlength="5"style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="i-mage">
+            <label for="image">Profile Image</label>
+            <input type="file" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="a-dress">
+            <label for="address">Address</label>
+            <input type="text" placeholder="Address Line 1" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+            <input type="text" placeholder="Address Line 2" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+            <input type="text" placeholder="Address Line 3" style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+            <input type="text" placeholder="Postal Code" style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <div class="pass-word" style="margin: 2rem 0 1rem 0; ">
+            <label for="password" >Password</label>
+            <input type="password" placeholder="Password" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 0.2rem 0 20px;">
+            <input type="password" placeholder="Confirm Password" required style="display: block; font-size: 2rem; border-radius: 1rem; padding: 1.2%; margin: 2px 0 20px;">
+        </div>
+        <button style="width: 8rem; height: 5vh; border-radius:2rem; margin-bottom: 3rem;">Register</button>
+        <a href="Home.html" style="text-decoration: none; color: black; border: 2px solid black; padding: 15px; margin-left: 3rem; border-radius: 1rem;">Return</a>
+    </form>
+</body> 
 </html>

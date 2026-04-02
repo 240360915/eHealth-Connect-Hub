@@ -1,20 +1,20 @@
-* {
+*{
     margin: 0;
     padding: 0;
-    font-family: "Roboto", sans-serif;
-    font-size: 98%; 
+    box-sizing: border-box;
+    font-family:"Roboto";
+    font-size: 100;
+    
 }
 
-
-body {
+body{
     background: #f4f6f9;
     display: flex;
-    justify-content: center;
     flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     height: 100vh;
 }
-
 
 header {
     background: rgb(0, 204, 255);
@@ -30,17 +30,13 @@ header {
 }
 
 
-main {
-    margin-top: 120px;
-}
-
-
 .logo-image img {
-    border-radius: 10px 50px 50px 0 ;
+    border-radius: 10px 50px 50px 0;
     width: 60px;
     height: 80px;
     object-fit: cover;
 }
+
 
 .logo-image {
     display: flex;
@@ -51,7 +47,8 @@ main {
 
 header h1 {
     font-size: 1.7rem;
-    background: linear-gradient(90deg, blue, rgb(255,255,255), rgb(133, 161, 135));
+    
+    background: linear-gradient(90deg, blue, rgb(255,255, 255),rgb(133, 161, 135));
     background-clip: text;
     color: transparent;
     animation: animate 3s linear infinite;
@@ -64,23 +61,57 @@ nav {
     gap: 20px;
 }
 
-
-nav a {
+nav .a {
     text-decoration: none;
-    font-size: 1.2rem;
+    font-size: 2rem;
     color: #1F2937;
     font-weight: 500;
     transition: 0.3s;
 }
 
-nav a:hover {
+
+nav .a:hover {
     color: white;
+}
+
+nav .a:nth-child(1){
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+nav .a:nth-child(1):hover {
     background: #1E3A8A;
+}
+nav .a:nth-child(2){
     padding: 6px 12px;
     border-radius: 6px;
 }
 
+nav .a:nth-child(2):hover {
+    background: #1E3A8A;
+}
+nav .a:nth-child(3){
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+nav .a:nth-child(3):hover {
+    background: #1E3A8A;
+}
+nav .a:nth-child(4){
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+nav .a:nth-child(4):hover {
+    background: #1E3A8A;
+}
+nav .a:nth-child(5){
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+nav .a:nth-child(5):hover {
+    background: #1E3A8A;
+}
 
+/* DESCRIPTION */
 .description p {
     margin: 0 auto 40px auto;
     max-width: 700px;
@@ -88,7 +119,7 @@ nav a:hover {
     text-align: center;
 }
 
-
+/* CARDS CONTAINER */
 .cards {
     display: flex;
     justify-content: center;
@@ -97,6 +128,7 @@ nav a:hover {
     margin: 40px auto;
 }
 
+/* CARD */
 .card {
     background-color: rgb(230, 219, 219);
     padding: 15px;
@@ -105,8 +137,7 @@ nav a:hover {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     transition: 0.3s ease;
     cursor: pointer;
-    border-style: solid;
-    border-width: 1px;
+    border: 1px solid;
     text-align: center;
 }
 
@@ -114,11 +145,13 @@ nav a:hover {
     transform: scale(1.1);
 }
 
+/* ICON */
 .icon {
     font-size: 80px;
     margin-bottom: 10px;
 }
 
+/* CARD TEXT */
 .card h2 {
     font-size: 28px;
     color: rgb(76, 76, 129);
@@ -130,19 +163,18 @@ nav a:hover {
     color: rgb(21, 44, 21);
 }
 
-
+/* BUTTON */
 .butPDF {
-    display: block; 
+    display: block;
     margin: 30px auto;
     border-radius: 4px;
     padding: 15px;
-    border-width: 2px;
+    border: 2px solid;
     background-color: rgb(76, 76, 129);
     color: rgb(230, 219, 219);
     font-size: large;
     font-weight: bolder;
     cursor: pointer;
-    text-align: center;
 }
 
 .butPDF:hover {
@@ -151,24 +183,7 @@ nav a:hover {
     transition: 0.2s;
 }
 
-
-footer {
-    background-color: rgb(230, 219, 219);
-    padding: 15px;
-    display: flex;
-    justify-content: center;
-    display: block;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-footer a {
-    text-decoration: none;
-    
-}
-
-
+/* CUTS SECTION */
 .cuts {
     display: flex;
     justify-content: center;
@@ -185,23 +200,28 @@ footer a {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     transition: 0.3s ease;
     cursor: pointer;
-    border-style: solid;
-    border-width: 1px;
+    border: 1px solid;
+}
+
+/* FOOTER */
+footer {
+    background-color: rgb(230, 219, 219);
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+footer a {
+    text-decoration: none;
 }
 
 
-.video-class {
-    position: relative;
-    margin-bottom: 50%;
-}
 
-video {
-    width: 70%;
-    border-radius: 50% 10% 10% 0;
-    position: absolute;
-    left: 30%;
-   
-}
+
+
 
 
 @keyframes animate {
@@ -209,11 +229,16 @@ video {
         background-position-x: 300px;
     }
 }
-
-
-.choosingOption {
+.video-class{
+    position: relative;
+}
+video{
+    width: 100%;
+    margin-top: 50px;
+    border-radius: 50px/50px;
+}
+.choosingOption{
     display: flex;
-    flex-wrap: wrap;
     flex-direction: column;
     height: 100vh;
     align-items: center;
@@ -221,56 +246,108 @@ video {
     position: relative;
 }
 
-.patientChoose,
-.doctorChoose {
-     background: hsl(221, 83%, 53%);
+.patientChoose{
+    background-color: rgb(123, 123, 231);
     font-size: 70px;
     text-decoration: none;
     padding: 50px;
     border-radius: 200px 100px;
-    color: black;
-}
-
-.patientChoose {
     margin-right: 100px;
-}
+    color: black;
 
-.choosingOption p {
+
+}
+.doctorChoose{
+    background-color: rgb(123, 123, 231);
+    text-decoration: none;
+    font-size: 70px;
+    padding: 50px;
+    border-radius: 200px 100px ;
+    color: black;
+    
+    
+}
+.choosingOption p{
     font-size: 70px;
     color: hsl(219, 80%, 39%);
     position: absolute;
-    top: 150px;
+    top:150px
 }
-
-.patientChoose:hover,
-.doctorChoose:hover {
+.patientChoose:hover{
     background-color: rgb(123, 123, 255);
 }
-
-.patientChoose:active,
-.doctorChoose:active {
+.doctorChoose:hover{
+    background-color: rgb(123, 123, 255);
+}
+.patientChoose:active{
+    background-color: rgb(123, 123, 210);
+}
+.doctorChoose:active{
     background-color: rgb(123, 123, 210);
 }
 
 
-.address-infomation {
+.pers-info{
+    font-size: 3rem;
+    padding: 2rem;
+
+}
+.personal-info{
+    
     position: relative;
+    border-radius: 30px;
+    height: 50%;
+    width: 100vw;
+    padding: 5% 0 5%;
+    
 }
-
-label {
+label{
     font-size: 35px;
+    
+    
 }
-
-.personal-info input,
-.address-infomation input {
+.personal-info input{
     font-size: 1.5em;
     margin-left: 10%;
+   position: absolute;
+   left: 15%;
 }
-
-select {
+select{
     width: 28.3%;
     height: 3vh;
+    position: absolute;
+    left: 25%;
 }
+.address-info{
+    font-size: 3rem;
+    padding: 2rem;
+}
+.address-infomation input{
+    font-size: 1.5em;
+    margin-left: 10%;
+    position: absolute;
+    left: 20%;
+}
+.address-infomation{
+    position: relative;
+}
+#registerButton{
+    font-size: 3rem;
+    border:none;
+    position: absolute;
+    left: 50%;
+    color: white;
+    background-color: rgb(63, 61, 61);
+    padding: 1rem;
+    border-radius: 1rem;
+
+}
+#registerButton:hover{
+    background-color: rgb(63, 51, 41);
+}
+
+
+
 
 
 .PatientForm {
@@ -399,10 +476,3 @@ select {
 .login-btn:active{
     background: hsl(224, 64%, 40%);
 }
-.section{
-    display: flex;
-    justify-content: flex-start;
-    position: relative;
-}
-
-
