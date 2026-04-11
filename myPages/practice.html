@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <style>
+    body{
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+    }
+    .form{
+      width: 500px;
+      background-color: #eeeeee;
+      padding: 0 30px;
+      display: grid;
+      gap: 20px;
+      padding-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 2px 2px 10px #777575,-2px -2px 10px #777575;
+    }
+    input{
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .otp-verify{
+      width: 100%;
+      display: flex;
+      gap: 20px;
+    }
+    .btn{
+      padding: 10px;
+      background: rgb(0, 204, 255);
+      
+      outline: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 150px;
+    }
+    .otp-verify{
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="form">
+    <h1>OTP verification</h1>
+    <input type="email" id="email" placeholder="Enter your email">
+
+    <div class="otp-verify">
+      <input type="text" id="otp_inp" placeholder="Enter OTP sent to your email">
+      <button class="btn" id="otp-btn">Verify</button>
+      
+      
+    </div>
+    <button class="btn" onclick="sendOTP()">Send OTP</button>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+
+const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+
+async function sendOTP() {
+  const email = document.getElementById("email").value;
+  const otpBox = document.querySelector(".otp-verify");
+
+  if (!email) {
+    alert("Enter your email first");
+    return;
+  }
+
+  const { error } = await client.auth.signInWithOtp({
+    email: email
+  });
+
+  if (error) {
+    alert("Error: " + error.message);
+  } else {
+    alert("OTP sent to your email");
+    otpBox.style.display = "flex";
+  }
+}
+
+
+document.getElementById("otp-btn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const token = document.getElementById("otp_inp").value;
+
+  const { error } = await client.auth.verifyOtp({
+    email: email,
+    token: token,
+    type: "email"
+  });
+
+  if (error) {
+    alert("Invalid OTP");
+  } else {
+    alert("OTP Verified");
+
+    
+    window.location.href = "home.html";
+  }
+});
+</script>
+</body>
+</html>

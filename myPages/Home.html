@@ -1,94 +1,285 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>e-Health Connect Hub</title>
-      <link rel="icon" href="logo.jpeg">
-      <link rel="stylesheet" href="Style.css">
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-      
-  </head>
-  <body>
-      <header>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-Health Connect Hub</title>
+<link rel="icon" href="logo.jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-        <div class="logo-image">
-          <img src="logo.jpeg" alt="This is the logo">
-        </div>
-        
-        <h1>Welcome to e-Health Connect Hub</h1>
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Roboto", sans-serif;
+}
 
-        <nav class="nav-bar">
-          <a class="a" href="home.html" target="_blank">Home</a> |
-          <a class="a" href="patientsLogin.html" target="_blank">Login</a> |
-          <a class="a" href="Choose.html" target="_blank">Register</a> |
-          <a class="a" href="doctorLogin.html" target="_blank">Find Doctor</a> |
-          <a class="a" href="about.html" target="_blank">About</a>
-        
-        </nav>
-      </header>
+body{
+  background:#fff;
+  height: 100vh;
+}
 
-      <main>
 
-        <div class="video-class">
-          <video src="HP-video.mp4" autoplay loop muted playsinline>
-            Your browser does not support the video tag.
-          </video>
-        </div>
+header{
+  background:#00ccff;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 30px;
+  position:fixed;
+  top:0;
+  width:100%;
+  z-index:100;
+}
 
-        <div class="description">
-          <h1>Transforming healthcare access through digital innovation</h1>
-          <p>
-            Connecting patients, doctors, and healthcare institutions to reduce queues,
-            improve service delivery, and create opportunities for medical professionals.
-          </p>
-        </div>
+.logo-image img{
+  width:60px;
+  height:60px;
+  border-radius:10px 50px 50px 0;
+  object-fit:cover;
+}
 
-        <div class="cards">
+header h1{
+  font-size:1.7rem;
+  text-align:center;
+  background: linear-gradient(90deg, blue, rgb(255,255,255), rgb(133, 161, 135));
+  background-clip: text;
+  color: transparent;
+  animation: animate 3s linear infinite;
+}
+@keyframes animate {
+    to {
+        background-position-x: 300px;
+    }
+}
 
-          <div class="card">
-            <div class="icon">🩺</div>
-            <h2>Easy Booking</h2>
-            <p>Patients can book appointments online and avoid long queues.</p>
-          </div>
+nav{
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
+}
 
-          <div class="card">
-            <div class="icon">🕰️</div>
-            <h2>Queue Management</h2>
-            <p>Smart scheduling reduces overcrowding in health facilities.</p>
-          </div>
+nav a{
+  text-decoration:none;
+  color:#1F2937;
+  font-size:1.1rem;
+  
+  transition: 0.3s;
+}
 
-          <div class="card">
-            <div class="icon">💼</div>
-            <h2>Employment Opportunities</h2>
-            <p>Helping qualified doctors find employment.</p>
-          </div>
+nav a:hover{
+  color:#fff;
+  background: #1E3A8A;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
 
-        </div>
 
-        <div class="report-section">
-          <a href="E-health Connect Hub2.0.pdf" target="_blank">
-            <button class="butPDF">Read The Full Report</button>
-          </a>
-        </div>
+main{
+  margin-top:100px;
+  padding:20px;
+}
 
-        <div class="info">
-          <p>
-            South Africa's employment rate increased from 1% to 3% in 2019 compared to 2020.
-            This review focuses on medical doctors’ unemployment rate, which increased from 2021 to 2022.
-            According to the Cape Times, this crisis is compounded by a lack of government funding and inefficient recruitment processes, despite the need for doctors.
-          </p>
-        </div>
 
-      </main>
+.video-class{
+  display:flex;
+  justify-content:center;
+  margin-bottom:30px;
+}
 
-      <footer>
-        <p>&copy; 2026 E-Health Connect Hub. All rights reserved.</p>
-        <a href="contact-us.html">Contact Us</a>
-      </footer>
+.video-class video{
+  width:100%;
+  max-width:1000px;
+  border-radius:15px;
+}
 
-      <script src="javascript.js"></script>
-  </body>
+
+.description{
+  text-align:center;
+  max-width:800px;
+  margin:0 auto 30px;
+}
+
+.description h1{
+  font-size:1.5rem;
+  margin-bottom:20px;
+}
+
+.description p{
+  font-size:1.2rem;
+}
+
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+ 
+}
+
+.card{
+  background:#e6dbdb;
+  padding:15px;
+  width: 60%;
+  border-radius:10px;
+  text-align:center;
+  transition:0.3s;
+}
+
+.card:hover{
+  transform:scale(1.05);
+}
+
+.icon{
+  font-size:40px;
+}
+
+.card h2{
+  font-size:1.2rem;
+  margin:10px 0;
+}
+
+.card p{
+  font-size:1.2rem;
+}
+
+
+.butPDF{
+  display:block;
+  margin:30px auto;
+  padding:12px;
+  background:#4c4c81;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.butPDF:hover{
+  background:#333366;
+}
+
+
+.info{
+  max-width:800px;
+  margin:90px auto;
+  text-align:center;
+  font-size:1.2rem;
+}
+
+
+footer{
+  background:#e6dbdb;
+  text-align:center;
+  padding:15px;
+  margin-top: 70px;
+  
+  position: relative;
+  width: 100%;
+  height: 7.5vh;
+  bottom: 0;
+  
+}
+
+footer a, footer p{
+  display:block;
+  text-decoration:none;
+  color:black;
+  margin-top:5px;
+  font-size: 1.2rem;
+
+}
+
+
+@media(max-width:768px){
+  header{
+    flex-direction:column;
+    gap:10px;
+  }
+
+  header h1{
+    font-size:1rem;
+  }
+
+  nav{
+    justify-content:center;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo-image">
+    <img src="logo.jpeg" alt="logo">
+  </div>
+
+  <h1>e-Health Connect Hub</h1>
+
+  <nav>
+    <a href="Home.html" >Home</a> |
+    <a href="patientsLogin.html">Login</a> |
+    <a href="Choose.html">Register</a> |
+    <a href="#">Find Doctor</a> |
+    <a href="About-Us.html">About us</a>
+  </nav>
+</header>
+
+<main>
+
+<section class="video-class">
+  <video src="HP-video.mp4" autoplay loop muted playsinline></video>
+</section>
+
+<section class="description">
+  <h1>Transforming healthcare access through digital innovation</h1>
+  <p>
+    Connecting patients, doctors, and healthcare institutions to reduce queues,
+    improve service delivery, and create opportunities.
+  </p>
+</section>
+
+<section class="cards">
+
+  <div class="card">
+    <div class="icon">🩺</div>
+    <h2>Easy Booking</h2>
+    <p>Book appointments online easily.</p>
+  </div>
+
+  <div class="card">
+    <div class="icon">🕰️</div>
+    <h2>Queue Management</h2>
+    <p>Reduce overcrowding in hospitals.</p>
+  </div>
+
+  <div class="card">
+    <div class="icon">💼</div>
+    <h2>Jobs for Doctors</h2>
+    <p>Helping doctors find opportunities.</p>
+  </div>
+
+</section>
+
+<a href="E-health Connect Hub2.0.pdf"><button class="butPDF">Read The Full Report</button></a>
+
+<div class="info">
+  <p>
+    Our platform improves healthcare access by connecting patients with available doctors and reducing long queues.
+  </p>
+</div>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 E-Health Connect Hub</p>
+  <a href="#">Contact Us</a>
+</footer>
+
+</body>
 </html>

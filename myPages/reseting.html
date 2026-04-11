@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>reset password</title>
+      <link rel="stylesheet" href="Style.css">
+      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <div class="reset-container">
+
+      <div class="pass1">
+
+        <h1>Reset your password</h1>
+
+        <form id="forgotForm">
+          <div class="login-info">
+
+            <div class="input-group">
+              <input type="text" id="email" name="email" required>
+              <label for="email">Enter your Email Address:</label>
+            </div>
+
+          </div>
+          <input type="submit" class="login-btn" onclick="forgotPassword()">
+        </form>
+
+      </div>
+
+    </div>
+
+    <script src="index.js"></script>
+  </body>
+</html>

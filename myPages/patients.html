@@ -1,82 +1,263 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient registration</title>
-    <link rel="stylesheet" href="Style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: "Roboto", sans-serif; 
+        }
+        body{
+
+        display: flex;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+        background: rgb(0, 204, 255);
+        padding: 20px;
+        }
+        
+        .container{
+            max-width: 700px;
+            width: 100%;
+            background-color: white;
+            padding: 25px 30px;
+            border-radius: 10px;
+        }
+        .container .title{
+            font-size: 30px;
+            font-weight: 500;
+            position: relative;
+        }
+        .container .title::before{
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 3px;
+            width: 30px;
+            background: #9b59b6;
+        }
+        .container form .user-details{
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin: 20px 0 12px 0;
+        }
+        form .input-box{
+            margin-bottom: 15px;
+            width: calc(100% / 2 - 20px);
+            
+        }
+        .input-box .details{
+            display: block;
+            font-weight: 500;
+            margin-bottom: 5px;
+            
+            
+        }
+        form .user-details .input-box input{
+            height: 45px;
+            width: 100%;
+            outline: none;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding-left: 15px;
+            font-size: 16px;
+            border-bottom-width: 3px;
+            transition:  all 0.3s ease;
+        }
+        form .user-details .input-box input:focus,
+        form .user-details .input-box input:valid{
+            border-color: blue;
+        }
+        .gender-details .gender-title{
+            font-size: 20px;
+            font-weight: 500;
+        }
+        .category{
+        display: flex;
+
+        width: 80%;
+        margin: 14px 0;
+        justify-content: space-between;
+            
+        }
+        .gender-details .category label{
+            display: flex;
+            align-items: center;
+        }
+        .gender{
+            font-size: 20px;
+        }
+        .dot{
+            height: 18px;
+            width: 18px;
+            background: #d9d9d9;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 5px solid transparent;
+            transition: all 0.3s ease;
+        }
+        #dot-1:checked ~ .category label .one,
+        #dot-2:checked ~ .category label .two,
+        #dot-3:checked ~ .category label .three{
+            border-color: #d9d9d9;
+            background: #9b59b6;
+        }
+        input[type="radio"]{
+            display: none;
+        }
+        .button{
+            height: 45px;
+            margin: 45px 0;
+
+        }
+        form .button input{
+            height: 100%;
+            width: 100%;
+            outline: none;
+            color: #fff;
+            background: rgb(0, 204, 255);
+            border: none;
+            font-size: 18px;
+            letter-spacing: 1px;
+            font-weight: 500;
+            border-radius: 5px;
+        }
+        form .button input:hover{
+            background:linear-gradient(-180deg,rgb(83, 83, 241),rgba(230, 222, 222, 0.993));
+        }
+        @media(max-width:584px){
+            .container{
+                max-width: 100%;
+            }
+            form .input-box{
+            margin-bottom: 15px;
+            width: 100%;
+            }
+            .category{
+            
+            width: 100%;
+            }
+            .container form .user-details{
+                max-height: 300px;
+                overflow-y:scroll ;
+            }
+            .user-details::-webkit-scrollbar{
+                width: 0;
+            }
+        }
+    </style>
 </head>
 <body>
+    
+    <div class="container">
+        <div class="title">Patient Registration</div>
+            <form action="" class="PatientForm">
+                <div class="user-details">
 
-    <form class="register-form">
+                    <div class="input-box">
+                        <span class="details">First name</span>
+                        <input type="text" id="name" placeholder="i.e John" required>
+                    </div>
 
-        <div class="pers-info">Personal Information</div>
+                    <div class="input-box">
+                        <span class="details">Surname</span>
+                        <input type="text" id="surname" placeholder="i.e Doe" required>
+                    </div>
 
-        <div class="personal-info">
-            <label for="fname" id="fname">First name</label>
-            <input type="text" placeholder="First name" required class="firname"> <br><br>
+                    <div class="input-box">
+                        <span class="details">Date of Birth</span>
+                        <input type="date" id="date_of_birth" placeholder="i.e 01/01/2020">
+                    </div>
 
-            <label for="lname" id="lname">Surname</label>
-            <input type="text" placeholder="Last name" required class="lastname"><br><br>
-            <label for="">Title</label>
-            <select name="Title"  id="">
-                <option value="">Mr</option>
-                <option value="">Mrs</option>
-                <option value="">Miss</option>
-                <option value="">Advocate</option>
-                <option value="">Doctor</option>
-                <option value="">Professor</option>
-            </select><br><br>
-            
-            <label for="dateOfBirth" id="dateofBirth">Date of Birth</label>
-            <input type="date" required><br><br>
+                    <div class="input-box">
+                        <span class="details">ID number</span>
+                        <input type="text" id="id_number" placeholder="i.e 0000000000000" required maxlength="13">
+                    </div>
 
-            <label for="idNumber">ID number</label>
-            <input type="text" required maxlength="13" placeholder="Enter ID number"><br><br>
-            <label for="">Home languege</label>
-            <select name="" id="">
-                <option value="">English</option>
-                <option value="">XiTsonga</option>
-                <option value="">IsiZulu</option>
-                <option value="">IsiXhosa</option>
-                <option value="">IsiSwati</option>
-            </select><br><br>
+                    <div class="input-box">
+                        <span class="details">Title</span>
+                        <input type="text" id="title" placeholder="i.e Mr. / Ms / Miss/ Mrs" required maxlength="4">
+                    </div>
 
-            <label for="phoneNumber" id="phoneNumber">Phone number</label>
-            <input type="text" required maxlength="10" pattern="[0-9]{10}" placeholder="Enter cellphone number"><br><br>
+                    <div class="input-box">
+                        <span class="details">Phone number</span>
+                        <input type="text" id="phone" placeholder="Cell phone Number" required maxlength="10">
+                    </div>
 
+                    <div class="input-box">
+                        <span class="details">Prefered Languege</span>
+                        <input type="text" id="languege" placeholder="i.e English / Siswati / isiZulu /etc" required>
+                    </div>
 
-            <label for="email" id="email">email address</label>
-            <input type="email" placeholder="Enter email address" required>
+                    <div class="input-box">
+                        <span class="details">Email Address</span>
+                        <input type="email" id="email" placeholder="Email Address" required minlength="5">
+                    </div>
 
-        </div>
-        
-        <div class="address-info">Address Information</div>
-        <div class="address-infomation">
+                    <div class="input-box">
+                        <span class="details" >Address</span>
+                        <input type="text" id="address1" placeholder="Address Line 1" required >
+                        <input type="text" id="address2" placeholder="Address Line 2" required>
+                        <input type="text" id="address3" placeholder="Address Line 3" >
+                        <input type="text" id="postalCode" placeholder="Postal Code" required>
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Province</span>
+                        <input type="text" id="province" placeholder="i.e Mpumalanga" required>
+                    </div>
 
-            <label for="address1" id="address1">Address line 1(e.g. Street Name):</label><br>
-            <input type="text" required><br><br><br><br>
+                    <div class="input-box">
+                        <span class="details">Password</span>
+                        <input type="password" id="password" placeholder="Password" required>
+                    </div>
 
-            <label for="address2" id="address2">Street Address line 2(e.g Surbub Name):</label><br>
-            <input type="text" required><br><br><br><br>
+                    <div class="input-box">
+                        <span class="details">Confirm Password</span>
+                        <input type="password" id="confirmPassword" placeholder="Confirm Password" required >
+                    </div>
 
-            <label for="address3" id="address3">Street Address line 3(e.g Town name):</label><br>
-            <input type="text"><br><br><br>
+                </div>
 
-            <label for="Province" id="province">Province:</label><br>
-            <input type="text" required><br><br><br><br>
+                <div class="gender-details">
+                    <input type="radio" name="gender" id="dot-1" value="Male">
+                    <input type="radio" name="gender" id="dot-2" value="Female">
+                    <input type="radio" name="gender" id="dot-3" value="Prefer not to say">
+                    <span class="gender-title">Gender</span>
+                    <div class="category">
+                        <label for="dot-1">
+                            <span class="dot one"></span>
+                            <span class="gender">Male</span>
+                        </label>
 
-            <label for="postalcode" id="postalcode">Postal Code:</label><br>
-            <input type="text" required minlength="4"><br><br><br>
+                        <label for="dot-2">
+                            <span class="dot two"></span>
+                            <span class="gender">Female</span>
+                        </label>
 
+                        <label for="dot-3">
+                            <span class="dot three"></span>
+                            <span class="gender">Prefer not to say</span>
+                        </label>
 
-        </div>
+                    </div>
 
-        <div class="save-button">
-            <button id="registerButton">Save </button><br>
-        </div>
-        
+                </div>
+                <div class="button">
+                    <input type="submit" value="Register" onclick="patientsRegistration()">
+                </div>
+            </form>
+        </div>    
 
-    </form>
+    </div>
+    <script src="index.js"></script>
 </body>
 </html>
