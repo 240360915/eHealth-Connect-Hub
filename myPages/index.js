@@ -310,6 +310,47 @@ function resetPassword(){
     window.location.href = "patientsLogin.html";
   });
 }
+async function sendOTP() {
+  const email = document.getElementById("email").value;
+  const otpBox = document.querySelector(".otp-verify");
+
+  if (!email) {
+    alert("Enter your email first");
+    return;
+  }
+
+  const { error } = await client.auth.signInWithOtp({
+    email: email
+  });
+
+  if (error) {
+    alert("Error: " + error.message);
+  } else {
+    alert("OTP sent to your email");
+    otpBox.style.display = "flex";
+  }
+}
+
+
+document.getElementById("otp-btn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const token = document.getElementById("otp_inp").value;
+
+  const { error } = await client.auth.verifyOtp({
+    email: email,
+    token: token,
+    type: "email"
+  });
+
+  if (error) {
+    alert("Invalid OTP");
+  } else {
+    alert("OTP Verified");
+
+    
+    window.location.href = "home.html";
+  }
+});
 
 
 
