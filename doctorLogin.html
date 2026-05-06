@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Doctor Login – e-Health Connect</title>
+
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+        <style>
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: "Roboto", sans-serif;
+                
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+
+            body {
+                background-color: hsla(180, 4%, 87%, 0.614);
+                min-height: 100vh;
+            }
+
+            /* ── NAV ── */
+            .topnav {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: white;
+                padding: 0 48px;
+                height: 72px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+
+            .nav-brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-decoration: none;
+            }
+
+            .nav-logo {
+                width: 42px;
+                height: 42px;
+                border-radius: 10px;
+                background: #1b2a4e;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+            }
+
+            .brand-name {
+                font-family: "Roboto", sans-serif;
+                font-size: 17px;
+                font-weight: 700;
+                color: #0b1c3d;
+                line-height: 1;
+            }
+
+            .brand-tag {
+                font-size: 11px;
+                color: #26a060;
+                font-weight: 600;
+                margin-top: 2px;
+            }
+
+            .nav-links {
+                display: flex;
+                gap: 4px;
+            }
+
+            .nav-links a {
+                padding: 8px 14px;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #5a6a7a;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+
+            .nav-links a:hover {
+                color: #0b1c3d;
+                background: rgba(11, 28, 61, 0.05);
+            }
+
+            .nav-btns {
+                display: flex;
+                gap: 10px;
+            }
+
+            .nav-btn {
+                padding: 8px 18px;
+                border-radius: 8px;
+                font-family: "Roboto", sans-serif;
+                font-size: 13px;
+                font-weight: 600;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+
+            .nav-btn.ghost {
+                border: 1.5px solid #dde3ed;
+                color: #0b1c3d;
+            }
+
+            .nav-btn.ghost:hover {
+                background: #1b2a4e;
+                color: white;
+                border-color: #1b2a4e;
+            }
+
+            .nav-btn.solid {
+                background: #1b2a4e;
+                color: white;
+                border: none;
+            }
+
+            .nav-btn.solid:hover {
+                background: #385a9e;
+            }
+
+            /* ── HERO BANNER ── */
+            .page-hero {
+                background: linear-gradient(145deg, #0b1c3d 0%, #1b2a4e 55%, #385a9e 100%);
+                padding: 56px 80px 72px;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .page-hero::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+            }
+
+            .hero-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: rgba(38, 160, 96, 0.2);
+                border: 1px solid rgba(38, 160, 96, 0.35);
+                padding: 6px 14px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                color: #6ee7b7;
+                margin-bottom: 18px;
+                position: relative;
+            }
+
+            .page-hero h1 {
+                font-family: "Roboto", sans-serif;
+                font-size: clamp(30px, 4vw, 48px);
+                font-weight: 900;
+                color: white;
+                line-height: 1.1;
+                margin-bottom: 12px;
+                position: relative;
+            }
+
+            .page-hero h1 em {
+                font-style: italic;
+                color: #6ee7b7;
+            }
+
+            .page-hero p {
+                font-size: 15px;
+                color: rgba(255, 255, 255, 0.6);
+                line-height: 1.7;
+                max-width: 480px;
+                position: relative;
+            }
+
+            /* ── PAGE WRAPPER ── */
+            .page-wrapper {
+                max-width: 520px;
+                margin: 0 auto;
+                padding: 48px 20px 64px;
+            }
+
+            /* ── CARD ── */
+            .PatientForm {
+                background: white;
+                border-radius: 18px;
+                box-shadow: 0 8px 40px rgba(11, 28, 61, 0.10), 0 1px 4px rgba(11, 28, 61, 0.06);
+                padding: clamp(28px, 5vw, 44px) clamp(24px, 5vw, 40px);
+                border: 1px solid #dde3ed;
+            }
+
+            /* ── ROLE SWITCHER ── */
+            .role-buttons {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                margin-bottom: 2rem;
+            }
+
+            .btn {
+                text-decoration: none;
+                padding: 11px 10px;
+                border-radius: 9px;
+                font-size: 14px;
+                font-weight: 600;
+                text-align: center;
+                border: 1.5px solid #dde3ed;
+                color: #5a6a7a;
+                background: #f8fafc;
+                transition: all 0.2s;
+                letter-spacing: 0.02em;
+            }
+
+            .btn:hover {
+                border-color: #1b2a4e;
+                color: #1b2a4e;
+                background: rgba(27, 42, 78, 0.04);
+            }
+
+            .btn.active {
+                background: linear-gradient(135deg, #1b2a4e, #385a9e);
+                color: white;
+                border-color: transparent;
+                box-shadow: 0 4px 12px rgba(27, 42, 78, 0.25);
+            }
+
+            /* ── SECTION LABEL ── */
+            .section-heading {
+                font-size: 11px;
+                font-weight: 700;
+                color: #5a6a7a;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                margin: 0 0 1.2rem;
+                padding: 0.45rem 1rem;
+                background: rgba(11, 28, 61, 0.04);
+                border-left: 4px solid #1b2a4e;
+                border-radius: 0 8px 8px 0;
+            }
+
+            /* ── INPUT GROUP (floating label) ── */
+            .login-info {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .input-group {
+                position: relative;
+            }
+
+            .input-group input {
+                width: 100%;
+                height: 52px;
+                padding: 18px 14px 6px;
+                border: 1.5px solid #dde3ed;
+                border-radius: 9px;
+                outline: none;
+                font-size: 14.5px;
+                font-family: "Roboto", sans-serif;
+                color: #0b1c3d;
+                background: #f8fafc;
+                transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            }
+
+            .input-group label {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 14px;
+                color: #8a9ab0;
+                pointer-events: none;
+                transition: all 0.2s ease;
+                background: transparent;
+                padding: 0;
+            }
+
+            .input-group input:focus,
+            .input-group input:valid {
+                padding-top: 20px;
+                padding-bottom: 4px;
+            }
+
+            .input-group input:focus + label,
+            .input-group input:valid + label {
+                top: 10px;
+                transform: none;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.06em;
+                color: #5a6a7a;
+            }
+
+            .input-group input:focus {
+                border-color: #385a9e;
+                background: white;
+                box-shadow: 0 0 0 3px rgba(56, 90, 158, 0.1);
+            }
+
+            .input-group input:valid:not(:placeholder-shown) {
+                border-color: #26a060;
+            }
+
+            /* ── FORGOT ── */
+            .forgot {
+                text-align: right;
+                margin-bottom: 1.4rem;
+            }
+
+            .forgot a {
+                font-size: 13px;
+                color: #385a9e;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .forgot a:hover {
+                text-decoration: underline;
+            }
+
+            /* ── LOGIN BUTTON ── */
+            .login-btn {
+                width: 100%;
+                height: 52px;
+                outline: none;
+                border: none;
+                border-radius: 10px;
+                background: linear-gradient(135deg, #1b2a4e, #385a9e);
+                color: white;
+                font-family: "Roboto", sans-serif;
+                font-size: 15px;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                cursor: pointer;
+                transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+                box-shadow: 0 4px 18px rgba(27, 42, 78, 0.3);
+            }
+
+            .login-btn:hover {
+                opacity: 0.9;
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(27, 42, 78, 0.4);
+            }
+
+            .login-btn:active {
+                transform: translateY(0);
+            }
+
+            /* ── REGISTER LINK ── */
+            .register-link {
+                text-align: center;
+                margin-top: 20px;
+                font-size: 14px;
+                color: #5a6a7a;
+            }
+
+            .register-link a {
+                color: #385a9e;
+                font-weight: 600;
+                text-decoration: none;
+            }
+
+            .register-link a:hover {
+                text-decoration: underline;
+            }
+
+            /* ── RESPONSIVE ── */
+            @media (max-width: 768px) {
+                .topnav { padding: 0 20px; }
+                .nav-links { display: none; }
+                .page-hero { padding: 48px 24px 60px; }
+            }
+
+            @media (max-width: 560px) {
+                .nav-btns { display: none; }
+            }
+            /* ── HAMBURGER & MOBILE MENU ── */
+            .hamburger {
+            display: none;
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: #0b1c3d; padding: 6px 8px;
+            border-radius: 8px; line-height: 1;
+            }
+            .hamburger:hover { background: rgba(11,28,61,.07); }
+
+            .mobile-menu {
+            display: none; flex-direction: column;
+            position: sticky; top: 72px; z-index: 99;
+            background: #fff; border-bottom: 1px solid #dde3ed;
+            padding: 12px 20px 20px; gap: 4px;
+            box-shadow: 0 6px 20px rgba(0,0,0,.08);
+            }
+            .mobile-menu a {
+            padding: 11px 12px; border-radius: 8px;
+            font-size: 15px; font-weight: 500; color: #0b1c3d;
+            text-decoration: none; transition: background .2s;
+            }
+            .mobile-menu a:hover { background: rgba(11,28,61,.06); }
+            .mobile-menu hr { border: none; border-top: 1px solid #dde3ed; margin: 8px 0; }
+            .mobile-menu.open { display: flex; }
+
+            @media (max-width: 768px) {
+            .hamburger { display: block; }
+            .nav-btns  { display: none; }
+            }
+
+        </style>
+    </head>
+    <body>
+
+        <!-- NAV -->
+        <nav class="topnav">
+            <a href="index.html" class="nav-brand">
+                <div class="nav-logo"><span class="nav-logo-text"><img src="LOGO.jpg" width="50px" alt="e-Health Connect Logo"></span></div>
+                <div>
+                    <div class="brand-name">e-Health Connect</div>
+                    <div class="brand-tag">health-care made easier for you</div>
+                </div>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="about.html">About Us</a>
+                <a href="Contact-Us.html">Contact Us</a>
+                <a href="Choose.html">Register</a>
+            </div>
+            <div class="nav-btns">
+                <a href="patientsLogin.html" class="nav-btn ghost">Patient Login</a>
+                <a href="doctorLogin.html" class="nav-btn solid">Doctor Login</a>
+            </div>
+            <button class="hamburger" id="menuToggle" aria-label="Open menu">&#9776;</button>
+        </nav>
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="index.html">Home</a>
+            <a href="About-Us.html">About Us</a>
+            <a href="Contact-Us.html">Contact Us</a>
+            <hr/>
+            <a href="patientsLogin.html">Patient Login</a>
+            <a href="doctorLogin.html">Doctor Login</a>
+        </div>
+
+        <!-- HERO BANNER -->
+        <div class="page-hero">
+            <div class="hero-badge">🩺 Doctor Portal</div>
+            <h1>Welcome <em>Back</em></h1>
+            <p>Sign in to your doctor account to manage appointments, view patient records, and connect with your practice.</p>
+        </div>
+
+        <!-- LOGIN CARD -->
+        <div class="page-wrapper">
+            <form class="PatientForm">
+
+                <!-- Role switcher -->
+                <div class="role-buttons">
+                    <a href="patientsLogin.html" class="btn">👤 Patient</a>
+                    <a href="doctorLogin.html" class="btn active">🩺 Doctor</a>
+                </div>
+
+                <div class="section-heading">🔒 Doctor Sign In</div>
+
+                <div class="login-info">
+
+                    <div class="input-group">
+                        <input
+                            type="text"
+                            id="practice_number"
+                            name="practice_number"
+                            required
+                            minlength="7"
+                            autocomplete="new-password"
+                            placeholder=" ">
+                        <label for="practice_number">Practice Number</label>
+                    </div>
+
+                    <div class="input-group">
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            required
+                            minlength="6"
+                            autocomplete="new-password"
+                            placeholder=" ">
+                        <label for="password">Password</label>
+                    </div>
+
+                </div>
+
+                <div class="forgot">
+                    <a href="reseting.html">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-btn">🩺 Login to Doctor Portal</button>
+                <div id="login-success" style="color: green; margin-top: 7px; text-align: center; font-size: 20px;" ></div>
+
+                <div class="register-link">
+                    Don't have an account? <a href="doctor.html">Register here</a>
+                </div>
+
+            </form>
+        </div>
+
+        <script>
+            const menuBtn    = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('open');
+            const isOpen = mobileMenu.classList.contains('open');
+            menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+            menuBtn.innerHTML = isOpen ? '&#x2715;' : '&#9776;';
+            });
+            const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+            const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+            const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+            function doctorLogin() {
+                const form = document.querySelector(".PatientForm");
+                if (!form) return;
+
+                form.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+
+                    const practice_number = document.getElementById("practice_number").value.trim();
+                    const password        = document.getElementById("password").value.trim();
+
+                    if (!practice_number || !password) {
+                        document.getElementById("login-success").textContent = "Please fill in all fields.";
+                        setTimeout(() => { document.getElementById("login-success").textContent = ""; }, 3000);
+                        return;
+                    }
+
+                    try {
+                        const { data, error } = await client
+                            .from("doctors")
+                            .select("email, verification_status")
+                            .or(`practice_number.eq.${practice_number},email.eq.${practice_number}`)
+                            .single();
+
+                        if (error || !data) {
+                            document.getElementById("login-success").textContent = "Practice number not found.";
+                            setTimeout(() => { document.getElementById("login-success").textContent = ""; }, 3000);
+                            return;
+                        }
+
+                        if (data.verification_status !== 'approved') {
+                            if (data.verification_status === 'rejected') {
+                                document.getElementById("login-success").textContent = "Your registration was rejected. Please contact support.";
+                                setTimeout(() => { document.getElementById("login-success").textContent = ""; }, 3000);
+                            } else {
+                                document.getElementById("login-success").textContent = "Your account is still pending verification. Please wait for admin approval.";
+                                setTimeout(() => { document.getElementById("login-success").textContent = ""; }, 3000);
+                            }
+                            return;
+                        }
+
+                        const { error: loginError } = await client.auth.signInWithPassword({
+                            email:    data.email,
+                            password: password
+                        });
+
+                        if (loginError) {
+                            document.getElementById("login-success").textContent = "Incorrect password.";
+                            setTimeout(() => { document.getElementById("login-success").textContent = ""; }, 3000);
+                            return;
+                        }
+
+                        document.getElementById("login-success").textContent = "Login successful! Redirecting...";
+                        setTimeout(() => { document.getElementById("login-success").textContent = ""; }, 3000);
+                        window.location.href = "Doctors-Dashboard.html";
+
+                    } catch (err) {
+                        console.error(err);
+                        document.getElementById("login-success").textContent = "Something went wrong. Please try again.";
+                        setTimeout(() => { document.getElementById("login-success").textContent = ""; }, 3000); 
+                    }
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", doctorLogin);
+        </script>
+    </body>
+</html>

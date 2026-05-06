@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Appointment — e-Health Connect</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f0f4f8;
+      --surface:   #ffffff;
+      --accent:    #1a6c5e;
+      --accent2:   #26a88a;
+      --danger:    #d94f4f;
+      --warn:      #e07d2b;
+      --text:      #1a2634;
+      --muted:     #6b7f93;
+      --border:    #dce4ed;
+      --slot-free: #e8f6f2;
+      --slot-taken:#fde8e8;
+      --slot-sel:  #1a6c5e;
+      --radius:    14px;
+      --shadow:    0 4px 24px rgba(26,108,94,0.10);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+    }
+
+    /* ── Header ── */
+    .page-header {
+      max-width: 680px;
+      margin: 0 auto 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .back-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--surface); border: 1.5px solid var(--border);
+      cursor: pointer; font-size: 18px; color: var(--accent);
+      transition: background .2s, transform .15s;
+      text-decoration: none;
+    }
+    .back-btn:hover { background: var(--accent); color: #fff; transform: scale(1.05); }
+    .page-header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px; color: var(--text);
+    }
+    .page-header p { font-size: 13.5px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Card ── */
+    .card {
+      max-width: 680px;
+      margin: 0 auto 24px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-head {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-head .icon { font-size: 20px; }
+    .card-head h2 { font-size: 16px; font-weight: 600; }
+    .card-body { padding: 24px; }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 20px; }
+    .field label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .05em; margin-bottom: 8px;
+    }
+    .field select,
+    .field input[type="date"],
+    .field input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+    }
+    .field select:focus,
+    .field input:focus {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(38,168,138,.12);
+    }
+    .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7f93' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+
+    /* ── Doctor info banner ── */
+    #doctorInfo {
+      display: none;
+      margin-top: 12px;
+      padding: 14px 16px;
+      background: var(--slot-free);
+      border: 1.5px solid #b2e0d4;
+      border-radius: 10px;
+      font-size: 13.5px;
+    }
+    #doctorInfo .doc-name { font-weight: 600; font-size: 15px; color: var(--accent); margin-bottom: 4px; }
+    #doctorInfo .doc-meta { color: var(--muted); }
+    #doctorInfo .doc-hours { margin-top: 6px; font-size: 13px; color: var(--text); }
+    #doctorInfo .doc-hours strong { color: var(--accent); }
+
+    /* ── Time slots ── */
+    #slotSection { display: none; }
+    .slot-label {
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px;
+    }
+    .slots-legend {
+      display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+    .legend-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .legend-dot.free  { background: var(--accent2); }
+    .legend-dot.taken { background: var(--danger); }
+    .legend-dot.sel   { background: var(--slot-sel); }
+
+    .slots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 8px;
+    }
+    .slot-btn {
+      padding: 10px 6px;
+      border-radius: 8px;
+      border: 1.5px solid transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .18s;
+      text-align: center;
+    }
+    .slot-btn.free {
+      background: var(--slot-free);
+      border-color: #b2e0d4;
+      color: var(--accent);
+    }
+    .slot-btn.free:hover {
+      background: var(--accent2);
+      border-color: var(--accent2);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .slot-btn.taken {
+      background: var(--slot-taken);
+      border-color: #f5bebe;
+      color: var(--danger);
+      cursor: not-allowed;
+      opacity: .75;
+    }
+    .slot-btn.selected {
+      background: var(--slot-sel);
+      border-color: var(--slot-sel);
+      color: #fff;
+      box-shadow: 0 3px 12px rgba(26,108,94,.3);
+    }
+
+    .slots-loading, .slots-empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--accent2);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Selected slot display ── */
+    #selectedSlotDisplay {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: #e8f6f2;
+      border: 1.5px solid var(--accent2);
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── Submit button ── */
+    .submit-btn {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 11px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 18px rgba(26,108,94,.3);
+      margin-top: 4px;
+    }
+    .submit-btn:hover:not(:disabled) {
+      opacity: .9; transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(26,108,94,.4);
+    }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--text); color: #fff;
+      padding: 13px 24px; border-radius: 50px;
+      font-size: 14px; font-weight: 500;
+      box-shadow: 0 6px 24px rgba(0,0,0,.2);
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+      z-index: 9999; white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { background: var(--accent); }
+    #toast.error   { background: var(--danger); }
+    #toast.warn    { background: var(--warn); }
+
+    /* ── Summary card ── */
+    #summaryCard { display: none; }
+    .summary-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14.5px;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row span:first-child { color: var(--muted); }
+    .summary-row span:last-child  { font-weight: 600; color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="Patient-Dashboard.html" class="back-btn">←</a>
+  <div>
+    <h1>Book Appointment</h1>
+    <p>Choose a doctor, pick a date, and select an available time slot</p>
+  </div>
+</div>
+
+
+<div class="card">
+  <div class="card-head"><span class="icon">🩺</span><h2>Doctor &amp; Date</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label>Select Doctor</label>
+      <select id="doctorSelect" onchange="onDoctorChange()">
+        <option value="">-- Choose a doctor --</option>
+      </select>
+    </div>
+
+   
+    <div id="doctorInfo">
+      <div class="doc-name" id="dInfoName"></div>
+      <div class="doc-meta" id="dInfoDisc"></div>
+      <div class="doc-hours" id="dInfoHours"></div>
+      <div class="doc-meta" id="dInfoRate" style="margin-top:4px;"></div>
+    </div>
+
+    <div class="field" style="margin-top:20px;">
+      <label>Date</label>
+      <input type="date" id="date" onchange="onDateChange()"/>
+    </div>
+  </div>
+</div>
+
+<!-- Time slots -->
+<div class="card" id="slotSection">
+  <div class="card-head"><span class="icon">🕐</span><h2>Available Time Slots</h2></div>
+  <div class="card-body">
+    <div class="slots-legend">
+      <div class="legend-item"><div class="legend-dot free"></div>Available</div>
+      <div class="legend-item"><div class="legend-dot taken"></div>Booked</div>
+      <div class="legend-item"><div class="legend-dot sel"></div>Your pick</div>
+    </div>
+    <div class="slots-grid" id="slotsGrid"></div>
+    <div id="selectedSlotDisplay"></div>
+    <!-- Hidden time input -->
+    <input type="hidden" id="time"/>
+  </div>
+</div>
+
+<!-- Reason + Summary -->
+<div class="card" id="summaryCard">
+  <div class="card-head"><span class="icon">📋</span><h2>Appointment Details</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label>Reason for Visit</label>
+      <input type="text" id="reason" placeholder="e.g. General consultation, follow-up..."/>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <div class="slot-label" style="margin-bottom:10px;">Summary</div>
+      <div class="summary-row"><span>Doctor</span><span id="sumDoctor">—</span></div>
+      <div class="summary-row"><span>Date</span><span id="sumDate">—</span></div>
+      <div class="summary-row"><span>Time</span><span id="sumTime">—</span></div>
+      <div class="summary-row"><span>Payment</span><span>💳 EFT after consultation</span></div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="bookAppointment()">Confirm Booking</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+  const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+  // ── State ─
+  let selectedDoctor = null;
+  let selectedTime = null;
+
+  // ── Helpers ─
+  function el(id) { return document.getElementById(id); }
+
+  function showToast(msg, type = "") {
+    const t = el("toast");
+    t.textContent = msg;
+    t.className = "show " + type;
+    setTimeout(() => { t.className = ""; }, 3200);
+  }
+
+  function formatTime12(h, m) {
+    const ampm = h >= 12 ? "PM" : "AM";
+    const hh = h % 12 || 12;
+    return `${hh}:${String(m).padStart(2, "0")} ${ampm}`;
+  }
+
+  function formatDateDisplay(dateStr) {
+    if (!dateStr) return "—";
+    const [y, m, d] = dateStr.split("-");
+    return new Date(y, m - 1, d).toLocaleDateString("en-ZA", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric"
+    });
+  }
+
+  // ── Parse operating_hours string ───
+  
+  function parseOperatingHours(raw) {
+    if (!raw) return { start: 8, end: 17, days: null, raw };
+    const timeMatch = raw.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\s*[-–to]+\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    if (!timeMatch) return { start: 8, end: 17, days: null, raw };
+
+    let startH = parseInt(timeMatch[1]);
+    let startM = parseInt(timeMatch[2] || "0");
+    let startAmPm = (timeMatch[3] || "").toLowerCase();
+    let endH   = parseInt(timeMatch[4]);
+    let endM   = parseInt(timeMatch[5] || "0");
+    let endAmPm = (timeMatch[6] || "").toLowerCase();
+
+    if (startAmPm === "pm" && startH < 12) startH += 12;
+    if (startAmPm === "am" && startH === 12) startH = 0;
+    if (endAmPm === "pm" && endH < 12) endH += 12;
+    if (endAmPm === "am" && endH === 12) endH = 0;
+
+    // If no am/pm given but looks like 24h
+    return {
+      start: startH + startM / 60,
+      end:   endH   + endM   / 60,
+      startH, startM, endH, endM,
+      raw
+    };
+  }
+
+  // ── Generate 30-min slots between start and end hours ──
+  function generateSlots(startH, startM, endH, endM) {
+    const slots = [];
+    let h = startH, m = startM;
+    while (h < endH || (h === endH && m < endM)) {
+      slots.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+      m += 30;
+      if (m >= 60) { m -= 60; h++; }
+    }
+    return slots;
+  }
+
+  // ── Load doctors ───
+  async function loadDoctors() {
+    const { data, error } = await client.from("doctors")
+      .select("id, name, surname, discipline, qualifications, hourly_rate, operating_hours")
+      .eq("verification_status", "approved")
+      .order("name");
+
+    if (error) { showToast("Failed to load doctors", "error"); return; }
+    allDoctors = data || [];
+
+    const select = el("doctorSelect");
+    select.innerHTML = '<option value="">-- Choose a doctor --</option>';
+    allDoctors.forEach(doc => {
+      const opt = document.createElement("option");
+      opt.value = doc.id;
+      opt.textContent = `Dr. ${doc.name} ${doc.surname}${doc.discipline ? " — " + doc.discipline : ""}`;
+      select.appendChild(opt);
+    });
+  }
+
+  // ── Doctor selected ──
+  function onDoctorChange() {
+    const id = el("doctorSelect").value;
+    selectedDoctor = allDoctors.find(d => d.id === id) || null;
+
+    // Reset
+    selectedTime = null;
+    el("time").value = "";
+    el("slotSection").style.display = "none";
+    el("summaryCard").style.display = "none";
+    el("date").value = "";
+
+    if (!selectedDoctor) {
+      el("doctorInfo").style.display = "none";
+      return;
+    }
+
+    // Show doctor info
+    const info = el("doctorInfo");
+    info.style.display = "block";
+    el("dInfoName").textContent = `Dr. ${selectedDoctor.name} ${selectedDoctor.surname}`;
+    el("dInfoDisc").textContent = selectedDoctor.discipline || "General Practitioner";
+
+    const hours = selectedDoctor.operating_hours;
+    el("dInfoHours").innerHTML = hours
+      ? `🕐 <strong>Working hours:</strong> ${hours}`
+      : `🕐 <strong>Working hours:</strong> Contact for availability`;
+
+    el("dInfoRate").textContent = selectedDoctor.hourly_rate
+      ? `💳 R ${parseFloat(selectedDoctor.hourly_rate).toFixed(2)} / hr (EFT after consultation)`
+      : "";
+
+    // Set min date to today
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm   = String(today.getMonth() + 1).padStart(2, "0");
+    const dd   = String(today.getDate()).padStart(2, "0");
+    el("date").min = `${yyyy}-${mm}-${dd}`;
+  }
+
+  // ── Date selected — load slots ───
+  async function onDateChange() {
+    const date = el("date").value;
+    if (!date || !selectedDoctor) return;
+
+    // Reset slot state
+    selectedTime = null;
+    el("time").value = "";
+    el("selectedSlotDisplay").style.display = "none";
+    el("summaryCard").style.display = "none";
+
+    // Parse working hours
+    const parsed = parseOperatingHours(selectedDoctor.operating_hours);
+    const slots   = generateSlots(parsed.startH ?? 8, parsed.startM ?? 0,
+                                   parsed.endH   ?? 17, parsed.endM   ?? 0);
+
+    if (slots.length === 0) {
+      el("slotsGrid").innerHTML = `<div class="slots-empty">No slots available — please contact the doctor directly.</div>`;
+      el("slotSection").style.display = "block";
+      return;
+    }
+
+    // Show section with loading state
+    el("slotSection").style.display = "block";
+    el("slotsGrid").innerHTML = `<div class="slots-loading"><span class="spinner"></span>Checking availability…</div>`;
+
+    // Fetch booked slots for this doctor on this date
+    const { data: booked } = await client.from("appointments")
+      .select("time")
+      .eq("doctor_id", selectedDoctor.id)
+      .eq("date", date)
+      .neq("status", "cancelled");
+
+    const bookedTimes = new Set((booked || []).map(b => b.time.slice(0, 5)));
+
+    // Render slot buttons
+    el("slotsGrid").innerHTML = "";
+    slots.forEach(slot => {
+      const isTaken = bookedTimes.has(slot);
+      const [h, m]  = slot.split(":").map(Number);
+      const label   = formatTime12(h, m);
+
+      const btn = document.createElement("button");
+      btn.type      = "button";
+      btn.textContent = label;
+      btn.className = `slot-btn ${isTaken ? "taken" : "free"}`;
+      btn.disabled  = isTaken;
+      btn.dataset.value = slot;
+      btn.title     = isTaken ? "Already booked" : "Click to select";
+
+      if (!isTaken) {
+        btn.onclick = () => selectSlot(slot, label, btn);
+      }
+
+      el("slotsGrid").appendChild(btn);
+    });
+
+    // Show how many are free
+    const freeCount = slots.length - bookedTimes.size;
+    if (freeCount === 0) {
+      el("slotsGrid").innerHTML = `<div class="slots-empty">😕 No available slots for this date. Please pick another day.</div>`;
+    }
+  }
+
+  // ── Select a slot ───
+  function selectSlot(value, label, btn) {
+    // Deselect all
+    document.querySelectorAll(".slot-btn.selected").forEach(b => {
+      b.classList.remove("selected");
+      b.classList.add("free");
+    });
+
+    btn.classList.remove("free");
+    btn.classList.add("selected");
+
+    selectedTime = value;
+    el("time").value = value;
+
+    // Show selected display
+    const disp = el("selectedSlotDisplay");
+    disp.style.display = "block";
+    disp.innerHTML = `✅ Selected: <strong>${label}</strong> on ${formatDateDisplay(el("date").value)}`;
+
+    // Show summary card
+    updateSummary();
+    el("summaryCard").style.display = "block";
+    el("summaryCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function updateSummary() {
+    const doctorOpt = el("doctorSelect").options[el("doctorSelect").selectedIndex];
+    el("sumDoctor").textContent = doctorOpt?.textContent || "—";
+    el("sumDate").textContent   = formatDateDisplay(el("date").value);
+    const [h, m] = (selectedTime || "").split(":").map(Number);
+    el("sumTime").textContent   = selectedTime ? formatTime12(h, m) : "—";
+  }
+
+  // ── Book appointment ───
+  async function bookAppointment() {
+    const doctor_id = el("doctorSelect").value;
+    const date      = el("date").value;
+    const time      = el("time").value;
+    const reason    = el("reason").value.trim();
+
+    if (!doctor_id)  { showToast("Please select a doctor", "warn"); return; }
+    if (!date)       { showToast("Please select a date", "warn"); return; }
+    if (!time)       { showToast("Please select a time slot", "warn"); return; }
+    if (!reason)     { showToast("Please enter a reason for the visit", "warn"); return; }
+
+    const btn = el("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "Booking…";
+
+    // Auth check
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) { showToast("Please log in first", "error"); btn.disabled = false; btn.textContent = "Confirm Booking"; return; }
+
+    // Patient info
+    const { data: patient } = await client.from("patients")
+      .select("name, surname").eq("user_id", user.id).maybeSingle();
+
+    if (!patient) { showToast("Patient record not found", "error"); btn.disabled = false; btn.textContent = "Confirm Booking"; return; }
+
+    // Double-check slot is still free (race condition guard)
+    const { data: existing } = await client.from("appointments")
+      .select("id").eq("doctor_id", doctor_id).eq("date", date).eq("time", time)
+      .neq("status", "cancelled").maybeSingle();
+
+    if (existing) {
+      showToast("That slot was just taken — please pick another", "error");
+      btn.disabled = false; btn.textContent = "Confirm Booking";
+      onDateChange(); // Refresh slots
+      return;
+    }
+
+    // Insert
+    const { error } = await client.from("appointments").insert([{
+      doctor_id,
+      patient_id:   user.id,
+      patient_name: `${patient.name} ${patient.surname}`,
+      date, time, reason,
+      status: "pending"
+    }]);
+
+    if (error) {
+      showToast(error.message, "error");
+      btn.disabled = false; btn.textContent = "Confirm Booking";
+      return;
+    }
+
+    showToast("🎉 Appointment booked!", "success");
+    setTimeout(() => { window.location.href = "Patient-Dashboard.html"; }, 1800);
+  }
+
+  // ── Init ────
+  document.addEventListener("DOMContentLoaded", loadDoctors);
+</script>
+</body>
+</html>
+
+

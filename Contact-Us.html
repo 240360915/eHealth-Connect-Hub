@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Contact Us — e-Health Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Roboto", sans-serif;
+        }
+        html {
+            scroll-behavior: smooth;
+
+        }
+
+        body {
+            background-color: hsla(180, 4%, 87%, 0.614);
+        }
+
+        /* ── NAV ── */
+        .topnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 0 40px;
+            height: 72px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #1b2a4e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .brand-name {
+            font-family: "Roboto", sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0b1c3d;
+            line-height: 1;
+        }
+
+        .brand-tag {
+            font-size: 11px;
+            color: #26a060;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5a6a7a;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #0b1c3d;
+            background: rgba(11, 28, 61, 0.05);
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-family: "Roboto", sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.ghost {
+            border: 1.5px solid #dde3ed;
+            color: #0b1c3d;
+        }
+
+        .nav-btn.ghost:hover {
+            background: #1b2a4e;
+            color: white;
+            border-color: #1b2a4e;
+        }
+
+        .nav-btn.solid {
+            background: #1b2a4e;
+            color: white;
+            border: none;
+        }
+
+        .nav-btn.solid:hover {
+            background: #385a9e;
+        }
+
+        /* ── HERO BANNER ── */
+        .page-hero {
+            background: linear-gradient(145deg, #0b1c3d 0%, #1b2a4e 55%, #385a9e 100%);
+            padding: 80px 80px 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(38, 160, 96, 0.2);
+            border: 1px solid rgba(38, 160, 96, 0.35);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6ee7b7;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .page-hero h1 {
+            font-family: "Roboto", sans-serif;
+            font-size: clamp(36px, 5vw, 58px);
+            font-weight: 900;
+            color: white;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .page-hero h1 em {
+            font-style: italic;
+            color: #6ee7b7;
+        }
+
+        .page-hero p {
+            font-size: 17px;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.75;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* ── CONTACT CARDS SECTION ── */
+        .contact-section {
+            padding: 80px;
+        }
+
+        .section-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #26a060;
+            margin-bottom: 14px;
+        }
+
+        .section-label::before {
+            content: '';
+            width: 24px;
+            height: 2px;
+            background: #26a060;
+        }
+
+        .section-title {
+            font-family: "Roboto", sans-serif;
+            font-size: clamp(28px, 3vw, 40px);
+            font-weight: 700;
+            color: #0b1c3d;
+            line-height: 1.15;
+            margin-bottom: 14px;
+        }
+
+        .section-sub {
+            font-size: 16px;
+            color: #5a6a7a;
+            line-height: 1.75;
+            max-width: 520px;
+            margin-bottom: 56px;
+        }
+
+        /* ── CARDS GRID ── */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .contact-card {
+            background: white;
+            border-radius: 18px;
+            padding: 36px 28px;
+            border: 1.5px solid #dde3ed;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1b2a4e, #385a9e);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 16px 48px rgba(11, 28, 61, 0.12);
+            border-color: transparent;
+        }
+
+        .contact-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .contact-card.phone   .card-icon { background: linear-gradient(135deg, #e8ecf5, #d0d9f0); }
+        .contact-card.hours   .card-icon { background: linear-gradient(135deg, #e8f5ee, #d0f0de); }
+        .contact-card.email   .card-icon { background: linear-gradient(135deg, #fef3e8, #fde0c0); }
+        .contact-card.location .card-icon { background: linear-gradient(135deg, #fde8e8, #f5bebe); }
+
+        .card-title {
+            font-family: "Roboto", sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0b1c3d;
+            margin-bottom: 12px;
+        }
+
+        .card-detail {
+            font-size: 14px;
+            color: #5a6a7a;
+            line-height: 1.8;
+        }
+
+        .card-detail strong {
+            display: block;
+            color: #0b1c3d;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .card-detail p {
+            margin-bottom: 4px;
+        }
+
+        /* ── FORM SECTION ── */
+        .form-section {
+            background: white;
+            padding: 80px;
+        }
+
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: start;
+            margin-top: 48px;
+        }
+
+        .form-info h3 {
+            font-family: "Roboto", sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: #0b1c3d;
+            margin-bottom: 14px;
+        }
+
+        .form-info p {
+            font-size: 15px;
+            color: #5a6a7a;
+            line-height: 1.75;
+            margin-bottom: 28px;
+        }
+
+        .social-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .social-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: hsla(180, 4%, 87%, 0.614);
+            border: 1px solid #dde3ed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: background 0.2s;
+            overflow: hidden;
+        }
+
+        .social-icon:hover { background: #dde3ed; }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .form-field label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-field input,
+        .form-field textarea,
+        .form-field select {
+            padding: 12px 16px;
+            border: 1.5px solid #dde3ed;
+            border-radius: 10px;
+            font-family: "Roboto", sans-serif;
+            font-size: 15px;
+            color: #0b1c3d;
+            background: white;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .form-field input:focus,
+        .form-field textarea:focus,
+        .form-field select:focus {
+            border-color: #385a9e;
+            box-shadow: 0 0 0 3px rgba(56, 90, 158, 0.1);
+        }
+
+        .form-field textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-btn {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #1b2a4e, #385a9e);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: "Roboto", sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 18px rgba(27, 42, 78, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(27, 42, 78, 0.4);
+        }
+
+        /* success toast */
+        #toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #1b2a4e;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 9999;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #toast.success { background: #2e8b57; }
+
+        /* ── FOOTER ── */
+        .footer5 {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            background: #0b1c3d;
+            color: white;
+            padding: 48px 80px;
+            gap: 40px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        @media(max-width:1024px){
+            .footer5 { grid-template-columns: 1fr 1fr; padding: 40px; }
+        }
+
+        @media(max-width:600px){
+            .footer5 { grid-template-columns: 1fr; padding: 32px 24px; }
+        }
+
+        .footer5 h4 {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 20px;
+        }
+
+        .footer5 p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .footer5 nav a {
+            display: block;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.65);
+            text-decoration: none;
+            margin-bottom: 10px;
+            transition: color 0.2s;
+        }
+
+        .footer5 nav a:hover { color: white; }
+
+        .footer-socials {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .footer-social-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: background 0.2s;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .footer-social-btn img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            display: block;
+            margin: auto;
+        }
+
+        .footer-social-btn:hover { background: rgba(255, 255, 255, 0.15); }
+
+        .rights {
+            text-align: center;
+            background: #06122b;
+            color: rgba(255, 255, 255, 0.4);
+            padding: 16px;
+            font-size: 13px;
+        }
+
+        /* ── REVEAL ANIMATION ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+            .contact-section,
+            .form-section { padding: 56px 40px; }
+
+            .contact-grid { grid-template-columns: repeat(2, 1fr); }
+
+            .form-layout { grid-template-columns: 1fr; gap: 40px; }
+
+            .footer5 { padding: 40px; }
+
+            .page-hero { padding: 60px 40px 80px; }
+        }
+
+        @media (max-width: 768px) {
+            .topnav { padding: 0 20px; }
+
+            .nav-links { display: none; }
+
+            .contact-section,
+            .form-section { padding: 48px 24px; }
+
+            .contact-grid { grid-template-columns: 1fr; }
+
+            .form-row { grid-template-columns: 1fr; }
+
+            .footer5 { padding: 32px 24px; }
+
+            .page-hero { padding: 48px 24px 64px; }
+        }
+
+        @media (max-width: 480px) {
+            .nav-btns { display: none; }
+        }
+        /* ── HAMBURGER & MOBILE MENU ── */
+        .hamburger {
+        display: none;
+        background: none; border: none; font-size: 24px;
+        cursor: pointer; color: #0b1c3d; padding: 6px 8px;
+        border-radius: 8px; line-height: 1;
+        }
+        .hamburger:hover { background: rgba(11,28,61,.07); }
+
+        .mobile-menu {
+        display: none; flex-direction: column;
+        position: sticky; top: 72px; z-index: 99;
+        background: #fff; border-bottom: 1px solid #dde3ed;
+        padding: 12px 20px 20px; gap: 4px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.08);
+        }
+        .mobile-menu a {
+        padding: 11px 12px; border-radius: 8px;
+        font-size: 15px; font-weight: 500; color: #0b1c3d;
+        text-decoration: none; transition: background .2s;
+        }
+        .mobile-menu a:hover,
+        .mobile-menu a.active { background: rgba(11,28,61,.06); }
+        .mobile-menu hr { border: none; border-top: 1px solid #dde3ed; margin: 8px 0; }
+        .mobile-menu.open { display: flex; }
+
+        @media (max-width: 768px) {
+        .hamburger { display: block; }
+        .nav-btns  { display: none; }
+        }
+
+
+    </style>
+    </head>
+    <body>
+
+        <!-- NAV -->
+        <nav class="topnav">
+            <a href="index.html" class="nav-brand">
+                <div class="nav-logo"><img src="LOGO.jpg" width="42" height="42" style="object-fit:cover;border-radius:10px;" alt="Logo"></div>
+                <div>
+                    <div class="brand-name">e-Health Connect</div>
+                    <div class="brand-tag">health-care made easier for you</div>
+                </div>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="About-Us.html">About Us</a>
+                <a href="Contact-Us.html" class="active">Contact Us</a>
+                <a href="Choose.html">Register</a>
+            </div>
+            <div class="nav-btns">
+                <a href="doctorLogin.html" class="nav-btn ghost">Doctor Login</a>
+                <a href="patientsLogin.html" class="nav-btn solid">Patient Login</a>
+            </div>
+            <button class="hamburger" id="menuToggle" aria-label="Open menu">&#9776;</button>
+        </nav>
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="index.html">Home</a>
+            <a href="About-Us.html">About Us</a>
+            <a href="Contact-Us.html" class="active">Contact Us</a>
+            <a href="Choose.html">Register</a>
+            <hr/>
+            <a href="doctorLogin.html">Doctor Login</a>
+            <a href="patientsLogin.html">Patient Login</a>
+        </div>
+
+        <!-- HERO BANNER -->
+        <div class="page-hero">
+            <div class="hero-badge">📬 We'd love to hear from you</div>
+            <h1>Get in touch<br/>with <em>our team</em></h1>
+            <p>Have a question, need support, or want to partner with us? Reach out — we're always happy to help.</p>
+        </div>
+
+        <!-- CONTACT CARDS -->
+        <section class="contact-section">
+            <div class="reveal">
+                <div class="section-label">Contact details</div>
+                <h2 class="section-title">How to reach us</h2>
+                <p class="section-sub">Whether you prefer to call, email or visit us in person, we're available across multiple channels.</p>
+            </div>
+
+            <div class="contact-grid">
+
+                <div class="contact-card phone reveal reveal-delay-1">
+                    <div class="card-icon">📞</div>
+                    <div class="card-title">Phone</div>
+                    <div class="card-detail">
+                        <strong>Main line</strong>
+                        <p>072 067 2167</p>
+                        <p>082 563 8965</p>
+                    </div>
+                </div>
+
+                <div class="contact-card hours reveal reveal-delay-2">
+                    <div class="card-icon">🕐</div>
+                    <div class="card-title">Office Hours</div>
+                    <div class="card-detail">
+                        <strong>Monday – Friday</strong>
+                        <p>08:00 – 17:00</p>
+                        <strong>Saturday – Sunday</strong>
+                        <p>08:00 – 15:00</p>
+                        <strong>Public Holidays</strong>
+                        <p>09:00 – 14:00</p>
+                    </div>
+                </div>
+
+                <div class="contact-card email reveal reveal-delay-3">
+                    <div class="card-icon">✉️</div>
+                    <div class="card-title">Email</div>
+                    <div class="card-detail">
+                        <strong>General enquiries</strong>
+                        <p>Info@EhealthConnect.co.za</p>
+                        <strong>Support</strong>
+                        <p>support@EhealthConnect.co.za</p>
+                    </div>
+                </div>
+
+                <div class="contact-card location reveal reveal-delay-4">
+                    <div class="card-icon">📍</div>
+                    <div class="card-title">Office Location</div>
+                    <div class="card-detail">
+                        <strong>Head Office</strong>
+                        <p>321 Health Street</p>
+                        <p>Nelspruit, Mpumalanga</p>
+                        <p>South Africa, 1200</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CONTACT FORM -->
+        <section class="form-section">
+            <div class="reveal">
+                <div class="section-label">Send a message</div>
+                <h2 class="section-title">We'll get back to you<br/>within 24 hours</h2>
+            </div>
+
+            <div class="form-layout">
+
+                <div class="form-info reveal reveal-delay-1">
+                    <h3>Still have questions?</h3>
+                    <p>Fill in the form and one of our team members will respond to you as soon as possible. For urgent medical matters, please contact your nearest clinic or call emergency services on 119.</p>
+                    <p>You can also follow us on social media for updates, health tips and announcements.</p>
+                    <div class="social-row">
+                        <a href="#" class="social-icon">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" width="22"/>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <img src="https://static.vecteezy.com/system/resources/previews/023/741/129/original/tiktok-logo-icon-social-media-icon-free-png.png" width="22"/>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <img src="https://static.vecteezy.com/system/resources/previews/016/716/481/non_2x/facebook-icon-free-png.png" width="22"/>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="reveal reveal-delay-2">
+                    <form class="contact-form" onsubmit="submitForm(event)">
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>First Name</label>
+                                <input type="text" placeholder="e.g. Nomsa" required/>
+                            </div>
+                            <div class="form-field">
+                                <label>Last Name</label>
+                                <input type="text" placeholder="e.g. Dlamini" required/>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label>Email Address</label>
+                                <input type="email" placeholder="you@example.com" required/>
+                            </div>
+                            <div class="form-field">
+                                <label>Phone Number</label>
+                                <input type="tel" placeholder="07X XXX XXXX"/>
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label>Subject</label>
+                            <select>
+                                <option value="">Select a topic...</option>
+                                <option>General Enquiry</option>
+                                <option>Appointment Support</option>
+                                <option>Doctor Registration Help</option>
+                                <option>Technical Support</option>
+                                <option>Partnership</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Message</label>
+                            <textarea placeholder="Tell us how we can help you..."></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn">Send Message →</button>
+                    </form>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer>
+            <div class="footer5">
+                <div>
+                    <h4>Contact Us</h4>
+                    <p>📞 082 563 8965</p>
+                    <p>✉️ Info@EhealthConnect.co.za</p>
+                    <p>📍 321 Health Street, Nelspruit</p>
+                    <p style="margin-top: 8px;">🚨 Emergency: 119</p>
+                </div>
+                <nav>
+                    <h4>Help</h4>
+                    <a href="#">FAQs</a>
+                    <a href="#">Terms & Conditions</a>
+                    <a href="#">Privacy Policy</a>
+                </nav>
+                <nav>
+                    <h4>Navigation</h4>
+                    <a href="BestHomepage.html">Home</a>
+                    <a href="patientsLogin.html">Patient Login</a>
+                    <a href="doctorLogin.html">Doctor Login</a>
+                    <a href="Choose.html">Register</a>
+                </nav>
+                <nav>
+                    <h4>Follow Us</h4>
+                    <div class="footer-socials">
+                        <a href="#" class="footer-social-btn">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" width="18"/>
+                        </a>
+                        <a href="#" class="footer-social-btn">
+                            <img src="https://static.vecteezy.com/system/resources/previews/023/741/129/original/tiktok-logo-icon-social-media-icon-free-png.png" width="18"/>
+                        </a>
+                        <a href="#" class="footer-social-btn">
+                            <img src="https://static.vecteezy.com/system/resources/previews/016/716/481/non_2x/facebook-icon-free-png.png" width="18"/>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+            <div class="rights">
+                © 2026 E-Health Connect. All Rights Reserved
+            </div>
+        </footer>
+
+        <div id="toast"></div>
+
+        <script>
+            const menuBtn   = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+            menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('open');
+            const isOpen = mobileMenu.classList.contains('open');
+            menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+            menuBtn.innerHTML = isOpen ? '&#x2715;' : '&#9776;';
+            });
+            const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+            const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+            const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+            async function submitForm(e) {
+                e.preventDefault();
+                const form = e.target;
+                const btn  = form.querySelector(".submit-btn");
+
+                const firstName = form.querySelector('input[type="text"]').value.trim();
+                const lastName  = form.querySelectorAll('input[type="text"]')[1].value.trim();
+                const email     = form.querySelector('input[type="email"]').value.trim();
+                const phone     = form.querySelector('input[type="tel"]').value.trim();
+                const subject   = form.querySelector('select').value;
+                const message   = form.querySelector('textarea').value.trim();
+
+                if(!message){ showToast("Please write a message."); return; }
+
+                btn.textContent = "Sending...";
+                btn.disabled    = true;
+
+                // ── Save to Supabase contact_messages table ──
+                const { error } = await client.from("contact_messages").insert([{
+                    first_name: firstName,
+                    last_name:  lastName,
+                    email:      email,
+                    phone:      phone,
+                    subject:    subject,
+                    message:    message
+                }]);
+
+                btn.textContent = "Send Message →";
+                btn.disabled    = false;
+
+                if(error){
+                    showToast("❌ Failed to send: " + error.message);
+                    return;
+                }
+
+                showToast("✅ Message sent! We'll get back to you within 24 hours.", "success");
+                form.reset();
+            }
+
+            function showToast(msg, type = "") {
+                const toast = document.getElementById("toast");
+                toast.textContent = msg;
+                toast.className   = type === "success" ? "show success" : "show";
+                setTimeout(() => { toast.className = ""; }, 3500);
+            }
+
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        </script>
+
+    </body>
+</html>

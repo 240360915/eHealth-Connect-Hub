@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Health Tips — e-Health Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      --navy:   #0f1f3d;
+      --blue:   #1b2a4e;
+      --accent: #3b82f6;
+      --green:  #10b981;
+      --red:    #ef4444;
+      --amber:  #f59e0b;
+      --bg:     #f0f4f8;
+      --white:  #ffffff;
+      --border: #e2e8f0;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --radius: 12px;
+      --shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    /* ── HEADER ── */
+    .Heading {
+      display:flex; align-items:center; justify-content:space-between;
+      background:var(--white); padding:12px 28px;
+      box-shadow:0 1px 8px rgba(0,0,0,0.06);
+      position:sticky; top:0; z-index:200;
+    }
+    .brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
+    .brand-logo {
+      width:42px; height:42px; border-radius:10px;
+      background:var(--blue); display:flex; align-items:center; justify-content:center;
+      font-size:20px; overflow:hidden;
+    }
+    .brand-logo img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+    .slogan1 { font-size:1.25rem; color:var(--navy); font-weight:700; line-height:1; }
+    .slogan3 { font-size:12px; color:var(--green); font-weight:500; margin-top:2px; }
+    .nav-links { display:flex; gap:4px; }
+    .nav-links a {
+      padding:8px 14px; border-radius:8px; font-size:14px; font-weight:500;
+      color:var(--muted); text-decoration:none; transition:all 0.2s;
+    }
+    .nav-links a:hover { color:var(--navy); background:rgba(11,28,61,0.05); }
+    .nav-links a.active { color:var(--navy); background:rgba(59,130,246,0.08); font-weight:600; }
+
+    /* ── LAYOUT ── */
+    .layout { display:flex; min-height:calc(100vh - 68px); }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width:220px; background:var(--navy); color:white;
+      padding:24px 16px; display:flex; flex-direction:column;
+      position:sticky; top:68px; height:calc(100vh - 68px); flex-shrink:0;
+    }
+    .sidebar h2 {
+      font-size:11px; text-transform:uppercase; letter-spacing:1px;
+      color:rgba(255,255,255,0.4); margin-bottom:12px; padding:0 8px;
+    }
+    .sidebar ul { list-style:none; display:flex; flex-direction:column; gap:2px; }
+    .sidebar li a, .sidebar li button {
+      display:block; padding:10px 12px; border-radius:8px;
+      color:rgba(255,255,255,0.75); text-decoration:none; font-size:14px;
+      font-weight:500; transition:all 0.15s; background:none; border:none;
+      cursor:pointer; width:100%; text-align:left; font-family:inherit;
+    }
+    .sidebar li a:hover, .sidebar li button:hover { background:rgba(255,255,255,0.1); color:white; }
+    .sidebar li a.active { background:rgba(59,130,246,0.25); color:white; }
+
+    /* ── MAIN ── */
+    .main-content { flex:1; padding:32px 36px; max-width:960px; margin: auto;}
+
+    /* ── PAGE HEADER ── */
+    .page-header { margin-bottom:32px; }
+    .page-header h1 { font-size:1.7rem; font-weight:700; color:var(--navy); margin-bottom:6px; }
+    .page-header p  { color:var(--muted); font-size:14px; }
+
+    /* ── CATEGORY PILLS ── */
+    .category-pills {
+      display:flex; gap:10px; flex-wrap:wrap; margin-bottom:28px;
+    }
+    .pill {
+      padding:8px 18px; border-radius:20px; font-size:13px; font-weight:600;
+      border:1.5px solid var(--border); color:var(--muted); background:var(--white);
+      cursor:pointer; transition:all 0.2s;
+    }
+    .pill:hover { border-color:var(--accent); color:var(--accent); }
+    .pill.active { background:var(--navy); color:white; border-color:var(--navy); }
+
+    /* ── TIP CARDS GRID ── */
+    .tips-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      gap:16px; margin-bottom:32px;
+    }
+    .tip-card {
+      background:var(--white); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:22px;
+      border-left:4px solid var(--accent);
+      transition:transform 0.2s, box-shadow 0.2s;
+      animation:fadeUp 0.4s ease both;
+    }
+    .tip-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+    .tip-card.green  { border-left-color:var(--green); }
+    .tip-card.amber  { border-left-color:var(--amber); }
+    .tip-card.red    { border-left-color:var(--red); }
+    .tip-card.blue   { border-left-color:var(--accent); }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .tip-icon { font-size:2rem; margin-bottom:12px; }
+    .tip-title { font-size:15px; font-weight:700; color:var(--navy); margin-bottom:8px; }
+    .tip-desc  { font-size:13.5px; color:var(--muted); line-height:1.7; }
+
+    /* ── WARNING SECTION ── */
+    .warning-section {
+      background:linear-gradient(135deg,#064e3b,#065f46);
+      border-radius:var(--radius); padding:28px 32px; margin-bottom:28px;
+      box-shadow:var(--shadow);
+    }
+    .warning-section h2 {
+      color:white; font-size:1.1rem; font-weight:700; margin-bottom:16px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .warning-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+    .warning-list li {
+      display:flex; align-items:flex-start; gap:12px;
+      color:rgba(255,255,255,0.9); font-size:14px; line-height:1.6;
+    }
+    .warning-dot {
+      width:8px; height:8px; border-radius:50%; background:#6ee7b7;
+      flex-shrink:0; margin-top:6px;
+    }
+
+    /* ── NOTE BOX ── */
+    .note-box {
+      background:var(--white); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:20px 24px;
+      border-left:5px solid var(--accent); margin-bottom:28px;
+      display:flex; gap:14px; align-items:flex-start;
+    }
+    .note-icon { font-size:1.5rem; flex-shrink:0; margin-top:2px; }
+    .note-box p { font-size:14px; color:var(--muted); line-height:1.7; font-style:italic; }
+
+    /* ── GALLERY ── */
+    .section-title {
+      font-size:13px; font-weight:700; color:var(--navy);
+      text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;
+    }
+    .gallery-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+      gap:16px; margin-bottom:32px;
+    }
+    .gallery-card {
+      background:var(--white); border-radius:var(--radius);
+      box-shadow:var(--shadow); overflow:hidden;
+      transition:transform 0.2s, box-shadow 0.2s;
+    }
+    .gallery-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+    .gallery-card img {
+      width:100%; height:190px; object-fit:cover; display:block;
+    }
+    .gallery-card-label {
+      padding:12px 16px; font-size:13px; font-weight:700;
+      color:var(--navy); letter-spacing:0.5px; text-align:center;
+      border-top:1px solid var(--border);
+    }
+
+    /* ── EMERGENCY BANNER ── */
+    .emergency-banner {
+      background:linear-gradient(135deg,#7f1d1d,#991b1b);
+      border-radius:var(--radius); padding:20px 24px;
+      display:flex; align-items:center; gap:16px;
+      margin-bottom:28px; box-shadow:var(--shadow);
+    }
+    .emergency-banner .em-icon { font-size:2rem; flex-shrink:0; }
+    .emergency-banner h3 { color:white; font-size:15px; font-weight:700; margin-bottom:4px; }
+    .emergency-banner p  { color:rgba(255,255,255,0.8); font-size:13px; }
+    .emergency-banner .em-number {
+      margin-left:auto; font-size:1.6rem; font-weight:900;
+      color:white; white-space:nowrap; flex-shrink:0;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:768px) {
+      .Heading { padding:12px 16px; }
+      .nav-links { display:none; }
+      .layout { flex-direction:column; }
+      .sidebar { width:100%; height:auto; position:relative; top:0; flex-direction:row; flex-wrap:wrap; padding:12px; }
+      .sidebar h2 { display:none; }
+      .sidebar ul { flex-direction:row; flex-wrap:wrap; }
+      .main-content { padding:20px 16px; }
+      .tips-grid { grid-template-columns:1fr; }
+    }
+    /* ── HAMBURGER & SIDEBAR MOBILE ── */
+.hamburger {
+  display: none;
+  background: none; border: none; font-size: 24px;
+  cursor: pointer; color: var(--navy); padding: 6px 8px;
+  border-radius: 8px; line-height: 1;
+}
+.hamburger:hover { background: rgba(11,28,61,.07); }
+
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 199;
+}
+.sidebar-overlay.open { display: block; }
+
+@media(max-width:768px) {
+  .hamburger { display: block; }
+  .nav-links  { display: none; }
+
+  /* Override the horizontal strip — make it a proper slide-in panel */
+  .sidebar {
+    position: fixed !important;
+    top: 0; left: 0;
+    width: 240px !important;
+    height: 100vh !important;
+    z-index: 200;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    padding: 24px 16px !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  .sidebar h2 { display: block !important; }
+  .sidebar ul {
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+  }
+  .sidebar.open { transform: translateX(0); }
+}
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="Heading">
+  
+    <div class="brand-logo"><img src="LOGO.jpg" alt="Logo" onerror="this.parentElement.textContent='🏥'"></div>
+    <div>
+      <div class="slogan1">e-Health Connect Hub</div>
+      <div class="slogan3">health-care made easier for you</div>
+    </div>
+  </a>
+<button class="hamburger" id="sidebarToggle" aria-label="Open menu">&#9776;</button>
+</header>
+
+<div class="layout">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <h2>Patient Menu</h2>
+    <ul>
+      <li><a href="Profile.html">👤 My Profile</a></li>
+      <li><a href="BookAppointment.html">📅 Appointments</a></li>
+      <li><a href="MedicalRecords.html">📋 Medical Records</a></li>
+      <li><a href="ConnectDoctors.html">🗺️ Find Doctors</a></li>
+      <li><a href="HealthTips.html" class="active">💡 Health Tips</a></li>
+      <li><button onclick="logout()" style="color:#fca5a5;">🚪 Logout</button></li>
+    </ul>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+
+    <div class="page-header">
+      <h1>💡 Health Tips & Wellness Guide</h1>
+      <p>Practical advice to help you stay healthy between consultations.</p>
+    </div>
+
+    <!-- Category Filter Pills -->
+    <div class="category-pills">
+      <button class="pill active" onclick="filterTips('all', this)">All Tips</button>
+      <button class="pill" onclick="filterTips('home', this)">🏠 At-Home Care</button>
+      <button class="pill" onclick="filterTips('daily', this)">📅 Daily Habits</button>
+      <button class="pill" onclick="filterTips('mental', this)">🧠 Mental Health</button>
+      <button class="pill" onclick="filterTips('prevention', this)">🛡️ Prevention</button>
+    </div>
+
+    <!-- ── TIPS GRID ── -->
+    <div class="tips-grid" id="tipsGrid">
+
+      <!-- AT-HOME CARE -->
+      <div class="tip-card green" data-category="home">
+        <div class="tip-icon">😴</div>
+        <div class="tip-title">Rest & Recovery</div>
+        <div class="tip-desc">Allow your immune system to fight illness. Aim for 7–9 hours of sleep and avoid overexerting yourself when sick.</div>
+      </div>
+
+      <div class="tip-card blue" data-category="home">
+        <div class="tip-icon">💧</div>
+        <div class="tip-title">Stay Hydrated</div>
+        <div class="tip-desc">Drink plenty of fluids — especially water and clear broths — to prevent dehydration and support recovery.</div>
+      </div>
+
+      <div class="tip-card amber" data-category="home">
+        <div class="tip-icon">💊</div>
+        <div class="tip-title">Manage Symptoms</div>
+        <div class="tip-desc">Use OTC medication like paracetamol or ibuprofen for fever and pain. Always follow dosage instructions carefully.</div>
+      </div>
+
+      <div class="tip-card green" data-category="home">
+        <div class="tip-icon">🧼</div>
+        <div class="tip-title">Hand Hygiene</div>
+        <div class="tip-desc">Wash hands frequently with soap and water for at least 20 seconds. Use hand sanitiser when soap isn't available.</div>
+      </div>
+
+      <div class="tip-card blue" data-category="home">
+        <div class="tip-icon">🤧</div>
+        <div class="tip-title">Cover Coughs & Sneezes</div>
+        <div class="tip-desc">Use a tissue or your elbow. Dispose of tissues immediately and wash your hands to prevent spreading germs.</div>
+      </div>
+
+      <div class="tip-card red" data-category="home">
+        <div class="tip-icon">🚭</div>
+        <div class="tip-title">Avoid Smoking</div>
+        <div class="tip-desc">Smoking irritates the respiratory tract and slows recovery. Avoid smoky environments when you're unwell.</div>
+      </div>
+
+      <!-- DAILY HABITS -->
+      <div class="tip-card green" data-category="daily">
+        <div class="tip-icon">🥦</div>
+        <div class="tip-title">Eat Nutritiously</div>
+        <div class="tip-desc">Add vegetables to every meal and swap refined grains for wholemeal options. A balanced diet supports your immune system.</div>
+      </div>
+
+      <div class="tip-card blue" data-category="daily">
+        <div class="tip-icon">🏃</div>
+        <div class="tip-title">Exercise Regularly</div>
+        <div class="tip-desc">Aim for 150 minutes of moderate movement per week. Walking, swimming, or cycling all count — find what you enjoy.</div>
+      </div>
+
+      <div class="tip-card amber" data-category="daily">
+        <div class="tip-icon">🍶</div>
+        <div class="tip-title">Daily Hydration</div>
+        <div class="tip-desc">Keep a reusable water bottle handy. Aim for 8–10 glasses of water daily. More if you exercise or it's hot.</div>
+      </div>
+
+      <div class="tip-card green" data-category="daily">
+        <div class="tip-icon">⏰</div>
+        <div class="tip-title">Consistent Sleep Schedule</div>
+        <div class="tip-desc">Go to bed and wake up at the same time daily — even on weekends. Consistency helps regulate your body clock.</div>
+      </div>
+
+      <!-- MENTAL HEALTH -->
+      <div class="tip-card blue" data-category="mental">
+        <div class="tip-icon">🧘</div>
+        <div class="tip-title">Manage Stress</div>
+        <div class="tip-desc">Try deep breathing, meditation, or journaling. Even 5 minutes of mindfulness daily can reduce anxiety significantly.</div>
+      </div>
+
+      <div class="tip-card green" data-category="mental">
+        <div class="tip-icon">👥</div>
+        <div class="tip-title">Stay Connected</div>
+        <div class="tip-desc">Social connection is vital for mental wellbeing. Reach out to friends or family regularly, even just a quick message.</div>
+      </div>
+
+      <div class="tip-card amber" data-category="mental">
+        <div class="tip-icon">📵</div>
+        <div class="tip-title">Limit Screen Time</div>
+        <div class="tip-desc">Especially before bed. Blue light disrupts sleep. Try a 30-minute screen-free wind-down routine each evening.</div>
+      </div>
+
+      <!-- PREVENTION -->
+      <div class="tip-card green" data-category="prevention">
+        <div class="tip-icon">💉</div>
+        <div class="tip-title">Keep Vaccinations Current</div>
+        <div class="tip-desc">Stay up to date with recommended vaccines for your age group. Prevention is always better than treatment.</div>
+      </div>
+
+      <div class="tip-card blue" data-category="prevention">
+        <div class="tip-icon">🩺</div>
+        <div class="tip-title">Regular Check-ups</div>
+        <div class="tip-desc">Don't wait until you're sick. Schedule annual health screenings to catch issues early when they're easier to treat.</div>
+      </div>
+
+      <div class="tip-card amber" data-category="prevention">
+        <div class="tip-icon">🌞</div>
+        <div class="tip-title">Sun Protection</div>
+        <div class="tip-desc">Apply SPF 30+ sunscreen daily, even on cloudy days. Wear a hat and seek shade between 10am and 3pm.</div>
+      </div>
+
+    </div>
+
+    <!-- ── WARNING SIGNS ── -->
+    <div class="warning-section">
+      <h2>⚠️ When to Seek Immediate Medical Care</h2>
+      <ul class="warning-list">
+        <li><span class="warning-dot"></span>Difficulty breathing or shortness of breath at rest</li>
+        <li><span class="warning-dot"></span>Persistent chest pain, pressure, or tightness</li>
+        <li><span class="warning-dot"></span>Dizziness, confusion, or inability to stay awake</li>
+        <li><span class="warning-dot"></span>Severe muscle pain, weakness, or sudden numbness</li>
+        <li><span class="warning-dot"></span>Fever that disappears and returns worse than before</li>
+        <li><span class="warning-dot"></span>Signs of severe dehydration — dark urine, no urination for 8+ hours</li>
+      </ul>
+    </div>
+
+    <!-- ── EMERGENCY BANNER ── -->
+    <div class="emergency-banner">
+      <div class="em-icon">🚨</div>
+      <div>
+        <h3>Life-Threatening Emergency?</h3>
+        <p>Don't wait — call emergency services immediately.</p>
+      </div>
+      <div class="em-number">119</div>
+    </div>
+
+    <!-- ── NOTE ── -->
+    <div class="note-box">
+      <div class="note-icon">📌</div>
+      <p>If symptoms are severe, you belong to a high-risk group (elderly, pregnant, or have underlying conditions), or symptoms do not improve after a few days — consult a healthcare professional. Use the button below to book a consultation.</p>
+    </div>
+
+    <!-- Book Appointment CTA -->
+    <div style="text-align:center;margin-bottom:32px;">
+      <a href="BookAppointment.html" style="
+        display:inline-flex;align-items:center;gap:10px;
+        padding:14px 32px;background:var(--navy);color:white;
+        border-radius:10px;font-size:15px;font-weight:700;
+        text-decoration:none;box-shadow:0 4px 16px rgba(15,31,61,0.25);
+        transition:all 0.2s;
+      " onmouseover="this.style.background='#385a9e';this.style.transform='translateY(-2px)'"
+         onmouseout="this.style.background='var(--navy)';this.style.transform='translateY(0)'">
+        📅 Book a Consultation
+      </a>
+    </div>
+
+    <!-- ── WELLNESS GALLERY ── -->
+    <div class="section-title">📸 Wellness in Action</div>
+    <div class="gallery-grid">
+      <div class="gallery-card">
+        <img src="https://cdn.hswstatic.com/gif/fitness-trends.jpg"
+             alt="Exercise"
+             onerror="this.style.display='none'">
+        <div class="gallery-card-label">🏃 Exercise</div>
+      </div>
+      <div class="gallery-card">
+        <img src="https://www.clinicalnutritioncenter.com/wp-content/uploads/2024/12/Create-an-image-of-a-healthy-female-person-1.png"
+             alt="Healthy Eating"
+             onerror="this.style.display='none'">
+        <div class="gallery-card-label">🥗 Healthy Eating</div>
+      </div>
+      <div class="gallery-card">
+        <img src="https://tse4.mm.bing.net/th/id/OIP.0gYvhKNHyF47UefT9jSS6wHaEf?rs=1&pid=ImgDetMain&o=7&rm=3"
+             alt="Staying Hydrated"
+             onerror="this.style.display='none'">
+        <div class="gallery-card-label">💧 Staying Hydrated</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── FOOTER ── -->
+
+
+<script>
+  const sidebarToggle  = document.getElementById('sidebarToggle');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const sidebar        = document.querySelector('.sidebar');
+
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.classList.add('open');
+    sidebarOverlay.classList.add('open');
+    sidebarToggle.innerHTML = '&#x2715;';
+  });
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('open');
+    sidebarToggle.innerHTML = '&#9776;';
+  }
+
+  // Close when any sidebar link is tapped
+  document.querySelectorAll('.sidebar a, .sidebar button').forEach(el => {
+    el.addEventListener('click', () => {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+  // ── Category filter ──
+  function filterTips(category, btn) {
+    // Update pills
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Filter cards with animation
+    const cards = document.querySelectorAll('.tip-card');
+    cards.forEach((card, i) => {
+      const match = category === 'all' || card.dataset.category === category;
+      if (match) {
+        card.style.display = 'block';
+        card.style.animationDelay = `${i * 0.05}s`;
+        card.style.animation = 'none';
+        card.offsetHeight; // reflow
+        card.style.animation = 'fadeUp 0.4s ease both';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  // ── Logout ──
+  async function logout() {
+    try {
+      const { createClient } = supabase;
+      // If supabase is loaded on this page
+      window.location.href = "patientsLogin.html";
+    } catch {
+      window.location.href = "patientsLogin.html";
+    }
+  }
+</script>
+
+</body>
+</html>

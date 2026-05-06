@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Registration – e-Health Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Roboto", sans-serif;
+        }
+
+        body {
+            background-color: hsla(180, 4%, 87%, 0.614);
+        }
+
+        /* ── NAV ── */
+        .topnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 0 48px;
+            height: 72px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #1b2a4e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-name {
+            font-family: "Fraunces", serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0b1c3d;
+            line-height: 1;
+        }
+
+        .brand-tag {
+            font-size: 11px;
+            color: #26a060;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5a6a7a;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #0b1c3d;
+            background: rgba(11, 28, 61, 0.05);
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-family: "Roboto", sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.ghost {
+            border: 1.5px solid #dde3ed;
+            color: #0b1c3d;
+        }
+
+        .nav-btn.ghost:hover {
+            background: #1b2a4e;
+            color: white;
+            border-color: #1b2a4e;
+        }
+
+        .nav-btn.solid {
+            background: #1b2a4e;
+            color: white;
+            border: none;
+        }
+
+        .nav-btn.solid:hover {
+            background: #385a9e;
+        }
+
+        /* ── HERO BANNER ── */
+        .page-hero {
+            background: linear-gradient(145deg, #0b1c3d 0%, #1b2a4e 55%, #385a9e 100%);
+            padding: 56px 80px 72px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(38, 160, 96, 0.2);
+            border: 1px solid rgba(38, 160, 96, 0.35);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6ee7b7;
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .page-hero h1 {
+            font-family: "Fraunces", serif;
+            font-size: clamp(30px, 4vw, 48px);
+            font-weight: 900;
+            color: white;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .page-hero h1 em {
+            font-style: italic;
+            color: #6ee7b7;
+        }
+
+        .page-hero p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+            max-width: 480px;
+            position: relative;
+        }
+
+        /* ── PAGE WRAPPER ── */
+        .page-wrapper {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+
+        /* ── CARD ── */
+        .container {
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 8px 40px rgba(11, 28, 61, 0.10), 0 1px 4px rgba(11, 28, 61, 0.06);
+            padding: clamp(28px, 5vw, 52px) clamp(24px, 5vw, 48px);
+            border: 1px solid #dde3ed;
+        }
+
+        /* ── FORM SECTION HEADING ── */
+        .section-heading {
+            font-size: 11px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 2.2rem 0 1.1rem;
+            padding: 0.45rem 1rem;
+            background: rgba(11, 28, 61, 0.04);
+            border-left: 4px solid #1b2a4e;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-heading:first-of-type {
+            margin-top: 0;
+        }
+
+        /* ── GRID ── */
+        .user-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem 1.5rem;
+        }
+
+        .input-box.full {
+            grid-column: 1 / -1;
+        }
+
+        /* ── INPUT BOX ── */
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .details {
+            font-size: 12px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .input-box input {
+            height: 46px;
+            width: 100%;
+            outline: none;
+            border-radius: 9px;
+            border: 1.5px solid #dde3ed;
+            padding: 0 14px;
+            font-size: 14.5px;
+            color: #0b1c3d;
+            background: #f8fafc;
+            font-family: "Roboto", sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .input-box input:focus {
+            border-color: #385a9e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(56, 90, 158, 0.1);
+        }
+
+        .input-box input:valid:not(:placeholder-shown) {
+            border-color: #26a060;
+        }
+
+        /* ── ADDRESS STACK ── */
+        .address-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .address-stack input {
+            height: 44px;
+        }
+
+        /* ── GENDER ── */
+        .gender-details {
+            margin-top: 0.5rem;
+        }
+
+        .gender-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-bottom: 0.75rem;
+        }
+
+        .category {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        .gender-details .category label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 11px 20px;
+            border: 1.5px solid #dde3ed;
+            border-radius: 9px;
+            font-size: 14px;
+            color: #5a6a7a;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        .gender-details .category label::before {
+            content: '';
+            width: 18px;
+            height: 18px;
+            border: 2px solid #dde3ed;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .gender-details .category label:hover {
+            border-color: #1b2a4e;
+            background: rgba(27, 42, 78, 0.04);
+            color: #1b2a4e;
+        }
+
+        #dot-1:checked ~ .category label[for="dot-1"],
+        #dot-2:checked ~ .category label[for="dot-2"],
+        #dot-3:checked ~ .category label[for="dot-3"] {
+            border-color: #1b2a4e;
+            background: rgba(27, 42, 78, 0.07);
+            color: #1b2a4e;
+            font-weight: 600;
+        }
+
+        #dot-1:checked ~ .category label[for="dot-1"]::before,
+        #dot-2:checked ~ .category label[for="dot-2"]::before,
+        #dot-3:checked ~ .category label[for="dot-3"]::before {
+            border-color: #1b2a4e;
+            background: #1b2a4e;
+            box-shadow: inset 0 0 0 4px white;
+        }
+
+        /* ── MEDICAL FIELDSET ── */
+        .styled-fieldset {
+            border: 1.5px solid #dde3ed;
+            border-radius: 12px;
+            padding: 1.4rem 1.6rem;
+            margin-top: 0.5rem;
+        }
+
+        .styled-fieldset legend {
+            padding: 0 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1b2a4e;
+            letter-spacing: 0.02em;
+        }
+
+        .medical-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .medical-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .medical-row label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .medical-row input {
+            height: 44px;
+            outline: none;
+            border-radius: 9px;
+            border: 1.5px solid #dde3ed;
+            padding: 0 14px;
+            font-size: 14px;
+            color: #0b1c3d;
+            background: #f8fafc;
+            font-family: "Roboto", sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .medical-row input:focus {
+            border-color: #385a9e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(56, 90, 158, 0.1);
+        }
+
+        /* ── CONSENT ── */
+        .consent-fieldset {
+            border: 1.5px solid #dde3ed;
+            border-radius: 12px;
+            padding: 1.4rem 1.6rem;
+            margin-top: 0.5rem;
+        }
+
+        .consent-fieldset legend {
+            padding: 0 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1b2a4e;
+        }
+
+        .consent-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            padding: 0.9rem 0;
+            border-bottom: 1px solid #f0f3f8;
+        }
+
+        .consent-item:last-child {
+            border-bottom: none;
+        }
+
+        .consent-item input[type="checkbox"] {
+            display: block;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            accent-color: #1b2a4e;
+            cursor: pointer;
+        }
+
+        .consent-item label {
+            font-size: 14px;
+            color: #3a4a6b;
+            line-height: 1.6;
+            cursor: pointer;
+        }
+
+        /* ── SUBMIT ── */
+        .button {
+            margin-top: 2rem;
+        }
+
+        .btn-submit {
+            width: 100%;
+            height: 52px;
+            outline: none;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #1b2a4e, #385a9e);
+            color: white;
+            font-family: "Roboto", sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 18px rgba(27, 42, 78, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(27, 42, 78, 0.4);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* ── LOGIN LINK ── */
+        .login-prompt {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #5a6a7a;
+        }
+
+        .login-prompt a {
+            color: #385a9e;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .login-prompt a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .topnav { padding: 0 20px; }
+            .nav-links { display: none; }
+            .page-hero { padding: 48px 24px 60px; }
+        }
+
+        @media (max-width: 560px) {
+            .user-details { grid-template-columns: 1fr; }
+            .input-box.full { grid-column: 1; }
+            .medical-grid { grid-template-columns: 1fr; }
+            .category { flex-direction: column; }
+            .nav-btns { display: none; }
+        }
+        /* ── HAMBURGER & MOBILE MENU ── */
+        .hamburger {
+        display: none;
+        background: none; border: none; font-size: 24px;
+        cursor: pointer; color: #0b1c3d; padding: 6px 8px;
+        border-radius: 8px; line-height: 1;
+        }
+        .hamburger:hover { background: rgba(11,28,61,.07); }
+
+        .mobile-menu {
+        display: none; flex-direction: column;
+        position: sticky; top: 72px; z-index: 99;
+        background: #fff; border-bottom: 1px solid #dde3ed;
+        padding: 12px 20px 20px; gap: 4px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.08);
+        }
+        .mobile-menu a {
+        padding: 11px 12px; border-radius: 8px;
+        font-size: 15px; font-weight: 500; color: #0b1c3d;
+        text-decoration: none; transition: background .2s;
+        }
+        .mobile-menu a:hover { background: rgba(11,28,61,.06); }
+        .mobile-menu hr { border: none; border-top: 1px solid #dde3ed; margin: 8px 0; }
+        .mobile-menu.open { display: flex; }
+
+        @media (max-width: 768px) {
+        .hamburger { display: block; }
+        .nav-btns  { display: none; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="topnav">
+        <a href="index.html" class="nav-brand">
+            <div class="nav-logo"><img src="LOGO.jpg" width="50px" alt="e-Health Connect-Hub Logo"></div>
+            <div>
+                <div class="brand-name">e-Health Connect</div>
+                <div class="brand-tag">health-care made easier for you</div>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="About-Us.html">About Us</a>
+            <a href="Contact-Us.html">Contact Us</a>
+        </div>
+        <div class="nav-btns">
+            <a href="doctorLogin.html" class="nav-btn ghost">Doctor Login</a>
+            <a href="patientsLogin.html" class="nav-btn solid">Patient Login</a>
+        </div>
+        <button class="hamburger" id="menuToggle" aria-label="Open menu">&#9776;</button>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">Home</a>
+        <a href="About-Us.html">About Us</a>
+        <a href="Contact-Us.html">Contact Us</a>
+        <hr/>
+        <a href="patientsLogin.html">Patient Login</a>
+        <a href="doctorLogin.html">Doctor Login</a>
+    </div>
+
+    <!-- HERO BANNER -->
+    <div class="page-hero">
+        <div class="hero-badge">👤 Create your account</div>
+        <h1>Patient <em>Registration</em></h1>
+        <p>Fill in your details below to create your free e-Health Connect account and start booking appointments with verified doctors.</p>
+    </div>
+
+    <!-- MAIN FORM -->
+    <div class="page-wrapper">
+        <div class="container">
+
+            <form action="">
+
+                <!-- ── PERSONAL DETAILS ── -->
+                <div class="section-heading">👤 Personal Details</div>
+                <div class="user-details">
+
+                    <div class="input-box">
+                        <span class="details">First Name</span>
+                        <input type="text" id="name" placeholder="e.g. John" required>
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Surname</span>
+                        <input type="text" id="surname" placeholder="e.g. Doe" required>
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Title</span>
+                        <input type="text" id="title" placeholder="Mr / Ms / Mrs / Miss" required maxlength="4">
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Date of Birth</span>
+                        <input type="date" id="date_of_birth">
+                    </div>
+                    <div class="input-box">
+                        <span class="details">ID Number</span>
+                        <input type="text" id="id_number" placeholder="13-digit SA ID" required maxlength="13">
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Phone Number</span>
+                        <input type="text" id="phone" placeholder="Cell phone number" required maxlength="10">
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Email Address</span>
+                        <input type="email" id="email" placeholder="your@email.com" required minlength="5">
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Preferred Language</span>
+                        <input type="text" id="languege" placeholder="e.g. English / Siswati / isiZulu" required>
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Province</span>
+                        <input type="text" id="province" placeholder="e.g. Mpumalanga" required>
+                    </div>
+
+                    <div class="input-box full">
+                        <span class="details">Address</span>
+                        <div class="address-stack">
+                            <input type="text" id="address1" placeholder="Address Line 1" required>
+                            <input type="text" id="address2" placeholder="Address Line 2" required>
+                            <input type="text" id="address3" placeholder="Address Line 3 (optional)">
+                            <input type="text" id="postalCode" placeholder="Postal Code" required>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ── GENDER ── -->
+                <div class="section-heading">⚧ Gender</div>
+                <div class="gender-details">
+                    <input type="radio" name="gender" id="dot-1" value="Male">
+                    <input type="radio" name="gender" id="dot-2" value="Female">
+                    <input type="radio" name="gender" id="dot-3" value="Prefer not to say">
+                    <div class="category">
+                        <label for="dot-1"><span class="gender">Male</span></label>
+                        <label for="dot-2"><span class="gender">Female</span></label>
+                        <label for="dot-3"><span class="gender">Prefer not to say</span></label>
+                    </div>
+                </div>
+
+                <!-- ── ACCOUNT SECURITY ── -->
+                <div class="section-heading">🔒 Account Security</div>
+                <div class="user-details">
+                    <div class="input-box">
+                        <span class="details">Password</span>
+                        <input type="password" id="password" placeholder="Create a password" required>
+                    </div>
+                    <div class="input-box">
+                        <span class="details">Confirm Password</span>
+                        <input type="password" id="confirmPassword" placeholder="Repeat password" required>
+                    </div>
+                </div>
+
+                <!-- ── MEDICAL INFO ── -->
+                <div class="section-heading">🩺 Medical Information</div>
+                <fieldset class="styled-fieldset">
+                    <legend>Health History</legend>
+                    <div class="medical-grid">
+                        <div class="medical-row">
+                            <label>Known Allergies</label>
+                            <input type="text" name="Allergies" placeholder="e.g. Penicillin">
+                        </div>
+                        <div class="medical-row">
+                            <label>Current Medication</label>
+                            <input type="text" name="Medication" placeholder="List current meds">
+                        </div>
+                        <div class="medical-row">
+                            <label>Past Medical Conditions</label>
+                            <input type="text" name="Conditions" placeholder="e.g. Hypertension">
+                        </div>
+                        <div class="medical-row">
+                            <label>Chronic Illness (if any)</label>
+                            <input type="text" name="chronic" placeholder="e.g. Diabetes">
+                        </div>
+                        <div class="medical-row">
+                            <label>Previous Surgeries (if any)</label>
+                            <input type="text" name="Surgeries" placeholder="e.g. Appendectomy 2018">
+                        </div>
+                        <div class="medical-row">
+                            <label>Blood Group (Optional)</label>
+                            <input type="text" name="BG" placeholder="e.g. O+">
+                        </div>
+                        <div class="medical-row">
+                            <label>Disability (if any)</label>
+                            <input type="text" name="Disability" placeholder="e.g. Visual impairment">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- ── CONSENT ── -->
+                <div class="section-heading">✅ Consent &amp; Agreement</div>
+                <fieldset class="consent-fieldset">
+                    <legend>Please read and confirm</legend>
+                    <div class="consent-item">
+                        <input type="checkbox" id="c1" required>
+                        <label for="c1">I consent to receive medical treatment and healthcare services from registered public and private doctors on this platform.</label>
+                    </div>
+                    <div class="consent-item">
+                        <input type="checkbox" id="c2" required>
+                        <label for="c2">I agree that my personal and medical information may be stored securely and used only for healthcare purposes.</label>
+                    </div>
+                    <div class="consent-item">
+                        <input type="checkbox" id="c3" required>
+                        <label for="c3">I have read and agree to the Terms and Conditions and Privacy Policy of this platform.</label>
+                    </div>
+                    <div class="consent-item">
+                        <input type="checkbox" id="c4" required>
+                        <label for="c4">I confirm that the information I have provided is true and correct to the best of my knowledge.</label>
+                    </div>
+                </fieldset>
+
+                <!-- ── SUBMIT ── -->
+                <div class="button">
+                    <button type="submit" class="btn-submit">👤 Register as Patient</button>
+                </div>
+
+                <div id="showmessage" style="text-align: center; font-size: 18px; color: #2e8b57; margin-top: 14px; font-weight: 600;"></div>
+
+                <div class="login-prompt">
+                    Already have an account? <a href="patientsLogin.html">Login here</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const menuBtn    = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        menuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('open');
+        const isOpen = mobileMenu.classList.contains('open');
+        menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+        menuBtn.innerHTML = isOpen ? '&#x2715;' : '&#9776;';
+        });
+        const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+        const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+        //  Safe UI helper — avoids null crash if element doesn't exist on this page 
+        function setMessage(id, text, color = "green") {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent  = text;
+            el.style.color  = color;
+        }
+
+        // PATIENT REGISTRATION
+
+        function patientsRegister() {
+            const form = document.querySelector("form");
+            // FIX 7: guard — only attach if register form actually exists on this page
+            if (!form || !document.getElementById("name")) return;
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                //  Core fields 
+                const name          = document.getElementById("name").value.trim();
+                const surname       = document.getElementById("surname").value.trim();
+                const date_of_birth = document.getElementById("date_of_birth").value;
+                const id_number     = document.getElementById("id_number").value.trim();
+                const title         = document.getElementById("title").value.trim();
+                const phone         = document.getElementById("phone").value.trim();
+                const languege      = document.getElementById("languege").value.trim();
+                const email         = document.getElementById("email").value.trim();
+                const province      = document.getElementById("province").value.trim();
+                const password      = document.getElementById("password").value;
+                const confirmPassword = document.getElementById("confirmPassword").value;
+
+                const address1      = document.getElementById("address1").value.trim();
+                const address2      = document.getElementById("address2").value.trim();
+                const address3      = document.getElementById("address3").value.trim();
+                const postalCode    = document.getElementById("postalCode").value.trim();
+
+                
+                const allergies     = document.querySelector('input[name="Allergies"]')?.value.trim()    || null;
+                const medication    = document.querySelector('input[name="Medication"]')?.value.trim()   || null;
+                const conditions    = document.querySelector('input[name="Conditions"]')?.value.trim()   || null;
+                const chronic       = document.querySelector('input[name="chronic"]')?.value.trim()      || null;
+                const surgeries     = document.querySelector('input[name="Surgeries"]')?.value.trim()    || null;
+                const blood_group   = document.querySelector('input[name="BG"]')?.value.trim()           || null;
+                const disability    = document.querySelector('input[name="Disability"]')?.value.trim()   || null;
+
+                const genderInput   = document.querySelector('input[name="gender"]:checked');
+                const gender        = genderInput ? genderInput.value : null;
+
+                if (password !== confirmPassword) {
+                    setMessage("showmessage", "Passwords do not match.", "red");
+                    return;
+                }
+
+                setMessage("showmessage", "Creating your account...", "#555");
+
+                // Patient self-registers — no doctor login needed.
+                // doctor_id will be assigned later by the doctor from their dashboard.
+                const { data: authData, error: authError } = await client.auth.signUp({
+                    email,
+                    password
+                });
+
+                if (authError) {
+                    console.error(authError.message);
+                    setMessage("showmessage", "Error creating account: " + authError.message, "red");
+                    return;
+                } 
+
+                const patientUser = authData.user;
+
+                const { error: dbError } = await client
+                    .from("patients")
+                    .insert([{
+                        id:             patientUser.id,
+                        user_id:        patientUser.id,
+                        name,
+                        surname,
+                        date_of_birth,
+                        id_number,
+                        title,
+                        phone,
+                        languege,
+                        email,
+                        gender,
+                        province,
+                        
+                        address1,
+                        address2,
+                        address3:       address3 || null,
+                        postal_code:    postalCode,
+                        
+                        allergies,
+                        medication,
+                        conditions,
+                        chronic,
+                        surgeries,
+                        blood_group,
+                        disability
+                    }]);
+
+                if (dbError) {
+                    console.error(dbError.message);
+                    setMessage("showmessage", "Error registering patient: " + dbError.message, "red");
+                    return;
+                }
+
+                setMessage("showmessage", "Patient registered successfully!", "green");
+                setTimeout(() => window.location.href = "patientsLogin.html", 1500);
+            });
+        }
+
+
+        // PATIENT LOGIN
+
+        function patientsLogin() {
+            const form = document.querySelector(".PatientForm");
+            // FIX 7: guard — only attach if login form exists on this page
+            if (!form) return;
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const input    = document.getElementById("email").value.trim();
+                const password = document.getElementById("password").value.trim();
+
+                if (!input || !password) {
+                    setMessage("showmessage2", "Please fill in all fields.", "red");
+                    return;
+                }
+
+                let emailToUse = "";
+
+                try {
+                    // Allow login with phone number OR email
+                    if (input.includes("@")) {
+                        emailToUse = input;
+                    } else {
+                        const { data, error } = await client
+                            .from("patients")
+                            .select("email")
+                            .eq("phone", input)
+                            .maybeSingle();
+
+                        if (error || !data) {
+                            setMessage("showmessage2", "User not found.", "red");
+                            return;
+                        }
+                        emailToUse = data.email;
+                    }
+
+                    const { error: loginError } = await client.auth.signInWithPassword({
+                        email:    emailToUse,
+                        password: password
+                    });
+
+                    if (loginError) {
+                        setMessage("showmessage2", "Incorrect email or password.", "red");
+                        return;
+                    }
+
+                    setMessage("showmessage2", "Login successful!", "green");
+                    setTimeout(() => window.location.href = "patient-dashboard.html", 1000);
+
+                } catch (err) {
+                    console.error(err);
+                    setMessage("showmessage2", "Something went wrong. Please try again.", "red");
+                }
+            });
+        }
+
+        // LOAD PATIENT NAME (dashboard)
+
+        async function loadPatientName() {
+            const { data: { session } } = await client.auth.getSession();
+            if (!session) return;
+
+            const { data, error } = await client
+                .from("patients")
+                .select("name, surname")
+                .eq("user_id", session.user.id)
+                .maybeSingle();
+
+            const nameEl = document.getElementById("patientName");
+            if (!nameEl) return;
+
+            if (error || !data) {
+                nameEl.textContent = "Patient";
+                return;
+            }
+
+            nameEl.textContent = `${data.name || "Patient"} ${data.surname || ""}`.trim();
+        }
+
+        // Initialize patient registration and login handlers 
+        patientsRegister();
+        patientsLogin();
+
+        window.addEventListener("load", loadPatientName);
+
+        client.auth.onAuthStateChange((event, session) => {
+            if (session) loadPatientName();
+        });
+
+    </script>
+</body>
+</html>

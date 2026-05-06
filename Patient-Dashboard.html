@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Patient Dashboard — e-Health Connect</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:,">
+    <style>
+      :root {
+        --navy:#0f1f3d;
+        --blue:#1b2a4e;
+        --accent:#3b82f6;
+        --green:#10b981;
+        --red:#ef4444;
+        --bg:#f0f4f8;
+        --white:#ffffff;
+        --border:#e2e8f0;
+        --text:#1e293b;
+        --muted:#64748b;
+        --radius:12px;
+        --shadow:0 2px 16px rgba(0,0,0,0.08);
+      }
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+      .Heading {
+        display:flex; align-items:center; justify-content:space-between;
+        background:var(--white); padding:12px 28px;
+        box-shadow:0 1px 8px rgba(0,0,0,0.06); position:sticky; top:0; z-index:200;
+      }
+      .slogan1 { font-size:1.4rem; color:var(--navy); font-weight:700; }
+      .slogan3  { font-size:13px; color:var(--green); font-weight:500; }
+
+      .layout { display:flex; min-height:calc(100vh - 60px); }
+
+      .sidebar {
+        width:220px; background:var(--navy); color:white;
+        padding:24px 16px; display:flex; flex-direction:column;
+        position:sticky; top:70px; height:calc(100vh - 60px); flex-shrink:0;
+      }
+      .sidebar h2 {
+        font-size:12px; text-transform:uppercase; letter-spacing:1px;
+        color:rgba(255,255,255,0.4); margin-bottom:12px; padding:0 8px;
+      }
+      .sidebar ul { list-style:none; display:flex; flex-direction:column; gap:2px; }
+      .sidebar li a, .sidebar li button {
+        display:block; padding:10px 12px; border-radius:8px;
+        color:rgba(255,255,255,0.75); text-decoration:none; font-size:14px;
+        font-weight:500; transition:all 0.15s; background:none; border:none;
+        cursor:pointer; width:100%; text-align:left; font-family:inherit;
+      }
+      .sidebar li a:hover, .sidebar li button:hover { background:rgba(255,255,255,0.1); color:white; }
+
+      .main-content { flex:1; padding:28px; max-width:1100px; }
+
+      .welcome { margin-bottom:28px; }
+      .welcome h1 { font-size:1.7rem; font-weight:700; color:var(--navy); }
+      .welcome p  { color:var(--muted); font-size:14px; margin-top:4px; }
+
+      .section { margin-bottom:32px; }
+      .section-title {
+        font-size:13px; font-weight:700; color:var(--navy);
+        text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;
+      }
+
+      .dashboard-grid {
+        display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+        gap:14px; margin-bottom:32px;
+      }
+      .card {
+        background:var(--white); border-radius:var(--radius);
+        box-shadow:var(--shadow); padding:18px; border-top:3px solid var(--accent);
+      }
+      .card h2 { font-size:14px; font-weight:700; color:var(--navy); margin-bottom:6px; }
+      .card p  { font-size:13px; color:var(--muted); margin-bottom:12px; line-height:1.5; }
+      .btn {
+        padding:8px 16px; background:var(--blue); color:white; border:none;
+        border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:background 0.2s;
+      }
+      .btn:hover { background:#385a9e; }
+
+      /* Doctor selector */
+      .doctor-selector-bar {
+        background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow);
+        padding:18px 24px; margin-bottom:28px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+      }
+      .doctor-selector-bar label { font-weight:600; font-size:14px; color:var(--navy); white-space:nowrap; }
+      .doctor-selector-bar select {
+        flex:1; min-width:240px; padding:10px 14px; border:1.5px solid var(--border);
+        border-radius:8px; font-size:15px; font-family:inherit; outline:none; background:white;
+      }
+      .doctor-selector-bar select:focus { border-color:var(--accent); }
+      .rate-badge {
+        background:#eff6ff; color:var(--accent); padding:6px 14px;
+        border-radius:20px; font-size:14px; font-weight:700; border:1px solid #bfdbfe;
+      }
+
+      /* Doctor cards */
+      .doctor-cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+      .doctor-card {
+        background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow);
+        padding:20px; border-left:4px solid var(--accent); transition:transform 0.15s,box-shadow 0.15s;
+      }
+      .doctor-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+      .doctor-card.selected {
+        border-left-color:var(--green); background:#f0fdf4;
+        box-shadow:0 8px 24px rgba(16,185,129,0.25); transform:translateY(-2px);
+      }
+      .doctor-avatar {
+        width:48px; height:48px; border-radius:50%; background:var(--navy);
+        display:flex; align-items:center; justify-content:center; font-size:20px; overflow:hidden; flex-shrink:0;
+      }
+      .doctor-avatar img { width:100%; height:100%; object-fit:cover; }
+      .doctor-card-header { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+      .doctor-name { font-weight:700; color:var(--navy); font-size:15px; }
+      .doctor-disc { font-size:13px; color:var(--muted); }
+      .doctor-rate {
+        display:flex; justify-content:space-between; align-items:center;
+        background:#f8faff; border-radius:8px; padding:8px 12px; margin-top:10px;
+      }
+      .doctor-rate span:first-child { font-size:12px; color:var(--muted); }
+      .doctor-rate span:last-child  { font-size:15px; font-weight:700; color:var(--navy); }
+      .select-btn {
+        width:100%; margin-top:12px; padding:9px; background:var(--blue); color:white;
+        border:none; border-radius:8px; font-size:13px; font-weight:600;
+        cursor:pointer; transition:background 0.2s; font-family:inherit;
+      }
+      .select-btn:hover { background:#385a9e; }
+      .select-btn.selected-state { background:var(--green); }
+      .search-input {
+        width:100%; max-width:360px; padding:10px 14px; border:1.5px solid var(--border);
+        border-radius:8px; font-size:14px; font-family:inherit; outline:none; margin-bottom:16px;
+      }
+      .search-input:focus { border-color:var(--accent); }
+
+      /* Messages */
+      .messages-box { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+      .messages-header { padding:14px 18px; background:var(--navy); color:white; font-weight:600; font-size:15px; }
+      #messagesList { height:320px; overflow-y:auto; padding:16px; background:#f8faff; }
+      .msg-input-row { display:flex; gap:8px; padding:12px; border-top:1px solid var(--border); }
+      #newMessage {
+        flex:1; padding:10px 14px; border:1.5px solid var(--border); border-radius:24px;
+        font-size:14px; font-family:inherit; outline:none; resize:none; height:44px;
+      }
+      #newMessage:focus { border-color:var(--accent); }
+      .send-btn {
+        width:44px; height:44px; border-radius:50%; background:var(--accent); color:white;
+        border:none; cursor:pointer; font-size:18px; display:flex; align-items:center;
+        justify-content:center; flex-shrink:0; transition:background 0.2s;
+      }
+      .send-btn:hover { background:#2563eb; }
+      .no-doctor-msg { color:var(--muted); text-align:center; padding:40px 20px; font-size:14px; }
+
+      /* Tables */
+      table { width:100%; border-collapse:collapse; background:var(--white); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+      th { background:var(--navy); color:white; padding:12px 16px; text-align:left; font-size:13px; }
+      td { padding:12px 16px; border-bottom:1px solid var(--border); font-size:14px; }
+      tbody tr:last-child td { border-bottom:none; }
+
+      /* Video Call */
+      .call-container { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+      .call-header {
+        padding:14px 18px; background:var(--navy); color:white;
+        display:flex; align-items:center; justify-content:space-between; font-weight:600;
+      }
+      .call-title { font-weight:600; font-size:15px; }
+      .call-pill { font-size:12px; padding:3px 10px; border-radius:20px; background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.75); text-transform:capitalize; }
+      .call-pill.calling   { background:rgba(245,158,11,0.35); color:#fcd34d; }
+      .call-pill.connected { background:rgba(16,185,129,0.35); color:#6ee7b7; }
+      .call-pill.ended     { background:rgba(239,68,68,0.35); color:#fca5a5; }
+      .video-stage { position:relative; background:#0a0a0a; aspect-ratio:16/9; overflow:hidden; }
+      #remoteVideo { width:100%; height:100%; object-fit:cover; display:block; }
+      #localVideo  {
+        position:absolute; bottom:16px; right:16px; width:130px; height:96px;
+        border-radius:12px; object-fit:cover; border:2.5px solid white;
+        box-shadow:0 4px 20px rgba(0,0,0,0.5); z-index:10;
+      }
+      .video-placeholder {
+        position:absolute; inset:0; display:flex; flex-direction:column;
+        align-items:center; justify-content:center; color:rgba(255,255,255,0.4); gap:12px; font-size:14px;
+      }
+      .avatar-ring {
+        width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.08);
+        display:flex; align-items:center; justify-content:center; font-size:36px;
+        border:2px solid rgba(255,255,255,0.12);
+      }
+      .call-controls { display:flex; align-items:center; justify-content:center; gap:16px; padding:20px; background:#111827; }
+      .ctrl-btn {
+        width:52px; height:52px; border-radius:50%; border:none; cursor:pointer;
+        font-size:20px; display:flex; align-items:center; justify-content:center;
+        transition:transform 0.15s,opacity 0.15s; font-family:inherit;
+      }
+      .ctrl-btn:hover:not(:disabled) { transform:scale(1.08); }
+      .ctrl-btn:disabled { opacity:0.35; cursor:not-allowed; }
+      .ctrl-call { background:var(--green); color:white; width:64px; height:64px; font-size:24px; }
+      .ctrl-end  { background:var(--red); color:white; width:64px; height:64px; font-size:24px; display:none; }
+      .ctrl-mute,.ctrl-cam { background:rgba(255,255,255,0.1); color:white; }
+      .call-info { text-align:center; padding:10px; background:#0f172a; color:rgba(255,255,255,0.5); font-size:13px; }
+
+      /* ══════════════════════════════════════
+        PRESCRIPTION STYLES  ← NEW
+      ══════════════════════════════════════ */
+      .rx-header-row {
+        display:flex; align-items:center; justify-content:space-between;
+        margin-bottom:16px; flex-wrap:wrap; gap:10px;
+      }
+      .rx-load-btn {
+        display:inline-flex; align-items:center; gap:8px;
+        padding:9px 20px; background:var(--navy); color:white;
+        border:none; border-radius:8px; font-size:13px; font-weight:600;
+        cursor:pointer; font-family:inherit; transition:background 0.2s;
+      }
+      .rx-load-btn:hover { background:#243561; }
+
+      .rx-empty {
+        text-align:center; padding:32px; color:var(--muted); font-size:14px;
+        background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow);
+      }
+
+      .rx-card {
+        background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow);
+        border-left:4px solid var(--accent); padding:20px 24px; margin-bottom:16px;
+        transition:box-shadow 0.2s;
+      }
+      .rx-card:hover { box-shadow:0 6px 20px rgba(0,0,0,0.1); }
+
+      .rx-meta {
+        display:flex; align-items:center; justify-content:space-between;
+        flex-wrap:wrap; gap:8px; padding-bottom:12px;
+        border-bottom:1px solid var(--border); margin-bottom:14px;
+      }
+      .rx-meta-left { display:flex; flex-direction:column; gap:3px; }
+      .rx-doctor-name { font-size:15px; font-weight:700; color:var(--navy); }
+      .rx-date { font-size:13px; color:var(--muted); }
+      .rx-count-badge {
+        background:#eff6ff; color:var(--accent); padding:5px 12px;
+        border-radius:20px; font-size:13px; font-weight:700; border:1px solid #bfdbfe;
+        white-space:nowrap;
+      }
+
+      .rx-med-list { margin-bottom:16px; }
+      .rx-med-item {
+        display:flex; align-items:center; gap:12px;
+        padding:10px 12px; border-radius:8px; margin-bottom:6px;
+        background:#f8faff; border:1px solid var(--border);
+      }
+      .rx-med-num {
+        width:24px; height:24px; border-radius:50%; background:var(--navy);
+        color:white; font-size:11px; font-weight:700; display:flex;
+        align-items:center; justify-content:center; flex-shrink:0;
+      }
+      .rx-med-name { font-size:14px; font-weight:600; color:var(--text); }
+
+      .rx-print-btn {
+        display:inline-flex; align-items:center; gap:7px;
+        padding:9px 18px; background:#f0fdf4; color:#059669;
+        border:1.5px solid #6ee7b7; border-radius:8px; font-family:inherit;
+        font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s;
+      }
+      .rx-print-btn:hover { background:var(--green); color:white; border-color:var(--green); }
+
+      /* ══════════════════════════════════════
+        PRINT STYLES  ← NEW
+        When window.print() is called, only
+        #printArea is visible.
+      ══════════════════════════════════════ */
+      #printArea { display:none; }
+
+      @media print {
+        /* Hide everything on the page */
+        body > * { display:none !important; }
+
+        /* Show ONLY the print area */
+        #printArea {
+          display:block !important;
+          position:fixed;
+          inset:0;
+          background:white;
+          z-index:99999;
+          padding:0;
+        }
+      }
+
+      #logoutMessage { text-align:center; color:var(--green); padding:8px; font-size:14px; }
+      /* ── HAMBURGER & SIDEBAR MOBILE ── */
+      .hamburger {
+        display: none;
+        background: none; border: none; font-size: 24px;
+        cursor: pointer; color: var(--navy); padding: 6px 8px;
+        border-radius: 8px; line-height: 1;
+      }
+      .hamburger:hover { background: rgba(11,28,61,.07); }
+
+      .sidebar-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 199;
+      }
+      .sidebar-overlay.open { display: block; }
+
+      @media(max-width:768px) {
+        .hamburger { display: block; }
+
+        .sidebar {
+          position: fixed !important;
+          top: 0; left: 0;
+          width: 240px !important;
+          height: 100vh !important;
+          z-index: 200;
+          transform: translateX(-100%);
+          transition: transform 0.3s ease;
+        }
+        .sidebar.open { transform: translateX(0); }
+      }
+    </style>
+  </head>
+  <body>
+
+  <div id="printArea"></div>
+
+  <header class="Heading">
+    <div><img src="LOGO.jpg" width="60" alt="Logo"></div>
+    <div>
+      <h1 class="slogan1">e-Health Connect</h1>
+      <h3 class="slogan3">health-care made easier for you</h3>
+    </div>
+    <button class="hamburger" id="sidebarToggle" aria-label="Open menu">&#9776;</button>
+  </header>
+
+  <div class="layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar">
+      <h2>Patient Menu</h2>
+      <ul>
+        <li><a href="Profile.html">👤 My Profile</a></li>
+        <li><a href="updatedbookingpage.html">📅 Appointments</a></li>
+        <li><a href="MedicalRecords.html">📋 Medical Records</a></li>
+        <li><a href="ConnectDoctors.html">🗺️ Find Doctors</a></li>
+        <li><a href="HealthTips.html">💡 Health Tips</a></li>
+        <li><button onclick="logout()" style="color:#fca5a5;">🚪 Logout</button></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+
+      <div class="welcome">
+        <h1>Welcome back, <span id="patientName">Patient</span> 👋</h1>
+        <p>Select a doctor below — all features will be linked to them automatically.</p>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="dashboard-grid">
+        <div class="card"><h2>📋 Records</h2><p>Access your health history.</p>
+          <button class="btn" onclick="location.href='MedicalRecords.html'">View</button></div>
+        <div class="card"><h2>📅 Appointments</h2><p>Book or manage appointments.</p>
+          <button class="btn" onclick="location.href='updatedbookingpage.html'">Book appointment</button></div>
+        <div class="card"><h2>💡 Health Tips</h2><p>Personalized health advice.</p>
+          <button class="btn" onclick="location.href='HealthTips.html'">View Tips</button></div>
+        <div class="card"><h2>👤 Profile</h2><p>View and update your info.</p>
+          <button class="btn" onclick="location.href='Profile.html'">View</button></div>
+      </div>
+
+      <!-- Appointments -->
+      <div class="section">
+        <div class="section-title">📅 My Appointments</div>
+        <div id="appointmentsList">
+          <p style="color:var(--muted);text-align:center;padding:20px;">Loading appointments...</p>
+        </div>
+      </div>
+
+      <!-- Reschedule Modal -->
+      <div id="rescheduleModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+        <div style="background:white;border-radius:16px;padding:28px;width:100%;max-width:480px;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h3 style="color:#0f1f3d;font-size:1.2rem;">📅 Reschedule Appointment</h3>
+            <button onclick="closeReschedule()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">✕</button>
+          </div>
+          <div id="rescheduleCurrentInfo" style="background:#f0f4f8;border-radius:8px;padding:12px 14px;margin-bottom:20px;font-size:14px;color:#555;"></div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">New Date</label>
+              <input type="date" id="newDate" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;font-family:inherit;outline:none;"/>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">New Time</label>
+              <select id="newTime" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;font-family:inherit;outline:none;background:white;">
+                <option value="">-- Select time --</option>
+                <option>08:00</option><option>08:30</option><option>09:00</option><option>09:30</option>
+                <option>10:00</option><option>10:30</option><option>11:00</option><option>11:30</option>
+                <option>12:00</option><option>12:30</option><option>13:00</option><option>13:30</option>
+                <option>14:00</option><option>14:30</option><option>15:00</option><option>15:30</option>
+                <option>16:00</option><option>16:30</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:6px;">Reason (optional update)</label>
+              <textarea id="newReason" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:15px;font-family:inherit;outline:none;resize:vertical;" placeholder="Update reason if needed..."></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:20px;">
+            <button onclick="closeReschedule()" style="flex:1;padding:11px;background:#f1f5f9;color:#555;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Cancel</button>
+            <button onclick="confirmReschedule()" id="confirmRescheduleBtn" style="flex:2;padding:11px;background:#1b2a4e;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">✅ Confirm Reschedule</button>
+          </div>
+          <p id="rescheduleStatus" style="text-align:center;font-size:14px;margin-top:12px;min-height:20px;"></p>
+        </div>
+      </div>
+
+      <!-- Doctor selector -->
+      <div class="doctor-selector-bar">
+        <label for="selectedDoctor">🩺 Selected Doctor:</label>
+        <select id="selectedDoctor" onchange="onDoctorSelected()">
+          <option value="">-- Choose a doctor --</option>
+        </select>
+        <span class="rate-badge" id="selectedRate" style="display:none;"></span>
+      </div>
+
+      <!-- Available doctors -->
+      <div class="section">
+        <div class="section-title">🩺 Available Doctors</div>
+        <input class="search-input" id="doctorSearch" type="text"
+          placeholder="🔍 Search by name or discipline..."
+          oninput="filterDoctors(this.value)"/>
+        <div class="doctor-cards-grid" id="doctorCards">
+          <p style="color:var(--muted);">Loading doctors...</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="rx-header-row">
+          <div class="section-title" style="margin-bottom:0;">💊 Prescribed Medications</div>
+          <button class="rx-load-btn" onclick="loadPrescriptions()">
+            📋 Load Prescriptions
+          </button>
+        </div>
+        <!--  proper container for prescription cards -->
+        <div id="prescriptionCards"></div>
+      </div>
+
+      <!-- Messages -->
+      <div class="section">
+        <div class="section-title">💬 Messages</div>
+        <div class="messages-box">
+          <div class="messages-header">💬 Chat with <span id="chatDoctorName">your doctor</span></div>
+          <div id="messagesList"><div class="no-doctor-msg">Select a doctor above to start chatting.</div></div>
+          <div class="msg-input-row">
+            <textarea id="newMessage" placeholder="Type a message..." rows="1"></textarea>
+            <button class="send-btn" onclick="sendPatientMessage()">➤</button>
+          </div>
+          <div id="showmessages" style="text-align:center;margin-top:8px;margin-bottom:7px;font-size:14px;color:#16ce72;"></div>
+        </div>
+      </div>
+
+      <!-- Video Call -->
+      <div class="section">
+        <div class="section-title">📞 Video Call</div>
+        <div class="call-container">
+          <div class="call-header">
+            <span class="call-title" id="callDoctorLabel">Select a doctor to call</span>
+            <span class="call-pill" id="callPill">Ready</span>
+          </div>
+          <div class="video-stage">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <video id="localVideo"  autoplay playsinline muted></video>
+            <div class="video-placeholder" id="videoPlaceholder">
+              <div class="avatar-ring">👨‍⚕️</div>
+              <span>Video will appear here when connected</span>
+            </div>
+          </div>
+          <div class="call-controls">
+            <button class="ctrl-btn ctrl-mute" id="muteBtn" onclick="toggleMute()" disabled>🎤</button>
+            <button class="ctrl-btn ctrl-call" id="startCallBtn" onclick="startCall()">📞</button>
+            <button class="ctrl-btn ctrl-end"  id="endCallBtn"   onclick="endCall()">📵</button>
+            <button class="ctrl-btn ctrl-cam"  id="camBtn"  onclick="toggleCam()" disabled>📷</button>
+          </div>
+          <div class="call-info" id="callStatus">Choose a doctor and press 📞 to call</div>
+        </div>
+      </div>
+
+      <div id="logoutMessage"></div>
+    </main>
+  </div>
+
+  <script>
+    const sidebarToggle  = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebar        = document.querySelector('.sidebar');
+
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.add('open');
+      sidebarOverlay.classList.add('open');
+      sidebarToggle.innerHTML = '&#x2715;';
+    });
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('open');
+      sidebarToggle.innerHTML = '&#9776;';
+    }
+
+    document.querySelectorAll('.sidebar a, .sidebar button').forEach(el => {
+      el.addEventListener('click', () => {
+        if (window.innerWidth <= 768) closeSidebar();
+      });
+    });
+  const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+  const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+  function el(id) { return document.getElementById(id); }
+  function safeSet(id, prop, val) { const n = el(id); if (n) n[prop] = val; }
+
+  let selectedDoctorId = null, selectedDoctorName = "", allDoctorsData = [];
+  let messageChannel = null, localStream = null, peerConnection = null;
+  let currentCallId = null, callChannel = null, isMuted = false, isCamOff = false;
+
+
+
+  //  Logout
+  async function logout() {
+    const { error } = await client.auth.signOut();
+    if (error) { safeSet("logoutMessage","textContent","Error logging out"); return; }
+    window.location.href = "patientsLogin.html";
+  }
+
+  // Patient name
+  async function loadPatientName() {
+    if (!el("patientName")) return;
+    const { data:{ session } } = await client.auth.getSession();
+    if (!session) { safeSet("patientName","textContent","Guest"); return; }
+    const { data } = await client.from("patients").select("name,surname").eq("user_id",session.user.id).maybeSingle();
+    safeSet("patientName","textContent", data ? `${data.name||""} ${data.surname||""}`.trim() : "Patient");
+  }
+
+  // Doctor dropdown 
+  async function loadDoctorDropdown() {
+    const { data,error } = await client.from("doctors")
+      .select("id,name,surname,discipline,hourly_rate")
+      .eq("verification_status","approved").order("name");
+    const select = el("selectedDoctor");
+    if (!select||error||!data) return;
+    select.innerHTML = '<option value="">-- Choose a doctor --</option>';
+    data.forEach(doc => {
+      const opt = document.createElement("option");
+      opt.value = doc.id;
+      opt.dataset.name = `Dr. ${doc.name} ${doc.surname}`;
+      opt.dataset.rate = doc.hourly_rate ? `R ${parseFloat(doc.hourly_rate).toFixed(2)}/hr` : "Rate not set";
+      opt.textContent  = `Dr. ${doc.name} ${doc.surname} — ${doc.discipline||"General"}`;
+      select.appendChild(opt);
+    });
+  }
+
+  function onDoctorSelected() {
+    const select = el("selectedDoctor");
+    const opt = select.options[select.selectedIndex];
+    if (!select.value) {
+      selectedDoctorId = null; selectedDoctorName = "";
+      el("selectedRate").style.display = "none";
+      safeSet("chatDoctorName","textContent","your doctor");
+      safeSet("callDoctorLabel","textContent","Select a doctor to call");
+      el("messagesList").innerHTML = `<div class="no-doctor-msg">Select a doctor above to start chatting.</div>`;
+      return;
+    }
+    selectedDoctorId = select.value;
+    selectedDoctorName = opt.dataset.name;
+    el("selectedRate").textContent = opt.dataset.rate;
+    el("selectedRate").style.display = "inline-block";
+    safeSet("chatDoctorName","textContent", selectedDoctorName);
+    safeSet("callDoctorLabel","textContent", `Call ${selectedDoctorName}`);
+    document.querySelectorAll(".doctor-card").forEach(c => c.classList.toggle("selected", c.dataset.id === selectedDoctorId));
+    document.querySelectorAll(".select-btn").forEach(b => {
+      const hit = b.dataset.id === selectedDoctorId;
+      b.textContent = hit ? "✓ Selected" : "Select Doctor";
+      b.className   = hit ? "select-btn selected-state" : "select-btn";
+    });
+    loadSelectedDoctorMessages();
+  }
+
+  //  Doctor cards 
+  async function loadAvailableDoctors() {
+    const container = el("doctorCards");
+    if (!container) return;
+    const { data,error } = await client.from("doctors")
+      .select("id,name,surname,discipline,qualifications,hourly_rate,profile_image_url,operating_hours")
+      .eq("verification_status","approved").order("name");
+    if (error||!data||data.length===0) {
+      container.innerHTML = `<p style="color:var(--muted);">No doctors available.</p>`; return;
+    }
+    allDoctorsData = data;
+    renderDoctorCards(data);
+  }
+
+  function renderDoctorCards(doctors) {
+    const container = el("doctorCards");
+    if (!container) return;
+    container.innerHTML = "";
+    if (!doctors||doctors.length===0) { container.innerHTML=`<p style="color:var(--muted);">No results.</p>`; return; }
+    doctors.forEach(doc => {
+      const rate = doc.hourly_rate ? `R ${parseFloat(doc.hourly_rate).toFixed(2)} / hr` : "Rate not set";
+      const isSelected = selectedDoctorId === doc.id;
+      const card = document.createElement("div");
+      card.className = `doctor-card${isSelected?" selected":""}`;
+      card.dataset.id = doc.id;
+      card.innerHTML = `
+        <div class="doctor-card-header">
+          <div class="doctor-avatar">${doc.profile_image_url ? `<img src="${doc.profile_image_url}">` : "👨‍⚕️"}</div>
+          <div><div class="doctor-name">Dr. ${doc.name} ${doc.surname}</div>
+              <div class="doctor-disc">🩺 ${doc.discipline||"General Practitioner"}</div></div>
+        </div>
+        ${doc.qualifications?`<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">🎓 ${doc.qualifications}</div>`:""}
+        ${doc.operating_hours?`<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">🕐 ${doc.operating_hours}</div>`:""}
+        <div class="doctor-rate"><span>Consultation rate</span><span>${rate}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">💳 EFT payment after consultation</div>
+        <button class="select-btn${isSelected?" selected-state":""}" data-id="${doc.id}"
+          onclick="selectDoctorCard('${doc.id}')">
+          ${isSelected?"✓ Selected":"Select Doctor"}
+        </button>`;
+      container.appendChild(card);
+    });
+  }
+
+  function filterDoctors(query) {
+    const q = query.toLowerCase().trim();
+    renderDoctorCards(q ? allDoctorsData.filter(d =>
+      `${d.name} ${d.surname}`.toLowerCase().includes(q)||(d.discipline||"").toLowerCase().includes(q)
+    ) : allDoctorsData);
+  }
+
+  function selectDoctorCard(doctorId) {
+    const select = el("selectedDoctor");
+    if (select) { select.value = doctorId; onDoctorSelected(); }
+  }
+
+  //  Messages 
+  function renderMessages(data) {
+    const container = el("messagesList");
+    if (!container) return;
+    container.innerHTML = "";
+    if (!data||data.length===0) {
+      container.innerHTML=`<div class="no-doctor-msg">No messages yet. Say hello! 👋</div>`; return;
+    }
+    data.forEach(msg => {
+      const isP = msg.sender==="patient";
+      const div = document.createElement("div");
+      div.style.cssText=`display:flex;justify-content:${isP?"flex-end":"flex-start"};margin-bottom:8px;`;
+      div.innerHTML=`<div style="max-width:72%;padding:10px 14px;border-radius:${isP?"18px 18px 4px 18px":"18px 18px 18px 4px"};
+        background:${isP?"var(--accent)":"white"};color:${isP?"white":"var(--text)"};
+        font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+        <div>${msg.message}</div>
+        <div style="font-size:11px;opacity:0.6;margin-top:4px;text-align:right;">
+          ${new Date(msg.created_at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}
+        </div></div>`;
+      container.appendChild(div);
+    });
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function loadSelectedDoctorMessages() {
+    const { data:{ user } } = await client.auth.getUser();
+    if (!user || !selectedDoctorId) return;
+
+    const { data, error } = await client
+      .from("messages")
+      .select("*")
+      .eq("patient_id", user.id)
+      .eq("doctor_id", selectedDoctorId)
+      .order("created_at", { ascending:true });
+
+    if (error) { console.error(error); return; }
+    renderMessages(data);
+
+    // ── Unsubscribe old channel first ──
+    if (messageChannel) {
+      await client.removeChannel(messageChannel);
+      messageChannel = null;
+    }
+
+    // ── Listen for ANY new message in this conversation ──
+    messageChannel = client
+      .channel(`chat-${user.id}-${selectedDoctorId}`)
+      .on("postgres_changes", {
+        event:  "INSERT",
+        schema: "public",
+        table:  "messages",
+        filter: `doctor_id=eq.${selectedDoctorId}`  // catches both sides
+      }, () => loadSelectedDoctorMessages())
+      .subscribe();
+  }
+
+  async function sendPatientMessage() {
+    const { data:{ user } } = await client.auth.getUser();
+    if (!user) { alert("Please log in."); return; }
+
+    const text = el("newMessage")?.value?.trim();
+    if (!text) return;
+
+    if (!selectedDoctorId) {
+      el("showmessages").textContent = "Please select a doctor first.";
+      setTimeout(() => { el("showmessages").textContent = ""; }, 3000);
+      return;
+    }
+
+      const tempMsg = {
+      sender:     "patient",
+      message:    text,
+      created_at: new Date().toISOString()
+    };
+
+    const container = el("messagesList");
+    if (container) {
+
+      const placeholder = container.querySelector(".no-doctor-msg");
+      if (placeholder) placeholder.remove();
+
+      // Append the new message immediately
+      const div = document.createElement("div");
+      div.style.cssText = `display:flex;justify-content:flex-end;margin-bottom:8px;`;
+      div.innerHTML = `
+        <div style="
+          max-width:72%;padding:10px 14px;
+          border-radius:18px 18px 4px 18px;
+          background:var(--accent);color:white;
+          font-size:14px;box-shadow:0 1px 4px rgba(0,0,0,0.08);
+        ">
+          <div>${text}</div>
+          <div style="font-size:11px;opacity:0.6;margin-top:4px;text-align:right;">
+            ${new Date().toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}
+          </div>
+        </div>`;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // ── Clear input immediately so patient can type next message ──
+    safeSet("newMessage", "value", "");
+
+
+    const { error } = await client.from("messages").insert([{
+      doctor_id:  selectedDoctorId,
+      patient_id: user.id,
+      sender:     "patient",
+      message:    text
+    }]);
+
+    if (error) {
+      console.error("Failed to send:", error.message);
+      // Show error but don't remove the optimistic message
+      el("showmessages").textContent = "⚠️ Message may not have saved. Check connection.";
+      setTimeout(() => { el("showmessages").textContent = ""; }, 4000);
+    }
+  }
+
+  async function cancelAppointmentById(apptId) {
+      if (!confirm("Are you sure you want to cancel this appointment?")) return;
+
+      // ── Get logged in patient ──
+      const { data:{ user }, error: authError } = await client.auth.getUser();
+      if (authError || !user) { 
+          alert("Please log in first."); 
+          return; 
+      }
+
+      // ── First check current status from DB (not just UI) ──
+      const { data: appt, error: fetchError } = await client
+          .from("appointments")
+          .select("status, patient_id")
+          .eq("id", apptId)
+          .single();
+
+      if (fetchError || !appt) { 
+          alert("Could not find appointment."); 
+          return; 
+      }
+
+      // ── Block cancel if already confirmed by doctor ──
+      if (appt.status === "confirmed") {
+          alert("❌ This appointment has already been confirmed by the doctor and cannot be cancelled.");
+          return;
+      }
+
+      // ── Block cancel if already cancelled ──
+      if (appt.status === "cancelled") {
+          alert("This appointment is already cancelled.");
+          loadAppointments();
+          return;
+      }
+
+      // ── Allow cancel if pending OR rescheduled (still awaiting doctor) ──
+      if (appt.status !== "pending" && appt.status !== "rescheduled") {
+          alert("This appointment cannot be cancelled.");
+          return;
+      }
+
+      // ── Cancel it — include patient_id for RLS ──
+      const { error } = await client
+          .from("appointments")
+          .update({ status: "cancelled" })
+          .eq("id", apptId)
+          .eq("patient_id", user.id); // ✅ satisfies RLS policy
+
+      if (error) { 
+          console.error("Cancel error:", error);
+          if (error.code === "42501" || error.message.includes("row-level security")) {
+              alert("Permission denied. Please contact support.");
+          } else {
+              alert("Failed to cancel: " + error.message);
+          }
+          return; 
+      }
+
+      loadAppointments();
+  }
+  
+  document.addEventListener("click",(e)=>{const m=el("rescheduleModal");if(m&&e.target===m)closeReschedule();});
+  
+  // Video call — collapsible 
+
+  
+
+  //  ICE ──
+  const ICE = { iceServers:[
+    {urls:"stun:stun.l.google.com:19302"},
+    {urls:"stun:stun1.l.google.com:19302"}
+  ]};
+
+  // ──  showToast ──
+  function showToast(msg, type="success") {
+    let toast = el("toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "toast";
+      toast.style.cssText = `
+        position:fixed;bottom:24px;right:24px;z-index:9999;
+        padding:12px 20px;border-radius:10px;font-size:14px;
+        font-weight:600;color:white;box-shadow:0 4px 20px rgba(0,0,0,0.2);
+        transition:opacity 0.3s;opacity:0;pointer-events:none;
+      `;
+      document.body.appendChild(toast);
+    }
+    const colors = { success:"#10b981", error:"#ef4444", warn:"#f59e0b" };
+    toast.style.background = colors[type] || colors.success;
+    toast.textContent = msg;
+    toast.style.opacity = "1";
+    setTimeout(() => { toast.style.opacity = "0"; }, 3000);
+  }
+
+
+  let callPanelOpen = true;
+
+
+  function toggleCallPanel(forceOpen) {
+    callPanelOpen = true;
+  }
+
+  function setCallStatus(msg, state="") {
+    safeSet("callStatus","textContent", msg);
+    const p = el("callPill");
+    if (p) {
+      p.textContent = state 
+        ? state.charAt(0).toUpperCase() + state.slice(1) 
+        : msg;
+      p.className = "call-pill" + (state ? " " + state : "");
+    }
+  }
+
+  function showVideoPlaceholder(show, pulsing=false) {
+    const p = el("videoPlaceholder");
+    if (p) p.style.display = show ? "flex" : "none";
+  }
+
+
+  async function startCall() {
+    const { data:{ user }, error:authErr } = await client.auth.getUser();
+    if (authErr || !user) { alert("Please log in."); return; }
+    if (!selectedDoctorId)  { alert("Please select a doctor first."); return; }
+
+    el("startCallBtn").disabled = true;
+    setCallStatus("Starting camera...", "calling");
+    showVideoPlaceholder(true, true);
+
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+      el("localVideo").srcObject = localStream;
+      el("muteBtn").disabled = false;
+      el("camBtn").disabled  = false;
+
+      peerConnection = new RTCPeerConnection(ICE); // ✅ Fixed
+      localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+
+      peerConnection.ontrack = (e) => {
+        el("remoteVideo").srcObject = e.streams[0];
+        showVideoPlaceholder(false);
+        setCallStatus("Connected", "connected");
+      };
+
+      const iceCandidates = [];
+      peerConnection.onicecandidate = (e) => {
+        if (e.candidate) iceCandidates.push(e.candidate);
+      };
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      setCallStatus("Ringing...", "calling");
+      await waitForIce(peerConnection);
+
+      const { data:callData, error:ie } = await client
+        .from("calls")
+        .insert([{
+          patient_id:   user.id,
+          doctor_id:    selectedDoctorId,
+          offer:        JSON.stringify(offer),
+          caller_ice:   JSON.stringify(iceCandidates),
+          status:       "calling",
+          initiated_by: "patient"
+        }])
+        .select()
+        .single();
+
+      if (ie) {
+        console.error("Call insert error:", ie);
+        setCallStatus("Failed to start call.");
+        resetCallUI();
+        return;
+      }
+
+      currentCallId = callData.id;
+      el("startCallBtn").style.display = "none";
+      el("endCallBtn").style.display   = "inline-flex";
+      subscribeCallUpdates(currentCallId);
+      showToast("📞 Calling " + selectedDoctorName + "...", "success");
+
+    } catch(err) {
+      console.error("startCall error:", err);
+      if (err.name === "NotAllowedError") {
+        setCallStatus("❌ Camera/mic permission denied.");
+        showToast("Please allow camera and microphone access.", "error");
+      } else if (err.name === "NotFoundError") {
+        setCallStatus("❌ No camera/mic found.");
+        showToast("No camera or microphone detected.", "error");
+      } else {
+        setCallStatus("❌ Could not start call.");
+        showToast("Call failed: " + err.message, "error");
+      }
+      showVideoPlaceholder(true, false);
+      resetCallUI();
+    }
+  }
+
+  function subscribeCallUpdates(callId) {
+    callChannel = client.channel(`call-p-${callId}`)
+      .on("postgres_changes", {
+        event:"UPDATE", schema:"public", table:"calls", filter:`id=eq.${callId}`
+      }, (payload) => {
+        const u = payload.new;
+        if (u.status === "connected" && u.answer) {
+          applyAnswer(u);
+        } else if (u.status === "rejected") {
+          showToast("Doctor is unavailable right now.", "warn");
+          cleanupCall();
+        } else if (u.status === "ended") {
+          showToast("Call ended by doctor.", "warn");
+          cleanupCall();
+        }
+      }).subscribe();
+  }
+
+
+  async function applyAnswer(cd) {
+    if (!peerConnection) return;
+    try {
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(JSON.parse(cd.answer))
+      );
+      if (cd.callee_ice) {
+        for (const c of JSON.parse(cd.callee_ice)) {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(c));
+        }
+      }
+      setCallStatus("Connected", "connected");
+      showVideoPlaceholder(false);
+    } catch(err) {
+      console.error("applyAnswer:", err);
+      setCallStatus("Connection error.");
+      showToast("Could not connect the call.", "error");
+    }
+  }
+
+  async function endCall() {
+    if (currentCallId) {
+      await client.from("calls").update({ status:"ended" }).eq("id", currentCallId);
+    }
+    cleanupCall();
+    setCallStatus("Call ended", "ended");
+    showToast("Call ended.", "success");
+  }
+
+
+  function cleanupCall() {
+    if (callChannel)    { client.removeChannel(callChannel); callChannel = null; }
+    if (peerConnection) { peerConnection.close(); peerConnection = null; }
+    if (localStream)    { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+    el("localVideo").srcObject  = null;
+    el("remoteVideo").srcObject = null;
+    showVideoPlaceholder(true, false);
+    currentCallId = null;
+    resetCallUI();
+  }
+
+  function resetCallUI() {
+    const startBtn = el("startCallBtn");
+    const endBtn   = el("endCallBtn");
+    const muteBtn  = el("muteBtn");
+    const camBtn   = el("camBtn");
+    if (startBtn) { startBtn.disabled = false; startBtn.style.display = "inline-flex"; }
+    if (endBtn)   { endBtn.style.display = "none"; }
+    if (muteBtn)  { muteBtn.disabled = true; muteBtn.textContent = "🎤"; muteBtn.style.background = "rgba(255,255,255,0.1)"; }
+    if (camBtn)   { camBtn.disabled  = true; camBtn.textContent  = "📷"; camBtn.style.background  = "rgba(255,255,255,0.1)"; }
+    isMuted  = false;
+    isCamOff = false;
+  }
+
+
+  function toggleMute() {
+    if (!localStream) return;
+    isMuted = !isMuted;
+    localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+    el("muteBtn").textContent        = isMuted ? "🔇" : "🎤";
+    el("muteBtn").style.background   = isMuted ? "var(--red)" : "rgba(255,255,255,0.1)";
+  }
+
+  function toggleCam() {
+    if (!localStream) return;
+    isCamOff = !isCamOff;
+    localStream.getVideoTracks().forEach(t => t.enabled = !isCamOff);
+    el("camBtn").textContent       = isCamOff ? "🚫" : "📷";
+    el("camBtn").style.background  = isCamOff ? "var(--red)" : "rgba(255,255,255,0.1)";
+  }
+
+  function waitForIce(pc) {
+    return new Promise(resolve => {
+      if (pc.iceGatheringState === "complete") return resolve();
+      const timeout = setTimeout(resolve, 5000);
+      pc.onicegatheringstatechange = () => {
+        if (pc.iceGatheringState === "complete") {
+          clearTimeout(timeout);
+          resolve();
+        }
+      };
+    });
+  }
+
+
+  //  Init 
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadPatientName();
+    const { data:{user} } = await client.auth.getUser();
+    await loadDoctorDropdown();
+    await loadAvailableDoctors();
+    await loadAppointments();
+    if (user&&el("medicationTable")) loadMedication();
+  });
+  client.auth.onAuthStateChange((event,session)=>{ if(session) loadPatientName(); });
+
+  let currentRescheduleId = null; // tracks which appointment is being rescheduled
+  
+  //  Load and render all patient appointments 
+  async function loadAppointments() {
+    const list = el("appointmentsList");
+    if (!list) return;
+
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) {
+        list.innerHTML = `<p style="color:var(--muted);text-align:center;">Please log in to view appointments.</p>`;
+        return;
+    }
+
+    const { data, error } = await client
+        .from("appointments")
+        .select("*")
+        .eq("patient_id", user.id)
+        .order("date", { ascending: true });
+
+    list.innerHTML = "";
+
+    if (error) {
+        list.innerHTML = `<p style="color:#ef4444;text-align:center;">Failed to load appointments.</p>`;
+        return;
+    }
+
+    if (!data || data.length === 0) {
+        list.innerHTML = `
+            <div style="text-align:center;padding:32px;background:white;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.06);color:var(--muted);">
+                <div style="font-size:2rem;margin-bottom:8px;">📅</div>
+                <p>No appointments yet.</p>
+                <p style="font-size:13px;margin-top:4px;">
+                    Visit <a href="ConnectDoctors.html" style="color:var(--accent);">Find a Doctor</a> to book one.
+                </p>
+            </div>`;
+        return;
+    }
+
+    data.forEach(appt => {
+        const card = document.createElement("div");
+
+        // ── PAYMENT: financial status labels ──
+        let financialStatus = appt.status;
+        if (appt.status === 'cancelled') financialStatus = 'Rejected & Refunded';
+        if (appt.status === 'confirmed') financialStatus = 'Accepted & Paid';
+
+        const formattedDate = new Date(appt.date).toLocaleDateString("en-ZA", {
+            weekday: "short", year: "numeric", month: "long", day: "numeric"
+        });
+
+        const wasRescheduled = appt.rescheduled_at
+            ? `<span style="font-size:12px;color:#f59e0b;">🔄 Rescheduled</span>`
+            : "";
+
+        card.style.cssText = `
+            background:white; border-radius:12px;
+            box-shadow:0 2px 12px rgba(0,0,0,0.07);
+            padding:18px 20px; margin-bottom:14px;
+            border-left:4px solid ${statusColor(appt.status)};
+            display:flex; justify-content:space-between;
+            align-items:flex-start; flex-wrap:wrap; gap:12px;
+        `;
+
+        card.innerHTML = `
+            <div>
+                <div style="font-weight:700;color:#0f1f3d;font-size:15px;margin-bottom:6px;">
+                    ${appt.patient_name || "You"} &nbsp;${wasRescheduled}
+                </div>
+                <div style="font-size:14px;color:#555;margin-bottom:3px;">
+                    📅 ${formattedDate} &nbsp;🕐 ${appt.time}
+                </div>
+                <div style="font-size:14px;color:#555;margin-bottom:3px;">
+                    📝 ${appt.reason || "General consultation"}
+                </div>
+
+                <!-- ── PAYMENT: show method and amount ── -->
+                ${appt.payment_method ? `
+                <div style="font-size:14px;color:#555;margin-bottom:3px;">
+                    💳 Paid via: <strong>${appt.payment_method}</strong>
+                </div>` : ""}
+                ${appt.amount_paid ? `
+                <div style="font-size:14px;color:#555;margin-bottom:3px;">
+                    💰 Amount: <strong>R ${parseFloat(appt.amount_paid).toFixed(2)}</strong>
+                </div>` : ""}
+
+                <span style="
+                    display:inline-block;margin-top:6px;
+                    padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;
+                    background:${statusBg(appt.status)};color:${statusColor(appt.status)};
+                ">${financialStatus}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+                ${appt.status !== "cancelled" ? `
+                <button onclick="openReschedule('${appt.id}', '${formattedDate}', '${appt.time}', \`${(appt.reason||"").replace(/`/g,"'")}\`)"
+                    style="padding:8px 16px;background:#1b2a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+                    🔄 Reschedule
+                </button>` : ""}
+                ${appt.status === "pending" || appt.status === "rescheduled" ? `
+                <button onclick="cancelAppointmentById('${appt.id}')"
+                    style="padding:8px 16px;background:white;color:#ef4444;border:1.5px solid #ef4444;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+                    ✕ Cancel
+                </button>` : ""}
+            </div>`;
+
+        list.appendChild(card);
+    });
+}
+  
+  // Status color helpers 
+  function statusColor(status) {
+      const map = {
+          confirmed:   "#10b981",
+          pending:     "#f59e0b",
+          rescheduled: "#3b82f6",
+          cancelled:   "#ef4444"
+      };
+      return map[status] || "#94a3b8";
+  }
+  
+  function statusBg(status) {
+      const map = {
+          confirmed:   "#f0fdf4",
+          pending:     "#fffbeb",
+          rescheduled: "#eff6ff",
+          cancelled:   "#fef2f2"
+      };
+      return map[status] || "#f8faff";
+  }
+  
+  //  Open reschedule modal 
+  function openReschedule(apptId, currentDate, currentTime, currentReason) {
+      currentRescheduleId = apptId;
+  
+      // Show current details in the modal
+      el("rescheduleCurrentInfo").innerHTML = `
+          <strong>Current booking:</strong><br>
+          📅 ${currentDate} &nbsp; 🕐 ${currentTime}<br>
+          📝 ${currentReason || "General consultation"}
+      `;
+  
+      // Pre-fill fields
+      el("newDate").min    = new Date().toISOString().split("T")[0];
+      el("newDate").value  = "";
+      el("newTime").value  = currentTime || "";
+      el("newReason").value = currentReason || "";
+      el("rescheduleStatus").textContent = "";
+  
+      // Show modal
+      const modal = el("rescheduleModal");
+      modal.style.display = "flex";
+  }
+  
+  function closeReschedule() {
+      el("rescheduleModal").style.display = "none";
+      currentRescheduleId = null;
+  }
+  
+  //  Confirm reschedule 
+  async function confirmReschedule() {
+      if (!currentRescheduleId) return;
+  
+      const newDate   = el("newDate").value;
+      const newTime   = el("newTime").value;
+      const newReason = el("newReason").value.trim();
+  
+      if (!newDate) {
+          el("rescheduleStatus").textContent = "Please select a new date.";
+          el("rescheduleStatus").style.color = "#ef4444";
+          return;
+      }
+      if (!newTime) {
+          el("rescheduleStatus").textContent = "Please select a new time.";
+          el("rescheduleStatus").style.color = "#ef4444";
+          return;
+      }
+  
+      const btn = el("confirmRescheduleBtn");
+      btn.disabled    = true;
+      btn.textContent = "Saving...";
+  
+      const { error } = await client
+          .from("appointments")
+          .update({
+              date:           newDate,
+              time:           newTime,
+              reason:         newReason || undefined,
+              status:         "rescheduled",
+              rescheduled_at: new Date().toISOString()
+          })
+          .eq("id", currentRescheduleId);
+  
+      btn.disabled    = false;
+      btn.textContent = "✅ Confirm Reschedule";
+  
+      if (error) {
+          console.error("reschedule:", error);
+          el("rescheduleStatus").textContent = "Failed to reschedule: " + error.message;
+          el("rescheduleStatus").style.color = "#ef4444";
+          return;
+      }
+  
+      el("rescheduleStatus").textContent = "✅ Appointment rescheduled successfully!";
+      el("rescheduleStatus").style.color = "#10b981";
+  
+      // Reload appointments and close modal after a short delay
+      await loadAppointments();
+      setTimeout(() => closeReschedule(), 1500);
+  }
+  
+  //  Cancel appointment 
+  async function cancelAppointmentById(apptId) {
+      if (!confirm("Are you sure you want to cancel this appointment?")) return;
+  
+      const { error } = await client
+          .from("appointments")
+          .update({ status: "cancelled" })
+          .eq("id", apptId);
+  
+      if (error) { alert("Failed to cancel: " + error.message); return; }
+  
+      loadAppointments();
+  }
+  
+  //  Close modal when clicking outside 
+  document.addEventListener("click", (e) => {
+      const modal = el("rescheduleModal");
+      if (modal && e.target === modal) closeReschedule();
+  });
+
+  // ─── Get patient record ───────────────────────────────────────────────────────
+  async function getPatientRecord() {
+    const { data:{user} } = await client.auth.getUser();
+    if (!user) return null;
+    let { data } = await client.from("patients").select("id,doctor_id").eq("user_id",user.id).maybeSingle();
+    if (!data) { const { data:d2 } = await client.from("patients").select("id,doctor_id").eq("id",user.id).maybeSingle(); data=d2; }
+    if (!data&&user.email) { const { data:d3 } = await client.from("patients").select("id,doctor_id").eq("email",user.email).maybeSingle(); data=d3; }
+    return data||null;
+  }
+
+  // ─── PRESCRIPTIONS ────────────────────────────────────────────────────────────
+  // FIX: Rewrote to use proper card styling & fixed printArea reference
+  async function loadPrescriptions() {
+    const container = el("prescriptionCards");
+    if (!container) return;
+    container.innerHTML = `<div class="rx-empty">⏳ Loading prescriptions...</div>`;
+
+    const patient = await getPatientRecord();
+    if (!patient) {
+      container.innerHTML = `<div class="rx-empty">Please log in to view prescriptions.</div>`;
+      return;
+    }
+
+    const { data,error } = await client
+      .from("prescriptions")
+      .select(`id, medication, created_at, doctor_id, doctors ( name, surname )`)
+      .eq("patient_id", patient.id)
+      .order("created_at", { ascending:false });
+
+    if (error) {
+      container.innerHTML = `<div class="rx-empty" style="color:var(--red);">Error loading prescriptions: ${error.message}</div>`;
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      container.innerHTML = `<div class="rx-empty">💊 No prescriptions found yet.</div>`;
+      return;
+    }
+
+    // Group by doctor + date
+    const groups = {};
+    data.forEach(p => {
+      const dateKey  = new Date(p.created_at).toISOString().split("T")[0];
+      const groupKey = `${p.doctor_id}_${dateKey}`;
+      if (!groups[groupKey]) groups[groupKey] = { doctor:p.doctors, date:p.created_at, medications:[] };
+      groups[groupKey].medications.push(p.medication);
+    });
+
+    container.innerHTML = "";
+    window._prescriptionGroups = Object.values(groups);
+
+    window._prescriptionGroups.forEach((group, index) => {
+      const doctorName = group.doctor ? `Dr. ${group.doctor.name} ${group.doctor.surname}` : "Unknown Doctor";
+      const dateStr = new Date(group.date).toLocaleDateString("en-ZA",{year:"numeric",month:"long",day:"numeric"});
+      const count = group.medications.length;
+
+      const medItemsHTML = group.medications.map((m,i) => `
+        <div class="rx-med-item">
+          <div class="rx-med-num">${i+1}</div>
+          <div class="rx-med-name">${m}</div>
+        </div>`).join("");
+
+      const card = document.createElement("div");
+      card.className = "rx-card";
+      card.innerHTML = `
+        <div class="rx-meta">
+          <div class="rx-meta-left">
+            <div class="rx-doctor-name">👨‍⚕️ ${doctorName}</div>
+            <div class="rx-date">📅 ${dateStr}</div>
+          </div>
+          <span class="rx-count-badge">💊 ${count} medication${count>1?"s":""}</span>
+        </div>
+        <div class="rx-med-list">${medItemsHTML}</div>
+        <button class="rx-print-btn" onclick="printPrescriptionGroup(${index})">
+          🖨️ Print / Download PDF
+        </button>`;
+      container.appendChild(card);
+    });
+  }
+
+  // ─── Print prescription ───────────────────────────────────────────────────────
+  // FIX: printArea now exists in HTML and @media print hides everything else
+  function printPrescriptionGroup(index) {
+    const group = window._prescriptionGroups?.[index];
+    if (!group) return;
+
+    const printArea = el("printArea");
+    if (!printArea) return;
+
+    const doctorName = group.doctor ? `Dr. ${group.doctor.name} ${group.doctor.surname}` : "Unknown Doctor";
+    const dateStr    = new Date(group.date).toLocaleDateString("en-ZA",{year:"numeric",month:"long",day:"numeric"});
+    const today      = new Date().toLocaleDateString("en-ZA",{year:"numeric",month:"long",day:"numeric"});
+    const patientNameText = el("patientName")?.textContent || "Patient";
+
+    const rows = group.medications.map((med,i) => `
+      <tr>
+        <td style="padding:12px 10px;border-bottom:1px solid #e2e8f0;color:#777;width:40px;font-size:14px;">${i+1}.</td>
+        <td style="padding:12px 10px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#1b2a4e;font-size:15px;">${med}</td>
+      </tr>`).join("");
+
+    printArea.innerHTML = `
+      <div style="font-family:'Georgia',serif;max-width:650px;margin:40px auto;padding:48px;
+        border:2px solid #1b2a4e;border-radius:12px;background:white;">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+          <div>
+            <h2 style="color:#1b2a4e;margin:0;font-size:1.7em;letter-spacing:0.5px;">e-Health Connect</h2>
+            <p style="color:#64748b;margin:4px 0 0;font-size:14px;">Official Prescription Record</p>
+          </div>
+          <div style="text-align:right;font-size:13px;color:#94a3b8;">
+            <div>Printed: ${today}</div>
+            <div style="margin-top:4px;font-weight:700;color:#1b2a4e;">PRESCRIPTION</div>
+          </div>
+        </div>
+
+        <hr style="border:2px solid #1b2a4e;margin-bottom:24px;">
+
+        <!-- Details grid -->
+        <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px;">
+          <tr>
+            <td style="padding:8px 0;color:#64748b;width:45%;">Patient Name</td>
+            <td style="padding:8px 0;font-weight:700;color:#1b2a4e;">${patientNameText}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#64748b;">Prescribed by</td>
+            <td style="padding:8px 0;font-weight:700;color:#1b2a4e;">${doctorName}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#64748b;">Date Prescribed</td>
+            <td style="padding:8px 0;font-weight:700;color:#1b2a4e;">${dateStr}</td>
+          </tr>
+        </table>
+
+        <hr style="border:1px solid #e2e8f0;margin-bottom:20px;">
+
+        <!-- Medications -->
+        <p style="font-weight:700;color:#1b2a4e;font-size:15px;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.5px;">
+          Medications Prescribed
+        </p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:28px;">
+          <thead>
+            <tr style="background:#1b2a4e;">
+              <th style="padding:11px 10px;text-align:left;color:white;font-weight:600;width:40px;">#</th>
+              <th style="padding:11px 10px;text-align:left;color:white;font-weight:600;">Medication</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+
+        <!-- Footer -->
+        <hr style="border:1px solid #e2e8f0;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+          <div style="font-size:12px;color:#94a3b8;">
+            Total medications: ${group.medications.length} &nbsp;|&nbsp; Issued via e-Health Connect
+          </div>
+          <div style="text-align:center;">
+            <div style="border-top:1px solid #1b2a4e;width:160px;padding-top:6px;font-size:12px;color:#64748b;">
+              Doctor's Signature
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+    // Trigger print — @media print CSS will hide everything except #printArea
+    window.print();
+
+    // Clean up after print dialog closes
+    setTimeout(() => { printArea.innerHTML = ""; }, 1500);
+  }
+
+  </script>
+
+  </html>
+  </body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Choose Role — e-Health Connect Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --navy:   #0b1c3d;
+  --navy2:  #1b2a4e;
+  --blue:   #385a9e;
+  --green:  #2e8b57;
+  --green2: #26a060;
+  --bg:     hsla(180,4%,87%,0.614);
+  --white:  #ffffff;
+  --text:   #0b1c3d;
+  --muted:  #5a6a7a;
+  --border: #dde3ed;
+}
+
+body{
+  font-family:'Roboto',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ── NAV ── */
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  background:#fff;padding:0 40px;height:72px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+  position:sticky;top:0;z-index:100;
+}
+.nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.nav-logo{
+  width:44px;height:44px;border-radius:10px;overflow:hidden;
+  background:var(--navy2);display:flex;align-items:center;justify-content:center;
+}
+.nav-logo img{width:100%;height:100%;object-fit:cover;border-radius:10px;}
+.nav-logo-emoji{font-size:22px;color:#fff;}
+.brand-name{font-family:'Roboto',sans-serif;font-size:17px;font-weight:700;color:var(--navy);line-height:1;}
+.brand-tag{font-size:11px;color:var(--green2);font-weight:600;margin-top:2px;}
+.nav-links{display:flex;gap:4px;}
+.nav-links a{
+  padding:8px 14px;border-radius:8px;font-size:14px;font-weight:500;
+  color:var(--muted);text-decoration:none;transition:all .2s;
+}
+.nav-links a:hover{color:var(--navy);background:rgba(11,28,61,.05);}
+.nav-btns{display:flex;gap:10px;}
+.nav-btn{
+  padding:8px 18px;border-radius:8px;font-family:'Roboto',sans-serif;
+  font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;
+}
+.nav-btn.ghost{border:1.5px solid var(--border);color:var(--navy);}
+.nav-btn.ghost:hover{background:var(--navy2);color:#fff;border-color:var(--navy2);}
+.nav-btn.solid{background:var(--navy2);color:#fff;}
+.nav-btn.solid:hover{background:var(--blue);}
+
+/* ── MAIN ── */
+main{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:48px 20px;
+}
+
+/* ── CARD ── */
+.choose-card{
+  background:#fff;border-radius:24px;
+  box-shadow:0 20px 60px rgba(11,28,61,.12);
+  padding:52px 48px;
+  max-width:560px;width:100%;
+  text-align:center;
+  border:1px solid var(--border);
+  animation:fadeUp .6s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
+
+.card-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(38,160,96,.1);border:1px solid rgba(38,160,96,.25);
+  padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;
+  color:var(--green2);margin-bottom:24px;
+}
+.card-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green2);}
+
+.card-title{
+  font-family:'Roboto',sans-serif;font-size:clamp(26px,4vw,36px);
+  font-weight:900;color:var(--navy);line-height:1.1;margin-bottom:10px;
+}
+.card-title em{font-style:italic;color:var(--green2);}
+.card-sub{font-size:15px;color:var(--muted);line-height:1.65;margin-bottom:40px;}
+
+/* ── Role options ── */
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;}
+
+.role-btn{
+  display:flex;flex-direction:column;align-items:center;
+  padding:32px 20px;border-radius:16px;text-decoration:none;
+  border:2px solid var(--border);background:#fff;
+  transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  cursor:pointer;position:relative;overflow:hidden;
+}
+.role-btn::before{
+  content:'';position:absolute;inset:0;opacity:0;transition:opacity .25s;
+}
+.role-btn.patient::before{background:linear-gradient(135deg,rgba(46,139,87,.06),rgba(38,160,96,.04));}
+.role-btn.doctor::before{background:linear-gradient(135deg,rgba(27,42,78,.06),rgba(56,90,158,.04));}
+.role-btn:hover{transform:translateY(-4px);}
+.role-btn:hover::before{opacity:1;}
+.role-btn.patient:hover{border-color:var(--green);box-shadow:0 12px 32px rgba(46,139,87,.18);}
+.role-btn.doctor:hover{border-color:var(--navy2);box-shadow:0 12px 32px rgba(27,42,78,.18);}
+
+.role-icon{
+  width:64px;height:64px;border-radius:18px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;margin-bottom:16px;position:relative;z-index:1;
+  transition:transform .25s;
+}
+.role-btn:hover .role-icon{transform:scale(1.08);}
+.role-btn.patient .role-icon{background:linear-gradient(135deg,#e8f5ee,#d0f0de);}
+.role-btn.doctor  .role-icon{background:linear-gradient(135deg,#e8ecf5,#d0d9f0);}
+
+.role-label{
+  font-family:'Roboto',sans-serif;font-size:18px;font-weight:700;
+  margin-bottom:6px;position:relative;z-index:1;transition:color .2s;
+}
+.role-btn.patient .role-label{color:var(--green);}
+.role-btn.doctor  .role-label{color:var(--navy2);}
+.role-desc{font-size:12.5px;color:var(--muted);line-height:1.5;position:relative;z-index:1;}
+
+.role-arrow{
+  position:absolute;bottom:14px;right:16px;
+  font-size:18px;opacity:0;transform:translateX(-6px);
+  transition:all .25s;z-index:1;
+}
+.role-btn.patient .role-arrow{color:var(--green);}
+.role-btn.doctor  .role-arrow{color:var(--navy2);}
+.role-btn:hover .role-arrow{opacity:1;transform:translateX(0);}
+
+/* ── Divider ── */
+.divider{
+  display:flex;align-items:center;gap:14px;
+  color:var(--muted);font-size:13px;margin-bottom:28px;
+}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── Already have account ── */
+.login-row{display:flex;gap:10px;}
+.login-link{
+  flex:1;padding:12px;border-radius:10px;text-decoration:none;text-align:center;
+  font-size:13.5px;font-weight:600;border:1.5px solid var(--border);
+  color:var(--muted);transition:all .2s;
+}
+.login-link:hover{border-color:var(--navy2);color:var(--navy2);background:rgba(27,42,78,.04);}
+
+/* ── Back home ── */
+.back-home{
+  display:inline-flex;align-items:center;gap:6px;margin-top:28px;
+  font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s;
+}
+.back-home:hover{color:var(--navy);}
+
+/* ── Responsive ── */
+@media(max-width:640px){
+  nav{padding:0 20px;}
+  .nav-links{display:none;}
+  .choose-card{padding:36px 24px;}
+  .roles{grid-template-columns:1fr;}
+}
+@media(max-width:400px){
+  .nav-btns{display:none;}
+}
+/* ── HAMBURGER & MOBILE MENU ── */
+.hamburger{
+  display:none;
+  background:none;border:none;font-size:24px;
+  cursor:pointer;color:var(--navy);padding:6px 8px;
+  border-radius:8px;line-height:1;
+}
+.hamburger:hover{background:rgba(11,28,61,.07);}
+
+.mobile-menu{
+  display:none;flex-direction:column;
+  background:#fff;border-top:1px solid var(--border);
+  padding:12px 20px 20px;gap:4px;
+  box-shadow:0 6px 20px rgba(0,0,0,.08);
+}
+.mobile-menu a{
+  padding:10px 12px;border-radius:8px;
+  font-size:15px;font-weight:500;color:var(--navy);
+  text-decoration:none;transition:background .2s;
+}
+.mobile-menu a:hover{background:rgba(11,28,61,.06);}
+.mobile-menu hr{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+.mobile-menu.open{display:flex;}
+
+@media(max-width:640px){
+  .hamburger{display:block;}
+  .nav-btns{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-brand">
+    <div class="nav-logo"><span class="nav-logo-text"><img src="LOGO.jpg" width="50px" alt="e-Health Connect Logo"></span></div>
+    <div>
+      <div class="brand-name">e-Health Connect</div>
+      <div class="brand-tag">health-care made easier for you</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="About-Us.html">About Us</a>
+    <a href="Contact-Us.html">Contact</a>
+  </div>
+  <div class="nav-btns">
+    <a href="doctorLogin.html" class="nav-btn ghost">Doctor Login</a>
+    <a href="patientsLogin.html" class="nav-btn solid">Patient Login</a>
+  </div>
+  <button class="hamburger" id="menuToggle" aria-label="Open menu">&#9776;</button>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="About-Us.html">About Us</a>
+  <a href="Contact-Us.html">Contact</a>
+  <hr/>
+  <a href="doctorLogin.html">Doctor Login</a>
+  <a href="patientsLogin.html">Patient Login</a>
+</div>
+
+<!-- MAIN -->
+<main>
+  <div class="choose-card">
+
+    <div class="card-badge"><span class="dot"></span>Create your free account</div>
+
+    <h1 class="card-title">Join e-Health<br/><em>Connect</em> today</h1>
+    <p class="card-sub">Choose how you'll be using the platform.<br/>You can always switch roles later.</p>
+
+    <!-- Role options -->
+    <div class="roles">
+      <a href="patients.html" class="role-btn patient">
+        <div class="role-icon">🧑‍💼</div>
+        <div class="role-label">Patient</div>
+        <div class="role-desc">Book appointments, consult doctors & manage your health records</div>
+        <span class="role-arrow">→</span>
+      </a>
+      <a href="doctor.html" class="role-btn doctor">
+        <div class="role-icon">👨‍⚕️</div>
+        <div class="role-label">Doctor</div>
+        <div class="role-desc">Manage your schedule, consult patients & issue prescriptions</div>
+        <span class="role-arrow">→</span>
+      </a>
+    </div>
+
+    <div class="divider">Already have an account?</div>
+
+    <div class="login-row">
+      <a href="patientsLogin.html" class="login-link">👤 Patient Login</a>
+      <a href="doctorLogin.html"   class="login-link">🩺 Doctor Login</a>
+    </div>
+
+    <a href="index.html" class="back-home">← Back to homepage</a>
+
+  </div>
+</main>
+<script>
+  const btn = document.getElementById('menuToggle');
+  const menu = document.getElementById('mobileMenu');
+  btn.addEventListener('click', () => {
+    menu.classList.toggle('open');
+    btn.setAttribute('aria-label', menu.classList.contains('open') ? 'Close menu' : 'Open menu');
+  });
+</script>
+</body>
+
+</html>

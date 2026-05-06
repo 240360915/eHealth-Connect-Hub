@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Appointment — e-Health Connect</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#f0f4f8; --surface:#ffffff; --accent:#1a6c5e; --accent2:#26a88a;
+      --danger:#d94f4f; --warn:#e07d2b; --text:#1a2634; --muted:#6b7f93;
+      --border:#dce4ed; --slot-free:#e8f6f2; --slot-taken:#fde8e8;
+      --slot-sel:#1a6c5e; --radius:14px; --shadow:0 4px 24px rgba(26,108,94,0.10);
+    }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:32px 16px 64px; }
+    .page-header { max-width:680px; margin:0 auto 32px; display:flex; align-items:center; gap:14px; }
+    .back-btn {
+      display:flex; align-items:center; justify-content:center;
+      width:42px; height:42px; border-radius:50%;
+      background:var(--surface); border:1.5px solid var(--border);
+      cursor:pointer; font-size:18px; color:var(--accent);
+      transition:background .2s,transform .15s; text-decoration:none;
+    }
+    .back-btn:hover { background:var(--accent); color:#fff; transform:scale(1.05); }
+    .page-header h1 { font-family:'DM Serif Display',serif; font-size:26px; color:var(--text); }
+    .page-header p { font-size:13.5px; color:var(--muted); margin-top:2px; }
+    .card { max-width:680px; margin:0 auto 24px; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    .card-head { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+    .card-head .icon { font-size:20px; }
+    .card-head h2 { font-size:16px; font-weight:600; }
+    .card-body { padding:24px; }
+    .field { margin-bottom:20px; }
+    .field label { display:block; font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+    .field select, .field input[type="date"], .field input[type="text"], .field input[type="number"] {
+      width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:10px;
+      font-family:'DM Sans',sans-serif; font-size:15px; color:var(--text); background:#fff;
+      outline:none; transition:border-color .2s,box-shadow .2s; appearance:none;
+    }
+    .field select:focus, .field input:focus { border-color:var(--accent2); box-shadow:0 0 0 3px rgba(38,168,138,.12); }
+    .field select {
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7f93' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 14px center; padding-right:38px;
+    }
+    .fee-input-wrap { display:flex; align-items:center; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; background:#fff; transition:border-color .2s,box-shadow .2s; }
+    .fee-input-wrap:focus-within { border-color:var(--accent2); box-shadow:0 0 0 3px rgba(38,168,138,.12); }
+    .fee-prefix { padding:12px 14px; font-size:15px; font-weight:600; color:var(--accent); background:var(--slot-free); border-right:1.5px solid var(--border); white-space:nowrap; }
+    .fee-input-wrap input { border:none !important; box-shadow:none !important; border-radius:0 !important; flex:1; }
+    .fee-display-box { display:none; justify-content:space-between; align-items:center; padding:14px 18px; border-radius:10px; background:var(--slot-free); border:1.5px solid #b2e0d4; margin-bottom:20px; }
+    .fee-display-box .fee-label { font-size:13px; color:var(--muted); font-weight:500; }
+    .fee-display-box .fee-value { font-size:22px; font-weight:700; color:var(--accent); }
+    #doctorInfo { display:none; margin-top:12px; padding:14px 16px; background:var(--slot-free); border:1.5px solid #b2e0d4; border-radius:10px; font-size:13.5px; }
+    #doctorInfo .doc-name { font-weight:600; font-size:15px; color:var(--accent); margin-bottom:4px; }
+    #doctorInfo .doc-meta { color:var(--muted); }
+    #doctorInfo .doc-hours { margin-top:6px; font-size:13px; color:var(--text); }
+    #doctorInfo .doc-hours strong { color:var(--accent); }
+    #slotSection { display:none; }
+    .slot-label { font-size:13px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+    .slots-legend { display:flex; gap:16px; margin-bottom:12px; flex-wrap:wrap; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted); }
+    .legend-dot { width:12px; height:12px; border-radius:50%; }
+    .legend-dot.free { background:var(--accent2); }
+    .legend-dot.taken { background:var(--danger); }
+    .legend-dot.sel { background:var(--slot-sel); }
+    .slots-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(88px,1fr)); gap:8px; }
+    .slot-btn { padding:10px 6px; border-radius:8px; border:1.5px solid transparent; font-family:'DM Sans',sans-serif; font-size:13.5px; font-weight:500; cursor:pointer; transition:all .18s; text-align:center; }
+    .slot-btn.free { background:var(--slot-free); border-color:#b2e0d4; color:var(--accent); }
+    .slot-btn.free:hover { background:var(--accent2); border-color:var(--accent2); color:#fff; transform:translateY(-1px); }
+    .slot-btn.taken { background:var(--slot-taken); border-color:#f5bebe; color:var(--danger); cursor:not-allowed; opacity:.75; }
+    .slot-btn.selected { background:var(--slot-sel); border-color:var(--slot-sel); color:#fff; box-shadow:0 3px 12px rgba(26,108,94,.3); }
+    .slots-loading, .slots-empty { padding:20px; text-align:center; color:var(--muted); font-size:14px; }
+    .spinner { display:inline-block; width:20px; height:20px; border:2.5px solid var(--border); border-top-color:var(--accent2); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:8px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    #selectedSlotDisplay { display:none; margin-top:14px; padding:12px 16px; background:#e8f6f2; border:1.5px solid var(--accent2); border-radius:10px; font-size:14px; color:var(--accent); font-weight:500; }
+    #paymentSection { display:none; }
+    .payment-card-preview { background:linear-gradient(135deg,#1a6c5e,#26a88a); border-radius:16px; padding:22px 24px; color:#fff; margin-bottom:20px; position:relative; overflow:hidden; }
+    .payment-card-preview::before { content:''; position:absolute; top:-30px; right:-30px; width:130px; height:130px; border-radius:50%; background:rgba(255,255,255,0.07); }
+    .payment-card-preview::after { content:''; position:absolute; bottom:-40px; right:60px; width:100px; height:100px; border-radius:50%; background:rgba(255,255,255,0.05); }
+    .card-chip { width:36px; height:26px; background:rgba(255,255,255,0.25); border-radius:5px; margin-bottom:18px; position:relative; }
+    .card-chip::after { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:rgba(255,255,255,0.4); transform:translateY(-50%); }
+    .card-number-display { font-size:17px; letter-spacing:3px; font-weight:500; margin-bottom:14px; opacity:0.95; }
+    .card-meta { display:flex; justify-content:space-between; align-items:flex-end; }
+    .card-meta-group label { font-size:10px; opacity:0.65; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px; display:block; color:#fff; }
+    .card-meta-group span { font-size:14px; font-weight:500; }
+    .card-logos { display:flex; gap:6px; align-items:center; }
+    .card-logos img { height:22px; opacity:0.9; }
+    .pay-fields-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .secure-note { display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--slot-free); border-radius:8px; font-size:12.5px; color:var(--accent); margin-top:6px; }
+    #summaryCard { display:none; }
+    .summary-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--border); font-size:14.5px; }
+    .summary-row:last-child { border-bottom:none; }
+    .summary-row span:first-child { color:var(--muted); }
+    .summary-row span:last-child { font-weight:600; color:var(--text); }
+    .summary-row.payer-row span:last-child { color:var(--accent2); }
+    .summary-row.amount-row { background:var(--slot-free); margin:0 -24px; padding:14px 24px; }
+    .summary-row.amount-row span:first-child { color:var(--accent); font-weight:600; font-size:15px; }
+    .summary-row.amount-row span:last-child { color:var(--accent); font-size:20px; }
+    .submit-btn { width:100%; padding:15px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; border-radius:11px; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:600; cursor:pointer; transition:opacity .2s,transform .15s,box-shadow .2s; box-shadow:0 4px 18px rgba(26,108,94,.3); margin-top:4px; }
+    .submit-btn:hover:not(:disabled) { opacity:.9; transform:translateY(-1px); box-shadow:0 6px 22px rgba(26,108,94,.4); }
+    .submit-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+    .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.52); z-index:900; align-items:center; justify-content:center; padding:16px; }
+    .modal-backdrop.open { display:flex; }
+    .receipt-modal { background:#fff; border-radius:18px; width:100%; max-width:520px; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+    .receipt-modal-head { background:linear-gradient(135deg,#1a6c5e,#26a88a); padding:28px 28px 22px; color:#fff; text-align:center; border-radius:18px 18px 0 0; }
+    .receipt-check { font-size:46px; margin-bottom:10px; }
+    .receipt-modal-head h2 { font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:4px; }
+    .receipt-modal-head p { font-size:13px; opacity:0.82; }
+    .receipt-ref { display:inline-block; margin-top:12px; padding:5px 18px; background:rgba(255,255,255,0.2); border-radius:20px; font-size:13px; font-weight:600; letter-spacing:0.05em; }
+    .receipt-body { padding:22px 28px; }
+    .receipt-section-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-bottom:10px; margin-top:18px; }
+    .receipt-section-label:first-child { margin-top:0; }
+    .receipt-row { display:flex; justify-content:space-between; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--border); font-size:14px; gap:12px; }
+    .receipt-row:last-child { border-bottom:none; }
+    .receipt-row .rl { color:var(--muted); flex-shrink:0; }
+    .receipt-row .rv { font-weight:600; color:var(--text); text-align:right; }
+    .receipt-total-box { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; border-radius:12px; background:var(--slot-free); border:1.5px solid #b2e0d4; margin:14px 0; }
+    .receipt-total-box .rt-label { font-size:14px; font-weight:600; color:var(--accent); }
+    .receipt-total-box .rt-value { font-size:26px; font-weight:700; color:var(--accent); }
+    .receipt-paid-banner { padding:14px 18px; background:#f0f9f6; border-radius:10px; border-left:4px solid var(--accent2); margin-bottom:14px; }
+    .receipt-paid-banner .pb-label { font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:4px; }
+    .receipt-paid-banner .pb-name { font-weight:600; font-size:15px; color:var(--text); }
+    .receipt-paid-banner .pb-card { font-size:13px; color:var(--muted); margin-top:2px; }
+    .receipt-actions { padding:0 28px 24px; display:flex; gap:12px; }
+    .btn-print { flex:1; padding:13px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; border-radius:10px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600; cursor:pointer; transition:opacity .2s; }
+    .btn-print:hover { opacity:0.9; }
+    .btn-close { padding:13px 20px; background:#fff; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:15px; font-weight:500; color:var(--muted); cursor:pointer; transition:background .2s; }
+    .btn-close:hover { background:var(--bg); }
+    #toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--text); color:#fff; padding:13px 24px; border-radius:50px; font-size:14px; font-weight:500; box-shadow:0 6px 24px rgba(0,0,0,.2); transition:transform .35s cubic-bezier(.34,1.56,.64,1); z-index:9999; white-space:nowrap; }
+    #toast.show { transform:translateX(-50%) translateY(0); }
+    #toast.success { background:var(--accent); }
+    #toast.error   { background:var(--danger); }
+    #toast.warn    { background:var(--warn); }
+    @media print {
+      body > *:not(.modal-backdrop) { display:none !important; }
+      .modal-backdrop { display:block !important; position:static !important; background:none !important; padding:0 !important; }
+      .receipt-modal { box-shadow:none !important; max-height:none !important; border-radius:0 !important; }
+      .receipt-modal-head { border-radius:0 !important; }
+      .receipt-actions { display:none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <a href="Patient-Dashboard.html" class="back-btn">←</a>
+  <div>
+    <h1>Book Appointment</h1>
+    <p>Choose a doctor, pick a date, select a slot, and pay to confirm</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><span class="icon">🩺</span><h2>Doctor &amp; Date</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label>Select Doctor</label>
+      <select id="doctorSelect" onchange="onDoctorChange()">
+        <option value="">-- Choose a doctor --</option>
+      </select>
+    </div>
+    <div id="doctorInfo">
+      <div class="doc-name" id="dInfoName"></div>
+      <div class="doc-meta" id="dInfoDisc"></div>
+      <div class="doc-hours" id="dInfoHours"></div>
+      <div class="doc-meta" id="dInfoRate" style="margin-top:4px;"></div>
+    </div>
+    <div class="field" style="margin-top:20px;">
+      <label>Date</label>
+      <input type="date" id="date" onchange="onDateChange()"/>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="slotSection">
+  <div class="card-head"><span class="icon">🕐</span><h2>Available Time Slots</h2></div>
+  <div class="card-body">
+    <div class="slots-legend">
+      <div class="legend-item"><div class="legend-dot free"></div>Available</div>
+      <div class="legend-item"><div class="legend-dot taken"></div>Booked</div>
+      <div class="legend-item"><div class="legend-dot sel"></div>Your pick</div>
+    </div>
+    <div class="slots-grid" id="slotsGrid"></div>
+    <div id="selectedSlotDisplay"></div>
+    <input type="hidden" id="time"/>
+  </div>
+</div>
+
+<div class="card" id="paymentSection">
+  <div class="card-head"><span class="icon">💳</span><h2>Payment Details</h2></div>
+  <div class="card-body">
+    <div class="payment-card-preview">
+      <div class="card-chip"></div>
+      <div class="card-number-display" id="previewNumber">•••• •••• •••• ••••</div>
+      <div class="card-meta">
+        <div class="card-meta-group">
+          <label>Card holder</label>
+          <span id="previewName">YOUR NAME</span>
+        </div>
+        <div class="card-meta-group" style="text-align:right;">
+          <label>Expires</label>
+          <span id="previewExpiry">MM/YY</span>
+        </div>
+        <div class="card-logos">
+          <img src="https://img.icons8.com/color/48/visa.png" alt="Visa"/>
+          <img src="https://img.icons8.com/color/48/mastercard.png" alt="Mastercard"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Consultation Fee</label>
+      <div class="fee-input-wrap">
+        <span class="fee-prefix">R</span>
+        <input type="number" id="consultFee" placeholder="0.00" min="0" step="0.01" oninput="updateFeeDisplay(); updateSummary()"/>
+      </div>
+    </div>
+    <div class="fee-display-box" id="feeDisplayBox">
+      <span class="fee-label">💳 Amount to be charged</span>
+      <span class="fee-value" id="feeDisplayValue">R0.00</span>
+    </div>
+
+    <div class="field">
+      <label>Cardholder Name</label>
+      <input type="text" id="cardName" placeholder="e.g. Lihlali Ndabeni" oninput="updateCardPreview(); updateSummary()"/>
+    </div>
+    <div class="field">
+      <label>Card Number</label>
+      <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCardNumber(); updateCardPreview(); updateSummary()"/>
+    </div>
+    <div class="pay-fields-row">
+      <div class="field" style="margin-bottom:0;">
+        <label>Expiry Date</label>
+        <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5" oninput="formatExpiry(); updateCardPreview()"/>
+      </div>
+      <div class="field" style="margin-bottom:0;">
+        <label>CVV</label>
+        <input type="text" id="cardCVV" placeholder="•••" maxlength="3"/>
+      </div>
+    </div>
+    <div class="field" style="margin-top:20px;">
+      <label>Select Your Bank:</label>
+      <select id="paymethod" oninput="updateCardPreview(); updateSummary()">
+        <option value="" disabled selected hidden>eg. Capitec</option>
+        <option value="Capitec">CAPITEC</option>                
+        <option value="FNB">FNB</option>
+        <option value="ABSA">ABSA</option>                
+        <option value="Standard Bank">STANDARD BANK</option>
+        <option value="TymeBank">TYMEBANK</option>
+        <option value="African Bank">AFRICAN BANK</option>                
+        <option value="Discovery Bank">DISCOVERY BANK</option>                
+        <option value="Investec">INVESTEC BANK</option>                
+        <option value="Bidvest">BIDVEST BANK</option>                  
+      </select>
+      <br><br>
+      <label>Card Nickname (optional)</label>
+      <input type="text" id="cardNickname" placeholder="e.g. My Savings Card" oninput="updateCardPreview(); updateSummary()"/>
+    </div>
+    <div class="secure-note">
+      <span>🔒</span>
+      Your payment is secured. Funds are only transferred upon doctor's confirmation.
+    </div>
+  </div>
+</div>
+
+<div class="card" id="summaryCard">
+  <div class="card-head"><span class="icon">📋</span><h2>Appointment Details</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label>Reason for Visit</label>
+      <input type="text" id="reason" placeholder="e.g. General consultation, follow-up..."/>
+    </div>
+    <div style="margin-bottom:20px;">
+      <div class="slot-label" style="margin-bottom:10px;">Booking Summary</div>
+      <div class="summary-row"><span>Doctor</span><span id="sumDoctor">—</span></div>
+      <div class="summary-row"><span>Date</span><span id="sumDate">—</span></div>
+      <div class="summary-row"><span>Time</span><span id="sumTime">—</span></div>
+      <div class="summary-row payer-row"><span>Paid by</span><span id="sumPaidBy">—</span></div>
+      <div class="summary-row"><span>Payment method</span><span id="sumPayment">—</span></div>
+      <div class="summary-row amount-row"><span>Amount Paid</span><span id="sumAmountPaid">R0.00</span></div>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="bookAppointment()">Confirm &amp; Pay Booking</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="receiptModal">
+  <div class="receipt-modal">
+    <div class="receipt-modal-head">
+      <div class="receipt-check">✅</div>
+      <h2>Booking Confirmed!</h2>
+      <p>Payment processed. Pending doctor approval.</p>
+      <div class="receipt-ref" id="rcptRef">Ref: —</div>
+    </div>
+    <div class="receipt-body">
+      <div class="receipt-section-label">Payment Receipt</div>
+      <div class="receipt-paid-banner">
+        <div class="pb-label">Paid by</div>
+        <div class="pb-name" id="rcptPaidBy">—</div>
+        <div class="pb-card" id="rcptCard">—</div>
+      </div>
+      <div class="receipt-total-box">
+        <span class="rt-label">Total Amount Paid</span>
+        <span class="rt-value" id="rcptAmount">R0.00</span>
+      </div>
+      <div class="receipt-section-label">Appointment Details</div>
+      <div class="receipt-row"><span class="rl">Doctor</span><span class="rv" id="rcptDoctor">—</span></div>
+      <div class="receipt-row"><span class="rl">Date</span><span class="rv" id="rcptDate">—</span></div>
+      <div class="receipt-row"><span class="rl">Time</span><span class="rv" id="rcptTime">—</span></div>
+      <div class="receipt-row"><span class="rl">Reason</span><span class="rv" id="rcptReason">—</span></div>
+      <div class="receipt-row"><span class="rl">Status</span><span class="rv" style="color:var(--warn);">✔ Pending Doctor Approval</span></div>
+    </div>
+    <div class="receipt-actions">
+      <button class="btn-print" onclick="window.print()">🖨️ Print Receipt</button>
+      <button class="btn-close" onclick="closeReceipt()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+  const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+  let allDoctors = [], selectedDoctor = null, selectedTime = null;
+
+  function el(id) { return document.getElementById(id); }
+
+  function showToast(msg, type="") {
+    const t = el("toast"); t.textContent = msg; t.className = "show " + type;
+    setTimeout(() => { t.className = ""; }, 3200);
+  }
+
+  function formatTime12(h, m) {
+    return `${h%12||12}:${String(m).padStart(2,"0")} ${h>=12?"PM":"AM"}`;
+  }
+
+  function formatDateDisplay(ds) {
+    if (!ds) return "—";
+    const [y,m,d] = ds.split("-");
+    return new Date(y,m-1,d).toLocaleDateString("en-ZA",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  }
+
+  function formatRand(val) {
+    const n = parseFloat(val);
+    return isNaN(n) ? "R0.00" : "R " + n.toFixed(2);
+  }
+
+  function updateFeeDisplay() {
+    const fee = parseFloat(el("consultFee").value);
+    const box = el("feeDisplayBox");
+    if (!isNaN(fee) && fee > 0) {
+      el("feeDisplayValue").textContent = formatRand(fee);
+      box.style.display = "flex";
+    } else {
+      box.style.display = "none";
+    }
+  }
+
+  function updateCardPreview() {
+    const name   = el("cardName").value.trim().toUpperCase() || "YOUR NAME";
+    const num    = el("cardNumber").value.replace(/\s/g,"");
+    const expiry = el("cardExpiry").value || "MM/YY";
+    el("previewName").textContent   = name;
+    el("previewExpiry").textContent = expiry;
+    let display = "";
+    for (let i=0; i<16; i++) {
+      if (i>0 && i%4===0) display += " ";
+      display += num[i] ? num[i] : "•";
+    }
+    el("previewNumber").textContent = display;
+  }
+
+  function formatCardNumber() {
+    const input = el("cardNumber");
+    let v = input.value.replace(/\D/g,"");
+    const g = v.match(/.{1,4}/g);
+    input.value = g ? g.join(" ") : "";
+  }
+
+  function formatExpiry() {
+    const input = el("cardExpiry");
+    let v = input.value.replace(/\D/g,"");
+    if (v.length >= 2) v = v.slice(0,2) + "/" + v.slice(2,4);
+    input.value = v;
+  }
+
+  function updateSummary() {
+    const doctorOpt = el("doctorSelect").options[el("doctorSelect").selectedIndex];
+    el("sumDoctor").textContent = doctorOpt?.textContent || "—";
+    el("sumDate").textContent   = formatDateDisplay(el("date").value);
+    const [h,m] = (selectedTime||"").split(":").map(Number);
+    el("sumTime").textContent   = selectedTime ? formatTime12(h,m) : "—";
+    const cardName = el("cardName").value.trim();
+    el("sumPaidBy").textContent = cardName || "—";
+
+    const bankSelect = el("paymethod");
+    const bankName = bankSelect.options[bankSelect.selectedIndex].text || "Card";
+    const num = el("cardNumber").value.replace(/\s/g,"");
+    const nick = el("cardNickname").value.trim();
+    
+    el("sumPayment").textContent = num.length >= 4
+      ? `💳 ${bankName} ••••${num.slice(-4)}${nick?" ("+nick+")":""}`
+      : "—";
+
+    const fee = parseFloat(el("consultFee").value);
+    el("sumAmountPaid").textContent = (!isNaN(fee) && fee>0) ? formatRand(fee) : "R0.00";
+  }
+
+  async function loadDoctors() {
+    const {data,error} = await client.from("doctors")
+      .select("id,name,surname,discipline,hourly_rate,operating_hours")
+      .eq("verification_status","approved").order("name");
+    if (error) { showToast("Failed to load doctors","error"); return; }
+    allDoctors = data||[];
+    const sel = el("doctorSelect");
+    sel.innerHTML = '<option value="">-- Choose a doctor --</option>';
+    allDoctors.forEach(doc => {
+      const opt = document.createElement("option");
+      opt.value = doc.id;
+      opt.textContent = `Dr. ${doc.name} ${doc.surname}${doc.discipline?" — "+doc.discipline:""}`;
+      sel.appendChild(opt);
+    });
+  }
+
+  function onDoctorChange() {
+    const id = el("doctorSelect").value;
+    selectedDoctor = allDoctors.find(d=>d.id===id)||null;
+    selectedTime = null; el("time").value = "";
+    el("slotSection").style.display = "none";
+    el("paymentSection").style.display = "none";
+    el("summaryCard").style.display = "none";
+    el("date").value = "";
+    if (!selectedDoctor) { el("doctorInfo").style.display="none"; return; }
+    el("doctorInfo").style.display = "block";
+    el("dInfoName").textContent = `Dr. ${selectedDoctor.name} ${selectedDoctor.surname}`;
+    el("dInfoDisc").textContent = selectedDoctor.discipline||"General Practitioner";
+    el("dInfoHours").innerHTML  = `🕐 <strong>Working hours:</strong> ${selectedDoctor.operating_hours || 'Contact for hours'}`;
+    if (selectedDoctor.hourly_rate) {
+      el("consultFee").value = parseFloat(selectedDoctor.hourly_rate).toFixed(2);
+      updateFeeDisplay(); updateSummary();
+    }
+    const today = new Date();
+    el("date").min = today.toISOString().split("T")[0];
+  }
+
+  async function onDateChange() {
+    const date = el("date").value;
+    if (!date||!selectedDoctor) return;
+    selectedTime=null; el("time").value="";
+    el("selectedSlotDisplay").style.display="none";
+    el("slotsGrid").innerHTML=`<div class="slots-loading"><span class="spinner"></span>Checking...</div>`;
+    el("slotSection").style.display="block";
+    
+    // Simulating slots for demo (normally pulled from doctor_slots table)
+    const baseSlots = ["08:00","09:00","10:00","11:00","13:00","14:00","15:00"];
+    const {data:booked} = await client.from("appointments").select("time").eq("doctor_id",selectedDoctor.id).eq("date",date).neq("status","cancelled");
+    const bookedTimes = new Set((booked||[]).map(b=>b.time.slice(0,5)));
+    
+    el("slotsGrid").innerHTML="";
+    baseSlots.forEach(slot=>{
+      const isTaken = bookedTimes.has(slot);
+      const btn = document.createElement("button");
+      btn.textContent = slot;
+      btn.className = `slot-btn ${isTaken?"taken":"free"}`;
+      btn.disabled = isTaken;
+      if(!isTaken) btn.onclick = () => selectSlot(slot, slot, btn);
+      el("slotsGrid").appendChild(btn);
+    });
+  }
+
+  function selectSlot(value, label, btn) {
+    document.querySelectorAll(".slot-btn.selected").forEach(b=>{b.classList.remove("selected");b.classList.add("free");});
+    btn.classList.add("selected");
+    selectedTime=value; el("time").value=value;
+    el("selectedSlotDisplay").style.display="block";
+    el("selectedSlotDisplay").innerHTML=`✅ Selected: <strong>${label}</strong>`;
+    el("paymentSection").style.display="block";
+    el("summaryCard").style.display="block";
+    updateSummary();
+  }
+
+  async function bookAppointment() {
+    const btn = el("submitBtn");
+    const bankSelect = el("paymethod");
+    const bankName = bankSelect.options[bankSelect.selectedIndex].text;
+    const cardNickname = el("cardNickname").value.trim();
+    const cardNumber = el("cardNumber").value.replace(/\s/g,"");
+    const fee = parseFloat(el("consultFee").value);
+    
+    if(!bankSelect.value) { showToast("Please select your bank","warn"); return; }
+    if(cardNumber.length < 16) { showToast("Invalid card number","warn"); return; }
+    
+    btn.disabled=true; btn.textContent="Processing...";
+    const {data:{user}} = await client.auth.getUser();
+    const {data:patient} = await client.from("patients").select("name,surname").eq("user_id",user.id).single();
+    
+    const paymentRef = `${bankName} ••••${cardNumber.slice(-4)}${cardNickname ? " ("+cardNickname+")" : ""}`;
+
+    const {error} = await client.from("appointments").insert([{
+      doctor_id: el("doctorSelect").value,
+      patient_id: user.id,
+      patient_name: `${patient.name} ${patient.surname}`,
+      date: el("date").value,
+      time: el("time").value,
+      reason: el("reason").value,
+      status: "pending",
+      payment_method: paymentRef,
+      amount_paid: fee
+    }]);
+
+    if(error) { showToast(error.message, "error"); btn.disabled=false; return; }
+
+    // Update receipt
+    el("rcptPaidBy").textContent = el("cardName").value;
+    el("rcptCard").textContent = paymentRef;
+    el("rcptAmount").textContent = formatRand(fee);
+    el("rcptDoctor").textContent = el("doctorSelect").options[el("doctorSelect").selectedIndex].text;
+    el("rcptDate").textContent = el("date").value;
+    el("rcptTime").textContent = el("time").value;
+    el("rcptReason").textContent = el("reason").value;
+
+    el("receiptModal").classList.add("open");
+  }
+
+  function closeReceipt() { window.location.href="Patient-Dashboard.html"; }
+
+  document.addEventListener("DOMContentLoaded", loadDoctors);
+</script>
+</body>
+</html>

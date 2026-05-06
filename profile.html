@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Profile — e-Health Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy:       #1b2a4e;
+            --navy-light: #243561;
+            --accent:     #3b82f6;
+            --success:    #10b981;
+            --danger:     #ef4444;
+            --warning:    #f59e0b;
+            --bg:         #f0f4f8;
+            --card:       #ffffff;
+            --text:       #1e293b;
+            --muted:      #64748b;
+            --border:     #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        /* 
+           AUTH SECTION
+       */
+        #authSection {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .auth-logo h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .auth-logo p {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .auth-logo .logo-icon {
+            width: 56px; height: 56px;
+            background: var(--navy);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+            margin: 0 auto 14px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 9px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .auth-field {
+            margin-bottom: 16px;
+        }
+
+        .auth-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .auth-field input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s;
+            border-bottom-width: 2px;
+        }
+
+        .auth-field input:focus { border-color: var(--accent); }
+
+        .btn-primary {
+            width: 100%;
+            height: 46px;
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 4px;
+        }
+
+        .btn-primary:hover { background: var(--navy-light); }
+
+        #authFeedback {
+            text-align: center;
+            font-size: 13px;
+            margin-top: 12px;
+            min-height: 20px;
+        }
+
+        /* 
+           PROFILE HEADER
+        */
+        #profileSection { display: none; }
+
+        .profile-header {
+            background: var(--navy);
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .profile-header-left { display: flex; align-items: center; gap: 16px; }
+
+        .avatar {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            border: 3px solid rgba(255,255,255,0.2);
+        }
+
+        .profile-header h1 { color: #fff; font-size: 20px; font-weight: 700; }
+        .profile-header p  { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 2px; }
+
+        .header-actions { display: flex; gap: 10px; align-items: center; }
+
+        .btn-outline {
+            padding: 9px 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: transparent;
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+        .btn-save {
+            padding: 9px 22px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-save:hover { background: #2563eb; }
+
+        /* 
+           PROFILE BODY
+         */
+        .profile-body {
+            max-width: 900px;
+            margin: 32px auto;
+            padding: 0 24px 60px;
+        }
+
+        /* Section card */
+        .form-card {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .form-card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-card-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .form-card-header p {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .section-icon {
+            font-size: 20px;
+            width: 36px; height: 36px;
+            background: var(--navy);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .form-card-body {
+            padding: 24px;
+        }
+
+        /* Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+        .form-grid .full { grid-column: 1 / -1; }
+
+        /* Field */
+        .field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .field label .req { color: var(--danger); margin-left: 2px; }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            height: 44px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            border-bottom-width: 2px;
+            background: #fff;
+        }
+
+        .field textarea {
+            height: auto;
+            padding: 12px 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+
+        .field input:valid:not(:placeholder-shown) { border-color: var(--success); }
+
+        /* Warning note */
+        .notice {
+            background: #fff8e1;
+            border-left: 4px solid var(--warning);
+            border-radius: 0 8px 8px 0;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #7d5a00;
+            margin-bottom: 20px;
+        }
+
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 28px; right: 28px;
+            background: var(--navy);
+            color: #fff;
+            padding: 13px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            transform: translateY(70px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 999;
+        }
+
+        #toast.show { transform: translateY(0); opacity: 1; }
+        #toast.success { border-left: 4px solid var(--success); }
+        #toast.error   { border-left: 4px solid var(--danger);  }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            text-decoration: none;
+            margin-bottom: 20px;
+            display: none; /* show if you have a dashboard */
+        }
+
+        @media (max-width: 640px) {
+            .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+            .profile-header { flex-direction: column; gap: 14px; align-items: flex-start; }
+            .profile-body { padding: 0 16px 40px; margin-top: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 
+     AUTH SECTION
+-->
+<div id="authSection">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <div class="logo-icon">🏥</div>
+            <h2>e-Health Connect</h2>
+            <p>Patient Portal</p>
+        </div>
+
+        <div class="auth-tabs">
+            <div class="auth-tab active" id="loginTab" onclick="switchAuthTab('login')">Login</div>
+            <div class="auth-tab" id="signupTab" onclick="switchAuthTab('signup')">Sign Up</div>
+        </div>
+
+        <form id="authForm">
+            <div class="auth-field">
+                <label>Email Address</label>
+                <input type="email" id="authEmail" placeholder="you@example.com" required>
+            </div>
+            <div class="auth-field">
+                <label>Password</label>
+                <input type="password" id="authPassword" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-primary" id="authSubmitBtn">Login</button>
+            <p id="authFeedback"></p>
+        </form>
+    </div>
+</div>
+
+<!-- 
+     PROFILE SECTION
+ -->
+<div id="profileSection">
+
+    <!-- Header -->
+    <div class="profile-header">
+        <div class="profile-header-left">
+            <div class="avatar" id="avatarInitial">P</div>
+            <div>
+                <h1 id="headerName">My Profile</h1>
+                <p id="headerEmail">Loading...</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="Patient-Dashboard.html" style="text-decoration:none">
+                <button class="btn-outline">← Dashboard</button>
+            </a>
+            <button class="btn-save" onclick="document.getElementById('profileForm').requestSubmit()">
+                💾 Save Changes
+            </button>
+            <button class="btn-outline" id="logoutBtn">⏻ Logout</button>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="profile-body">
+        <form id="profileForm">
+
+            <!-- ── Personal Information ── -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="section-icon">👤</div>
+                    <div>
+                        <h3>Personal Information</h3>
+                        <p>Your basic personal details</p>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Title</label>
+                            <select id="title">
+                                <option value="">Select Title</option>
+                                <option>Mr</option>
+                                <option>Mrs</option>
+                                <option>Ms</option>
+                                <option>Miss</option>
+                                <option>Dr</option>
+                                <option>Prof</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Gender</label>
+                            <select id="gender">
+                                <option value="">Select Gender</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>First Name <span class="req">*</span></label>
+                            <input type="text" id="name" placeholder="First Name" required>
+                        </div>
+                        <div class="field">
+                            <label>Surname <span class="req">*</span></label>
+                            <input type="text" id="surname" placeholder="Surname" required>
+                        </div>
+                        <div class="field">
+                            <label>ID Number</label>
+                            <input type="text" id="id_number" placeholder="13-digit SA ID Number" maxlength="13">
+                        </div>
+                        <div class="field">
+                            <label>Date of Birth</label>
+                            <input type="date" id="date_of_birth">
+                        </div>
+                        <div class="field">
+                            <label>Language</label>
+                            <input type="text" id="language" placeholder="e.g. English, Zulu">
+                        </div>
+                        <div class="field">
+                            <label>Blood Type</label>
+                            <select id="blood_type">
+                                <option value="">Select Blood Type</option>
+                                <option>A+</option><option>A-</option>
+                                <option>B+</option><option>B-</option>
+                                <option>AB+</option><option>AB-</option>
+                                <option>O+</option><option>O-</option>
+                                <option>Unknown</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Contact Information ── -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="section-icon">📞</div>
+                    <div>
+                        <h3>Contact Information</h3>
+                        <p>How we and doctors can reach you</p>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Email Address <span class="req">*</span></label>
+                            <input type="email" id="email" placeholder="Email" required>
+                        </div>
+                        <div class="field">
+                            <label>Cell Phone Number</label>
+                            <input type="tel" id="phone" placeholder="e.g. 0821234567" maxlength="10">
+                        </div>
+                        <div class="field full">
+                            <label>Address Line 1</label>
+                            <input type="text" id="address_line1" placeholder="Street address">
+                        </div>
+                        <div class="field full">
+                            <label>Address Line 2</label>
+                            <input type="text" id="address_line2" placeholder="Suburb / Unit">
+                        </div>
+                        <div class="field">
+                            <label>City</label>
+                            <input type="text" id="city" placeholder="City">
+                        </div>
+                        <div class="field">
+                            <label>Province</label>
+                            <select id="province">
+                                <option value="">Select Province</option>
+                                <option>Eastern Cape</option>
+                                <option>Free State</option>
+                                <option>Gauteng</option>
+                                <option>KwaZulu-Natal</option>
+                                <option>Limpopo</option>
+                                <option>Mpumalanga</option>
+                                <option>Northern Cape</option>
+                                <option>North West</option>
+                                <option>Western Cape</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Postal Code</label>
+                            <input type="text" id="postal_code" placeholder="Postal Code" maxlength="6">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Medical Aid ── -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="section-icon">🏥</div>
+                    <div>
+                        <h3>Medical Aid</h3>
+                        <p>Your medical aid / insurance details</p>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Medical Aid Scheme</label>
+                            <input type="text" id="medical_aid_scheme" placeholder="e.g. Discovery, Medihelp">
+                        </div>
+                        <div class="field">
+                            <label>Medical Aid Number</label>
+                            <input type="text" id="medical_aid_number" placeholder="Membership Number">
+                        </div>
+                        <div class="field">
+                            <label>Medical Aid Plan</label>
+                            <input type="text" id="medical_aid_plan" placeholder="e.g. Comprehensive, KeyCare">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Medical Background ── -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="section-icon">🩺</div>
+                    <div>
+                        <h3>Medical Background</h3>
+                        <p>Important health information for your doctors</p>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="notice">
+                        ⚠️ This information is shared with your treating doctors only. Keep it up to date for better care.
+                    </div>
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label>Known Allergies</label>
+                            <textarea id="allergies" placeholder="e.g. Penicillin, Peanuts, Latex — or type 'None'"></textarea>
+                        </div>
+                        <div class="field full">
+                            <label>Chronic Conditions</label>
+                            <textarea id="chronic_conditions" placeholder="e.g. Diabetes Type 2, Hypertension — or type 'None'"></textarea>
+                        </div>
+                        <div class="field full">
+                            <label>Current Medications</label>
+                            <textarea id="current_medications" placeholder="List any medications you are currently taking"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Emergency Contact ── -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="section-icon">🆘</div>
+                    <div>
+                        <h3>Emergency Contact</h3>
+                        <p>Person to contact in case of emergency</p>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-grid">
+                        <div class="field">
+                            <label>Contact Name</label>
+                            <input type="text" id="emergency_contact_name" placeholder="Full Name">
+                        </div>
+                        <div class="field">
+                            <label>Relationship</label>
+                            <select id="emergency_contact_relationship">
+                                <option value="">Select Relationship</option>
+                                <option>Spouse / Partner</option>
+                                <option>Parent</option>
+                                <option>Child</option>
+                                <option>Sibling</option>
+                                <option>Friend</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Contact Phone</label>
+                            <input type="tel" id="emergency_contact_phone" placeholder="e.g. 0821234567" maxlength="10">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+let currentAuthMode = 'login';
+
+
+// TOAST
+
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    setTimeout(() => { t.className = ''; }, 3500);
+}
+
+
+// AUTH TAB SWITCH
+
+function switchAuthTab(mode) {
+    currentAuthMode = mode;
+    document.getElementById('loginTab').classList.toggle('active',  mode === 'login');
+    document.getElementById('signupTab').classList.toggle('active', mode === 'signup');
+    document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Login' : 'Create Account';
+    document.getElementById('authFeedback').textContent = '';
+}
+
+// AUTH FORM SUBMIT (login + signup)
+
+document.getElementById("authForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email    = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value.trim();
+    const feedback = document.getElementById("authFeedback");
+
+    if (currentAuthMode === 'login') {
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+            feedback.textContent = error.message;
+            feedback.style.color = "red";
+        }
+    } else {
+        const { data, error } = await supabaseClient.auth.signUp({ email, password });
+        if (error) {
+            feedback.textContent = error.message;
+            feedback.style.color = "red";
+            return;
+        }
+
+        const user = data.user;
+        if (user) {
+            await supabaseClient.from("patients").insert({
+                id:      user.id,
+                user_id: user.id,
+                email:   email,
+                name:    "",
+                surname: "",
+            });
+        }
+
+        feedback.textContent = "Account created! Please check your email to verify.";
+        feedback.style.color = "green";
+    }
+});
+
+
+// LOAD PROFILE
+
+async function loadProfile() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabaseClient
+        .from("patients")
+        .select("*")
+        .or(`id.eq.${user.id},user_id.eq.${user.id}`)
+        .maybeSingle();
+
+    if (error) { console.error("Load error:", error); return; }
+
+    if (data) {
+        const set = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val || "";
+        };
+
+        set("name",                        data.name);
+        set("surname",                     data.surname);
+        set("date_of_birth",               data.date_of_birth);
+        set("id_number",                   data.id_number);
+        set("title",                       data.title);
+        set("phone",                       data.phone);
+        set("language",                    data.languege);   // keeping DB typo "languege"
+        set("email",                       data.email);
+        set("gender",                      data.gender);
+        set("blood_type",                  data.blood_type);
+        set("address_line1",               data.address_line1);
+        set("address_line2",               data.address_line2);
+        set("city",                        data.city);
+        set("province",                    data.province);
+        set("postal_code",                 data.postal_code);
+        set("medical_aid_scheme",          data.medical_aid_scheme);
+        set("medical_aid_number",          data.medical_aid_number);
+        set("medical_aid_plan",            data.medical_aid_plan);
+        set("allergies",                   data.allergies);
+        set("chronic_conditions",          data.chronic_conditions);
+        set("current_medications",         data.current_medications);
+        set("emergency_contact_name",      data.emergency_contact_name);
+        set("emergency_contact_phone",     data.emergency_contact_phone);
+        set("emergency_contact_relationship", data.emergency_contact_relationship);
+
+        // Update header
+        const fullName = `${data.name || ''} ${data.surname || ''}`.trim() || 'My Profile';
+        document.getElementById("headerName").textContent    = fullName;
+        document.getElementById("headerEmail").textContent   = data.email || user.email;
+        document.getElementById("avatarInitial").textContent = (data.name || user.email || 'P')[0].toUpperCase();
+    }
+}
+
+
+// SAVE PROFILE
+
+document.getElementById("profileForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const idNumber = document.getElementById("id_number").value.trim();
+
+    // Check duplicate ID number
+    if (idNumber) {
+        const { data: existing } = await supabaseClient
+            .from("patients")
+            .select("id")
+            .eq("id_number", idNumber)
+            .neq("id", user.id)
+            .maybeSingle();
+
+        if (existing) {
+            showToast("This ID Number is already used by another patient.", "error");
+            return;
+        }
+    }
+
+    const profile = {
+        name:                           document.getElementById("name").value.trim()                          || null,
+        surname:                        document.getElementById("surname").value.trim()                       || null,
+        date_of_birth:                  document.getElementById("date_of_birth").value                        || null,
+        id_number:                      idNumber                                                               || null,
+        title:                          document.getElementById("title").value                                 || null,
+        phone:                          document.getElementById("phone").value.trim()                          || null,
+        languege:                       document.getElementById("language").value.trim()                       || null, 
+        email:                          document.getElementById("email").value.trim()                          || null,
+        gender:                         document.getElementById("gender").value                                || null,
+        blood_type:                     document.getElementById("blood_type").value                           || null,
+        address_line1:                  document.getElementById("address_line1").value.trim()                  || null,
+        address_line2:                  document.getElementById("address_line2").value.trim()                  || null,
+        city:                           document.getElementById("city").value.trim()                           || null,
+        province:                       document.getElementById("province").value                              || null,
+        postal_code:                    document.getElementById("postal_code").value.trim()                    || null,
+        medical_aid_scheme:             document.getElementById("medical_aid_scheme").value.trim()             || null,
+        medical_aid_number:             document.getElementById("medical_aid_number").value.trim()             || null,
+        medical_aid_plan:               document.getElementById("medical_aid_plan").value.trim()               || null,
+        allergies:                      document.getElementById("allergies").value.trim()                      || null,
+        chronic_conditions:             document.getElementById("chronic_conditions").value.trim()             || null,
+        current_medications:            document.getElementById("current_medications").value.trim()            || null,
+        emergency_contact_name:         document.getElementById("emergency_contact_name").value.trim()         || null,
+        emergency_contact_phone:        document.getElementById("emergency_contact_phone").value.trim()        || null,
+        emergency_contact_relationship: document.getElementById("emergency_contact_relationship").value        || null,
+    };
+
+    // Find the row
+    const { data: matchedRow, error: matchError } = await supabaseClient
+        .from("patients")
+        .select("id")
+        .or(`id.eq.${user.id},user_id.eq.${user.id}`)
+        .maybeSingle();
+
+    if (matchError || !matchedRow) {
+        showToast("Could not find your profile row. Please contact support.", "error");
+        return;
+    }
+
+    const { error } = await supabaseClient
+        .from("patients")
+        .update(profile)
+        .eq("id", matchedRow.id);
+
+    if (error) {
+        showToast("Error saving profile: " + error.message, "error");
+    } else {
+        showToast("✅ Profile updated successfully!", "success");
+        loadProfile(); // refresh header name
+        setTimeout(() => { window.location.href = "Patient-Dashboard.html"; }, 1500);
+    }
+});
+
+
+// LOGOUT
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+});
+
+// SESSION CHECK
+
+async function checkUser() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    if (user) {
+        document.getElementById("authSection").style.display    = "none";
+        document.getElementById("profileSection").style.display = "block";
+        loadProfile();
+    } else {
+        document.getElementById("authSection").style.display    = "flex";
+        document.getElementById("profileSection").style.display = "none";
+    }
+}
+
+supabaseClient.auth.onAuthStateChange(() => { checkUser(); });
+checkUser();
+</script>
+</body>
+</html>

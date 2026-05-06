@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set New Password – e-Health Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Roboto", sans-serif;
+            
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: hsla(180, 4%, 87%, 0.614);
+            min-height: 100vh;
+
+        }
+
+        /* ── NAV ── */
+        .topnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 0 48px;
+            height: 72px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #1b2a4e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-name {
+            font-family: "Roboto", sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0b1c3d;
+            line-height: 1;
+        }
+
+        .brand-tag {
+            font-size: 11px;
+            color: #26a060;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5a6a7a;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #0b1c3d;
+            background: rgba(11, 28, 61, 0.05);
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-family: "Roboto", sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.ghost {
+            border: 1.5px solid #dde3ed;
+            color: #0b1c3d;
+        }
+
+        .nav-btn.ghost:hover {
+            background: #1b2a4e;
+            color: white;
+            border-color: #1b2a4e;
+        }
+
+        .nav-btn.solid {
+            background: #1b2a4e;
+            color: white;
+            border: none;
+        }
+
+        .nav-btn.solid:hover {
+            background: #385a9e;
+        }
+
+        /* ── HERO BANNER ── */
+        .page-hero {
+            background: linear-gradient(145deg, #0b1c3d 0%, #1b2a4e 55%, #385a9e 100%);
+            padding: 56px 80px 72px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(38, 160, 96, 0.2);
+            border: 1px solid rgba(38, 160, 96, 0.35);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6ee7b7;
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .page-hero h1 {
+            font-family: "Roboto", sans-serif;
+            font-size: clamp(30px, 4vw, 48px);
+            font-weight: 900;
+            color: white;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .page-hero h1 em {
+            font-style: italic;
+            color: #6ee7b7;
+        }
+
+        .page-hero p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+            max-width: 480px;
+            position: relative;
+        }
+
+        /* ── PAGE WRAPPER ── */
+        .page-wrapper {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+
+        /* ── CARD ── */
+        .reset-container {
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 8px 40px rgba(11, 28, 61, 0.10), 0 1px 4px rgba(11, 28, 61, 0.06);
+            padding: clamp(28px, 5vw, 44px) clamp(24px, 5vw, 40px);
+            border: 1px solid #dde3ed;
+        }
+
+        /* ── STEP INDICATOR ── */
+        .steps {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .step-pill {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 8px 0;
+            border-radius: 8px;
+            border: 1.5px solid #dde3ed;
+            transition: all 0.3s;
+        }
+
+        .step-pill.done {
+            background: rgba(38, 160, 96, 0.1);
+            color: #26a060;
+            border-color: rgba(38, 160, 96, 0.3);
+        }
+
+        .step-pill.active {
+            background: linear-gradient(135deg, #1b2a4e, #385a9e);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(27, 42, 78, 0.2);
+        }
+
+        .step-arrow {
+            font-size: 12px;
+            color: #dde3ed;
+            padding: 0 6px;
+            flex-shrink: 0;
+        }
+
+        /* ── SECTION HEADING ── */
+        .section-heading {
+            font-size: 11px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 0 0 1.4rem;
+            padding: 0.45rem 1rem;
+            background: rgba(11, 28, 61, 0.04);
+            border-left: 4px solid #1b2a4e;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* ── PASSWORD STRENGTH BAR ── */
+        .strength-wrap {
+            margin: -0.4rem 0 1rem;
+        }
+
+        .strength-bar {
+            height: 4px;
+            border-radius: 4px;
+            background: #f0f3f8;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s, background 0.3s;
+        }
+
+        .strength-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #8a9ab0;
+        }
+
+        /* ── INPUT GROUP ── */
+        .input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            height: 52px;
+            padding: 18px 14px 6px;
+            border: 1.5px solid #dde3ed;
+            border-radius: 9px;
+            outline: none;
+            font-size: 14.5px;
+            font-family: "Roboto", sans-serif;
+            color: #0b1c3d;
+            background: #f8fafc;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #8a9ab0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-group input:focus,
+        .input-group input:valid {
+            padding-top: 20px;
+            padding-bottom: 4px;
+        }
+
+        .input-group input:focus + label,
+        .input-group input:valid + label {
+            top: 10px;
+            transform: none;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #5a6a7a;
+        }
+
+        .input-group input:focus {
+            border-color: #385a9e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(56, 90, 158, 0.1);
+        }
+
+        .input-group input:valid:not(:placeholder-shown) {
+            border-color: #26a060;
+        }
+
+        /* ── SUBMIT BUTTON ── */
+        .login-btn {
+            width: 100%;
+            height: 52px;
+            outline: none;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #1b2a4e, #385a9e);
+            color: white;
+            font-family: "Roboto", sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 18px rgba(27, 42, 78, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        .login-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(27, 42, 78, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ── STATUS MESSAGE ── */
+        #showmessage {
+            text-align: center;
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-top: 14px;
+            min-height: 20px;
+            border-radius: 8px;
+            padding: 8px 0;
+        }
+
+        /* ── BACK LINK ── */
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #5a6a7a;
+        }
+
+        .back-link a {
+            color: #385a9e;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .topnav { padding: 0 20px; }
+            .nav-links { display: none; }
+            .page-hero { padding: 48px 24px 60px; }
+        }
+
+        @media (max-width: 560px) {
+            .nav-btns { display: none; }
+        }
+
+        /* ── HAMBURGER & MOBILE MENU ── */
+        .hamburger {
+        display: none;
+        background: none; border: none; font-size: 24px;
+        cursor: pointer; color: #0b1c3d; padding: 6px 8px;
+        border-radius: 8px; line-height: 1;
+        }
+        .hamburger:hover { background: rgba(11,28,61,.07); }
+
+        .mobile-menu {
+        display: none; flex-direction: column;
+        position: sticky; top: 72px; z-index: 99;
+        background: #fff; border-bottom: 1px solid #dde3ed;
+        padding: 12px 20px 20px; gap: 4px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.08);
+        }
+        .mobile-menu a {
+        padding: 11px 12px; border-radius: 8px;
+        font-size: 15px; font-weight: 500; color: #0b1c3d;
+        text-decoration: none; transition: background .2s;
+        }
+        .mobile-menu a:hover { background: rgba(11,28,61,.06); }
+        .mobile-menu hr { border: none; border-top: 1px solid #dde3ed; margin: 8px 0; }
+        .mobile-menu.open { display: flex; }
+
+        @media (max-width: 768px) {
+        .hamburger { display: block; }
+        .nav-btns  { display: none; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="topnav">
+        <a href="index.html" class="nav-brand">
+            <div class="nav-logo"><img src="LOGO.jpg" width="50px" alt="e-Health Connect Logo"></div>
+            <div>
+                <div class="brand-name">e-Health Connect</div>
+                <div class="brand-tag">health-care made easier for you</div>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="About-Us.html">About Us</a>
+            <a href="Contact-Us.html">Contact Us</a>
+            <a href="Choose.html">Register</a>
+        </div>
+        <div class="nav-btns">
+            <a href="doctorLogin.html" class="nav-btn ghost">Doctor Login</a>
+            <a href="patientsLogin.html" class="nav-btn solid">Patient Login</a>
+        </div>
+        <button class="hamburger" id="menuToggle" aria-label="Open menu">&#9776;</button>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="BestHomepage.html">Home</a>
+        <a href="About-Us.html">About Us</a>
+        <a href="Contact-Us.html">Contact Us</a>
+        <a href="Choose.html">Register</a>
+        <hr/>
+        <a href="doctorLogin.html">Doctor Login</a>
+        <a href="patientsLogin.html">Patient Login</a>
+    </div>
+
+    <!-- HERO BANNER -->
+    <div class="page-hero">
+        <div class="hero-badge">🔒 Account Recovery</div>
+        <h1>Set a New <em>Password</em></h1>
+        <p>Almost done! Choose a strong new password for your e-Health Connect account.</p>
+    </div>
+
+    <!-- CARD -->
+    <div class="page-wrapper">
+        <div class="reset-container">
+
+            <!-- Step indicator — steps 1 & 2 are done, step 3 active -->
+            <div class="steps">
+                <div class="step-pill done">1 · Email ✓</div>
+                <div class="step-arrow">›</div>
+                <div class="step-pill done">2 · OTP ✓</div>
+                <div class="step-arrow">›</div>
+                <div class="step-pill active">3 · New Password</div>
+            </div>
+
+            <div class="section-heading">🔑 Choose Your New Password</div>
+
+            <form id="resetForm">
+
+                <div class="input-group">
+                    <input type="password" id="newPassword" required minlength="6" placeholder=" ">
+                    <label for="newPassword">New Password</label>
+                </div>
+
+                <!-- Password strength indicator -->
+                <div class="strength-wrap">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <span class="strength-label" id="strengthLabel">Enter a password</span>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="confirmPassword" required minlength="6" placeholder=" ">
+                    <label for="confirmPassword">Confirm New Password</label>
+                </div>
+
+                <button type="submit" class="login-btn">🔒 Update Password</button>
+
+            </form>
+
+            <div id="showmessage"></div>
+
+            <div class="back-link">
+                <a href="patientsLogin.html">← Back to Login</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const menuBtn    = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        menuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('open');
+        const isOpen = mobileMenu.classList.contains('open');
+        menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+        menuBtn.innerHTML = isOpen ? '&#x2715;' : '&#9776;';
+        });
+        // ── Supabase setup ──
+        const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+        const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // ── Helpers ──
+        function setMessage(text, color = "#26a060") {
+            const el = document.getElementById("showmessage");
+            if (!el) return;
+            el.textContent = text;
+            el.style.color = color;
+        }
+
+        // ── Password strength meter ──
+        document.getElementById("newPassword").addEventListener("input", function () {
+            const val = this.value;
+            const fill = document.getElementById("strengthFill");
+            const label = document.getElementById("strengthLabel");
+
+            let score = 0;
+            if (val.length >= 6)  score++;
+            if (val.length >= 10) score++;
+            if (/[A-Z]/.test(val)) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+
+            const levels = [
+                { width: "0%",   color: "#dde3ed", text: "Enter a password" },
+                { width: "25%",  color: "#e53e3e", text: "Too weak" },
+                { width: "50%",  color: "#f39c12", text: "Fair" },
+                { width: "75%",  color: "#385a9e", text: "Good" },
+                { width: "90%",  color: "#26a060", text: "Strong" },
+                { width: "100%", color: "#19643b", text: "Very strong 💪" },
+            ];
+
+            const lvl = val.length === 0 ? levels[0] : levels[Math.min(score, 5)];
+            fill.style.width = lvl.width;
+            fill.style.background = lvl.color;
+            label.textContent = lvl.text;
+            label.style.color = lvl.color;
+        });
+
+        // ── Reset password on submit ──
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("resetForm");
+            if (!form) return;
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const newPassword     = document.getElementById("newPassword").value;
+                const confirmPassword = document.getElementById("confirmPassword").value;
+
+                if (newPassword.length < 6) {
+                    setMessage("Password must be at least 6 characters.", "#e53e3e");
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    setMessage("Passwords do not match.", "#e53e3e");
+                    return;
+                }
+
+                setMessage("Updating password…", "#555");
+
+                const { error } = await client.auth.updateUser({ password: newPassword });
+
+                if (error) {
+                    console.error(error.message);
+                    setMessage("Error updating password: " + error.message, "#e53e3e");
+                    return;
+                }
+
+                setMessage("Password updated successfully! Redirecting…", "#26a060");
+                setTimeout(() => window.location.href = "patientsLogin.html", 1500);
+            });
+        });
+    </script>
+
+</body>
+</html>

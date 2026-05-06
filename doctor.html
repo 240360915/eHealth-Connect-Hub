@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Registration – e-Health Connect</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Roboto", sans-serif;
+        }
+
+        body {
+            background-color: hsla(180, 4%, 87%, 0.614);
+        }
+
+        /* ── NAV ── */
+        .topnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 0 48px;
+            height: 72px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: #1b2a4e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-name {
+            font-family: "Fraunces", serif;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0b1c3d;
+            line-height: 1;
+        }
+
+        .brand-tag {
+            font-size: 11px;
+            color: #26a060;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 4px;
+        }
+
+        .nav-links a {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5a6a7a;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #0b1c3d;
+            background: rgba(11, 28, 61, 0.05);
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-family: "Roboto", sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.ghost {
+            border: 1.5px solid #dde3ed;
+            color: #0b1c3d;
+        }
+
+        .nav-btn.ghost:hover {
+            background: #1b2a4e;
+            color: white;
+            border-color: #1b2a4e;
+        }
+
+        .nav-btn.solid {
+            background: #1b2a4e;
+            color: white;
+            border: none;
+        }
+
+        .nav-btn.solid:hover {
+            background: #385a9e;
+        }
+
+        /* ── HERO BANNER ── */
+        .page-hero {
+            background: linear-gradient(145deg, #0b1c3d 0%, #1b2a4e 55%, #385a9e 100%);
+            padding: 56px 80px 72px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(38, 160, 96, 0.2);
+            border: 1px solid rgba(38, 160, 96, 0.35);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6ee7b7;
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .page-hero h1 {
+            font-family: "Fraunces", serif;
+            font-size: clamp(30px, 4vw, 48px);
+            font-weight: 900;
+            color: white;
+            line-height: 1.1;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .page-hero h1 em {
+            font-style: italic;
+            color: #6ee7b7;
+        }
+
+        .page-hero p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.7;
+            max-width: 480px;
+            position: relative;
+        }
+
+        /* ── PAGE WRAPPER ── */
+        .page-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 48px 20px 64px;
+        }
+
+        /* ── CARD ── */
+        .container {
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 8px 40px rgba(11, 28, 61, 0.10), 0 1px 4px rgba(11, 28, 61, 0.06);
+            padding: clamp(28px, 5vw, 52px) clamp(24px, 5vw, 48px);
+            border: 1px solid #dde3ed;
+            /* override old title styles */
+            max-width: unset;
+            margin-top: unset;
+            margin-bottom: unset;
+        }
+
+        /* hide old plain title */
+        .container > .title {
+            display: none;
+        }
+
+        /* ── FORM SECTION HEADING ── */
+        .section-heading {
+            font-size: 11px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin: 2.2rem 0 1.1rem;
+            padding: 0.45rem 1rem;
+            background: rgba(11, 28, 61, 0.04);
+            border-left: 4px solid #1b2a4e;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-heading:first-of-type {
+            margin-top: 0;
+        }
+
+        /* ── GRID ── */
+        .user-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem 1.5rem;
+            margin: 0;
+            justify-content: unset;
+            flex-wrap: unset;
+        }
+
+        /* ── INPUT BOX ── */
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: unset !important;
+            margin-bottom: 0;
+        }
+
+        .input-box.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .details {
+            font-size: 12px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-bottom: 0;
+        }
+
+        .details .required {
+            color: #e53e3e;
+            margin-left: 2px;
+            font-size: 13px;
+        }
+
+        /* All text / email / password / number / tel inputs */
+        .user-details .input-box input,
+        .documents-section .input-box input[type="text"],
+        .documents-section .input-box input[type="email"],
+        .documents-section .input-box input[type="password"],
+        .documents-section .input-box input[type="tel"],
+        .documents-section .input-box input[type="number"] {
+            height: 46px;
+            width: 100%;
+            outline: none;
+            border-radius: 9px;
+            border: 1.5px solid #dde3ed;
+            padding: 0 14px;
+            font-size: 14.5px;
+            color: #0b1c3d;
+            background: #f8fafc;
+            font-family: "Roboto", sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            border-bottom-width: 1.5px; /* reset old 3px */
+        }
+
+        .user-details .input-box input:focus,
+        .documents-section .input-box input:focus {
+            border-color: #385a9e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(56, 90, 158, 0.1);
+        }
+
+        .user-details .input-box input:valid:not(:placeholder-shown),
+        .documents-section .input-box input:valid:not(:placeholder-shown) {
+            border-color: #26a060;
+        }
+
+        /* ── ADDRESS STACK ── */
+        .address-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .address-stack input {
+            height: 46px;
+            width: 100%;
+            outline: none;
+            border-radius: 9px;
+            border: 1.5px solid #dde3ed;
+            padding: 0 14px;
+            font-size: 14.5px;
+            color: #0b1c3d;
+            background: #f8fafc;
+            font-family: "Roboto", sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .address-stack input:focus {
+            border-color: #385a9e;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(56, 90, 158, 0.1);
+        }
+
+        .address-stack input:valid:not(:placeholder-shown) {
+            border-color: #26a060;
+        }
+
+        /* ── GENDER ── */
+        .gender-details {
+            margin-top: 0.5rem;
+        }
+
+        .gender-details .gender-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #5a6a7a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-bottom: 0.75rem;
+        }
+
+        .category {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            width: unset;
+            margin: 0;
+            justify-content: unset;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        .gender-details .category label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 11px 20px;
+            border: 1.5px solid #dde3ed;
+            border-radius: 9px;
+            font-size: 14px;
+            color: #5a6a7a;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+
+        /* hide old dot spans */
+        .gender-details .category label .dot {
+            display: none;
+        }
+
+        .gender-details .category label::before {
+            content: '';
+            width: 18px;
+            height: 18px;
+            border: 2px solid #dde3ed;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .gender-details .category label:hover {
+            border-color: #1b2a4e;
+            background: rgba(27, 42, 78, 0.04);
+            color: #1b2a4e;
+        }
+
+        #dot-1:checked ~ .category label[for="dot-1"],
+        #dot-2:checked ~ .category label[for="dot-2"],
+        #dot-3:checked ~ .category label[for="dot-3"] {
+            border-color: #1b2a4e;
+            background: rgba(27, 42, 78, 0.07);
+            color: #1b2a4e;
+            font-weight: 600;
+        }
+
+        #dot-1:checked ~ .category label[for="dot-1"]::before,
+        #dot-2:checked ~ .category label[for="dot-2"]::before,
+        #dot-3:checked ~ .category label[for="dot-3"]::before {
+            border-color: #1b2a4e;
+            background: #1b2a4e;
+            box-shadow: inset 0 0 0 4px white;
+        }
+
+        /* ── DOCUMENTS SECTION ── */
+        .documents-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem 1.5rem;
+            margin: 0;
+            flex-wrap: unset;
+            justify-content: unset;
+        }
+
+        .documents-section .input-box {
+            width: unset !important;
+            margin-bottom: 0;
+        }
+
+        .documents-section .input-box.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* ── FILE UPLOAD ── */
+        .file-upload-wrapper input[type="file"] {
+            height: 46px;
+            width: 100%;
+            border-radius: 9px;
+            border: 1.5px dashed #dde3ed;
+            padding: 10px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #f8fafc;
+            font-family: "Roboto", sans-serif;
+            transition: border-color 0.2s, background 0.2s;
+            outline: none;
+            color: #5a6a7a;
+        }
+
+        .file-upload-wrapper input[type="file"]:hover {
+            background: rgba(27, 42, 78, 0.04);
+            border-color: #1b2a4e;
+        }
+
+        .file-hint {
+            font-size: 11px;
+            color: #8a9ab0;
+            margin-top: 4px;
+            display: block;
+            font-style: italic;
+        }
+
+        /* ── DOCUMENT NOTICE ── */
+        .doc-notice {
+            background: rgba(243, 156, 18, 0.08);
+            border-left: 4px solid #f39c12;
+            border-radius: 0 9px 9px 0;
+            padding: 14px 18px;
+            margin-bottom: 1.2rem;
+            font-size: 13.5px;
+            color: #7d5a00;
+            line-height: 1.6;
+        }
+
+        .doc-notice strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: #5a3e00;
+        }
+
+        /* ── SUBMIT BUTTON ── */
+        .button {
+            margin-top: 2rem;
+            height: auto;
+        }
+
+        form .button input[type="submit"] {
+            width: 100%;
+            height: 52px;
+            outline: none;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #1b2a4e, #385a9e);
+            color: white;
+            font-family: "Roboto", sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 18px rgba(27, 42, 78, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        form .button input[type="submit"]:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(27, 42, 78, 0.4);
+        }
+
+        form .button input[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        /* ── LOGIN PROMPT ── */
+        .login-prompt {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #5a6a7a;
+        }
+
+        .login-prompt a {
+            color: #385a9e;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .login-prompt a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .topnav { padding: 0 20px; }
+            .nav-links { display: none; }
+            .page-hero { padding: 48px 24px 60px; }
+        }
+
+        @media (max-width: 560px) {
+            .user-details,
+            .documents-section { grid-template-columns: 1fr; }
+            .input-box.full-width { grid-column: 1; }
+            .documents-section .input-box.full-width { grid-column: 1; }
+            .category { flex-direction: column; }
+            .nav-btns { display: none; }
+        }
+        /* ── HAMBURGER & MOBILE MENU ── */
+        .hamburger {
+        display: none;
+        background: none; border: none; font-size: 24px;
+        cursor: pointer; color: #0b1c3d; padding: 6px 8px;
+        border-radius: 8px; line-height: 1;
+        }
+        .hamburger:hover { background: rgba(11,28,61,.07); }
+
+        .mobile-menu {
+        display: none; flex-direction: column;
+        position: sticky; top: 72px; z-index: 99;
+        background: #fff; border-bottom: 1px solid #dde3ed;
+        padding: 12px 20px 20px; gap: 4px;
+        box-shadow: 0 6px 20px rgba(0,0,0,.08);
+        }
+        .mobile-menu a {
+        padding: 11px 12px; border-radius: 8px;
+        font-size: 15px; font-weight: 500; color: #0b1c3d;
+        text-decoration: none; transition: background .2s;
+        }
+        .mobile-menu a:hover { background: rgba(11,28,61,.06); }
+        .mobile-menu hr { border: none; border-top: 1px solid #dde3ed; margin: 8px 0; }
+        .mobile-menu.open { display: flex; }
+
+        @media (max-width: 768px) {
+        .hamburger { display: block; }
+        .nav-btns  { display: none; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav class="topnav">
+        <a href="index.html" class="nav-brand">
+            <div class="nav-logo">🏥</div>
+            <div>
+                <div class="brand-name">e-Health Connect</div>
+                <div class="brand-tag">health-care made easier for you</div>
+            </div>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="About-Us.html">About Us</a>
+            <a href="Contact-Us.html">Contact Us</a>
+        </div>
+        <div class="nav-btns">
+            <a href="patientsLogin.html" class="nav-btn ghost">Patient Login</a>
+            <a href="doctorLogin.html" class="nav-btn solid">Doctor Login</a>
+        </div>
+        <button class="hamburger" id="menuToggle" aria-label="Open menu">&#9776;</button>
+    </nav>
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html">Home</a>
+        <a href="About-Us.html">About Us</a>
+        <a href="Contact-Us.html">Contact Us</a>
+        <hr/>
+        <a href="patientsLogin.html">Patient Login</a>
+        <a href="doctorLogin.html">Doctor Login</a>
+    </div>
+
+    <!-- HERO BANNER -->
+    <div class="page-hero">
+        <div class="hero-badge">🩺 Create your doctor account</div>
+        <h1>Doctor <em>Registration</em></h1>
+        <p>Complete the form below to register as a verified doctor on e-Health Connect. Your account will be reviewed and activated by an administrator.</p>
+    </div>
+
+    <!-- MAIN FORM -->
+    <div class="page-wrapper">
+        <div class="container">
+
+            <form action="" onsubmit="registerDoctor(event)">
+
+                <!-- SECTION 1: Practice Information -->
+                <div class="section-heading">🏥 Practice Information</div>
+                <div class="user-details">
+
+                    <div class="input-box">
+                        <span class="details">Practice Number <span class="required">*</span></span>
+                        <input type="text" id="practice_number" name="practice_number" placeholder="Practice Number" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Practice Name <span class="required">*</span></span>
+                        <input type="text" id="practice_name" name="practice_name" placeholder="Practice Name" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">HPCSA Registration Number <span class="required">*</span></span>
+                        <input type="text" id="hpcsa_number" name="hpcsa_number" placeholder="HPCSA Registration Number" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Discipline</span>
+                        <input type="text" id="discipline" name="discipline" placeholder="Enter Discipline">
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Qualifications <span class="required">*</span></span>
+                        <input type="text" id="qualifications" name="qualifications" placeholder="e.g. MBChB, MMed" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Operating Hours <span class="required">*</span></span>
+                        <input type="text" id="operating_hours" name="operating_hours" placeholder="e.g. Mon–Fri 08:00–17:00" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Consultation Rate (per hour)</span>
+                        <input type="number" id="hourly_rate" placeholder="e.g. 350" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Medical Aid Schemes Accepted <span class="required">*</span></span>
+                        <input type="text" id="medical_aids" name="medical_aids" placeholder="e.g. Discovery, Medihelp, GEMS" required>
+                    </div>
+
+                </div>
+
+                <!-- SECTION 2: Personal Information -->
+                <div class="section-heading">👤 Personal Information</div>
+                <div class="user-details">
+
+                    <div class="input-box">
+                        <span class="details">Name <span class="required">*</span></span>
+                        <input type="text" id="name" name="name" placeholder="First Names" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Surname <span class="required">*</span></span>
+                        <input type="text" id="surname" name="surname" placeholder="Surname" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">ID Number <span class="required">*</span></span>
+                        <input type="text" id="idNumber" name="idNumber" placeholder="Identity Number" required maxlength="13">
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Cell phone Number <span class="required">*</span></span>
+                        <input type="tel" id="phone" name="phone" placeholder="Cell phone Number" required maxlength="10">
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Email Address <span class="required">*</span></span>
+                        <input type="email" id="email" name="email" placeholder="Email Address" required minlength="5">
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Languages Spoken <span class="required">*</span></span>
+                        <input type="text" id="language" name="language" placeholder="e.g. English, Zulu, Afrikaans" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Profile Image</span>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="profile_image" name="profile_image" accept="image/*">
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Gender -->
+                <div class="section-heading">⚧ Gender</div>
+                <div class="gender-details">
+                    <input type="radio" name="gender" id="dot-1" value="Male">
+                    <input type="radio" name="gender" id="dot-2" value="Female">
+                    <input type="radio" name="gender" id="dot-3" value="Prefer not to say">
+                    <div class="category">
+                        <label for="dot-1">
+                            <span class="dot one"></span>
+                            <span class="gender">Male</span>
+                        </label>
+                        <label for="dot-2">
+                            <span class="dot two"></span>
+                            <span class="gender">Female</span>
+                        </label>
+                        <label for="dot-3">
+                            <span class="dot three"></span>
+                            <span class="gender">Prefer not to say</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Practice Address -->
+                <div class="section-heading">📍 Practice Address</div>
+                <div class="user-details">
+
+                    <div class="input-box full-width">
+                        <span class="details">Address <span class="required">*</span></span>
+                        <div class="address-stack">
+                            <input type="text" id="address1" name="address1" placeholder="Address Line 1" required>
+                            <input type="text" id="address2" name="address2" placeholder="Address Line 2 (optional)">
+                        </div>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">City <span class="required">*</span></span>
+                        <input type="text" id="city" name="city" placeholder="City" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Province <span class="required">*</span></span>
+                        <input type="text" id="province" name="province" placeholder="Province" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Postal Code <span class="required">*</span></span>
+                        <input type="text" id="postal_code" name="postal_code" placeholder="Postal Code" required>
+                    </div>
+
+                </div>
+
+                <!-- SECTION 4: Verification Documents -->
+                <div class="section-heading">📄 Verification Documents</div>
+
+                <div class="doc-notice">
+                    <strong>⚠️ Important</strong>
+                    All uploaded documents will be reviewed by an administrator before your account is activated.
+                    Accepted formats: PDF, JPG, PNG. Your account will remain <strong>pending</strong> until verification is complete.
+                </div>
+
+                <div class="documents-section">
+
+                    <div class="input-box">
+                        <span class="details">Certified ID Copy <span class="required">*</span></span>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="id_document" name="id_document" accept=".pdf,.jpg,.jpeg,.png" required>
+                        </div>
+                        <span class="file-hint">Certified copy of your South African ID</span>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">HPCSA Registration Certificate <span class="required">*</span></span>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="hpcsa_certificate" name="hpcsa_certificate" accept=".pdf,.jpg,.jpeg,.png" required>
+                        </div>
+                        <span class="file-hint">Current HPCSA registration certificate</span>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Medical Degree Certificate <span class="required">*</span></span>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="medical_degree" name="medical_degree" accept=".pdf,.jpg,.jpeg,.png" required>
+                        </div>
+                        <span class="file-hint">e.g. MBChB degree certificate</span>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Specialist Certificate</span>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="specialist_certificate" name="specialist_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                        </div>
+                        <span class="file-hint">Only if applicable to your discipline</span>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Practice Registration Certificate <span class="required">*</span></span>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="practice_certificate" name="practice_certificate" accept=".pdf,.jpg,.jpeg,.png" required>
+                        </div>
+                        <span class="file-hint">Official practice registration document</span>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Proof of Address <span class="required">*</span></span>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="proof_of_address" name="proof_of_address" accept=".pdf,.jpg,.jpeg,.png" required>
+                        </div>
+                        <span class="file-hint">Utility bill or bank statement (not older than 3 months)</span>
+                    </div>
+
+                </div>
+
+                <!-- SECTION 5: Account Security -->
+                <div class="section-heading">🔒 Account Security</div>
+                <div class="user-details">
+
+                    <div class="input-box">
+                        <span class="details">Password <span class="required">*</span></span>
+                        <input type="password" id="password" name="password" placeholder="Create a password" required>
+                    </div>
+
+                    <div class="input-box">
+                        <span class="details">Confirm Password <span class="required">*</span></span>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repeat password" required>
+                    </div>
+
+                </div>
+
+                <!-- SUBMIT -->
+                <div class="button">
+                    <input type="submit" value="🩺  Register as Doctor">
+                </div>
+                <div id="registration-success" style="color: green; display: none; text-align: center; margin-top: 7px; font-size: 20px;" >
+                    Registration successful!
+                </div>
+
+                <div class="login-prompt">
+                    Already have an account? <a href="doctorLogin.html">Login here</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script>
+        
+        const menuBtn    = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        menuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('open');
+        const isOpen = mobileMenu.classList.contains('open');
+        menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+        menuBtn.innerHTML = isOpen ? '&#x2715;' : '&#9776;';
+        });
+        const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+        const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function uploadDocument(file, userId, documentType) {
+            if (!file) return null;
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${userId}/${documentType}.${fileExt}`;
+            const { data, error } = await client.storage
+                .from('doctor-documents')
+                .upload(filePath, file, { upsert: true });
+            if (error) {
+                alert(`Error uploading ${documentType}: ${error.message}`);
+                return null;
+            }
+            return data.path;
+        }
+
+        function doctorRegistration() {
+            const form = document.querySelector("form");
+            if (!form) return;
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const practice_number    = document.getElementById("practice_number").value.trim();
+                const practice_name      = document.getElementById("practice_name").value.trim();
+                const hpcsa_number       = document.getElementById("hpcsa_number").value.trim();
+                const discipline         = document.getElementById("discipline").value.trim();
+                const qualifications     = document.getElementById("qualifications").value.trim();
+                const name               = document.getElementById("name").value.trim();
+                const surname            = document.getElementById("surname").value.trim();
+                const phone              = document.getElementById("phone").value.trim();
+                const id_number          = document.getElementById("idNumber").value.trim();
+                const email              = document.getElementById("email").value.trim();
+                const password           = document.getElementById("password").value;
+                const confirmPassword    = document.getElementById("confirmPassword").value;
+                const operating_hours    = document.getElementById("operating_hours").value.trim();
+                const hourly_rate        = parseFloat(document.getElementById("hourly_rate").value) || 0;
+                const language          = document.getElementById("language").value.trim();
+                const medical_aids       = document.getElementById("medical_aids").value.trim();
+
+                const address_line1 = document.getElementById("address1").value.trim();
+                const address_line2 = document.getElementById("address2").value.trim();
+                const city          = document.getElementById("city").value.trim();
+                const province      = document.getElementById("province").value.trim();
+                const postal_code   = document.getElementById("postal_code").value.trim();
+
+                const genderInput = document.querySelector('input[name="gender"]:checked');
+                const gender = genderInput ? genderInput.value : null;
+
+                if (password !== confirmPassword) {
+                    alert("Passwords do not match.");
+                    return;
+                }
+                if (id_number.length !== 13) {
+                    alert("ID Number must be exactly 13 digits.");
+                    return;
+                }
+                if (phone.length !== 10) {
+                    alert("Cell phone number must be exactly 10 digits.");
+                    return;
+                }
+
+                const { data: authData, error: authError } = await client.auth.signUp({ email, password });
+                if (authError) { alert("Signup error: " + authError.message); return; }
+                const user = authData.user;
+
+                const profileImageFile = document.getElementById("profile_image").files[0];
+                let profile_image_url = null;
+                if (profileImageFile) {
+                    const { data: uploadData, error: uploadError } = await client.storage
+                        .from('profile-images')
+                        .upload(`doctors/${user.id}_${profileImageFile.name}`, profileImageFile, { upsert: true });
+                    if (uploadError) { alert("Profile image upload error: " + uploadError.message); return; }
+                    profile_image_url = client.storage.from('profile-images').getPublicUrl(uploadData.path).data.publicUrl;
+                }
+
+                const id_document_url          = await uploadDocument(document.getElementById("id_document").files[0],           user.id, "id_document");
+                const hpcsa_certificate_url    = await uploadDocument(document.getElementById("hpcsa_certificate").files[0],     user.id, "hpcsa_certificate");
+                const medical_degree_url       = await uploadDocument(document.getElementById("medical_degree").files[0],        user.id, "medical_degree");
+                const specialist_cert_url      = await uploadDocument(document.getElementById("specialist_certificate").files[0], user.id, "specialist_certificate");
+                const practice_certificate_url = await uploadDocument(document.getElementById("practice_certificate").files[0],  user.id, "practice_certificate");
+                const proof_of_address_url     = await uploadDocument(document.getElementById("proof_of_address").files[0],      user.id, "proof_of_address");
+
+                if (!id_document_url || !hpcsa_certificate_url || !medical_degree_url || !practice_certificate_url || !proof_of_address_url) {
+                    alert("One or more required documents failed to upload. Please try again.");
+                    return;
+                }
+
+                const { data, error } = await client.from("doctors").insert([{
+                    id: user.id,
+                    practice_number, practice_name, hpcsa_number, discipline, qualifications,
+                    name, surname, phone, id_number, email, gender,
+                    operating_hours, hourly_rate, language, medical_aids,
+                    profile_image_url,
+                    address_line1, address_line2, city, province, postal_code,
+                    id_document_url, hpcsa_certificate_url, medical_degree_url,
+                    specialist_certificate_url: specialist_cert_url,
+                    practice_certificate_url, proof_of_address_url,
+                    verification_status: 'pending'
+                }]);
+
+                if (error) { console.error("DB ERROR:", error); alert("Database error: " + error.message); return; }
+                const registrationSuccess = document.getElementById("registration-success");
+                registrationSuccess.textContent = "Registration successful! Your account is pending verification by an administrator. You will be notified once approved.";
+                registrationSuccess.style.display = "block";
+                window.location.href = "doctorLogin.html";
+            });
+        }
+
+        doctorRegistration();
+
+        function doctorLogin() {
+            const form = document.querySelector(".PatientForm");
+            if (!form) return;
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const practice_number = document.getElementById("practice_number").value.trim();
+                const password        = document.getElementById("password").value.trim();
+                if (!practice_number || !password) { alert("Please fill in all fields."); return; }
+                try {
+                    const { data, error } = await client
+                        .from("doctors")
+                        .select("email, verification_status")
+                        .or(`practice_number.eq.${practice_number},email.eq.${practice_number}`)
+                        .single();
+                    if (error || !data) { alert("Practice number not found."); return; }
+                    if (data.verification_status !== 'approved') {
+                        if (data.verification_status === 'rejected') {
+                            alert("Your registration was rejected. Please contact support.");
+                        } else {
+                            alert("Your account is still pending verification. Please wait for admin approval.");
+                        }
+                        return;
+                    }
+                    const { error: loginError } = await client.auth.signInWithPassword({ email: data.email, password });
+                    if (loginError) { alert("Incorrect password."); return; }
+                    alert("Login successful!");
+                    window.location.href = "Doctors-Dashboard.html";
+                } catch (err) {
+                    console.error(err);
+                    alert("Something went wrong. Please try again.");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

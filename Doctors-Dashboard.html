@@ -1,0 +1,2533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Doctor Dashboard — e-Health Connect</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet"><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{
+    box-sizing:border-box;
+    margin:0;padding:0
+}
+
+:root{
+  --navy:#0f1f3d;
+  --blue:#1b2a4e;
+  --accent:#3b82f6;
+  --green:#10b981;
+  --red:#ef4444;
+  --bg:#f0f4f8;
+  --white:#ffffff;
+  --border:#e2e8f0;
+  --text:#1e293b;
+  --muted:#64748b;
+
+  --surface:var(--navy);
+  --surface2:var(--blue);
+  --surface3:#243660;
+  --accent2:#34d399;
+  --accent-dim:#d1fae5;
+  --red-dim:#fee2e2;
+  --yellow:#f59e0b;
+  --radius:12px;
+  --shadow:0 2px 16px rgba(0,0,0,0.08);
+  --nav-w:240px;
+}
+
+body{
+    font-family:'Roboto',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    overflow:hidden;
+}
+
+/*  Sidebar nav  */
+.sidebar{
+  width:var(--nav-w);
+  min-width:var(--nav-w);
+  height:100vh;
+  background:var(--navy);
+  border-right:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  position:fixed;
+  left:0;
+  top:0;
+  z-index:100;
+}
+.sidebar-logo{
+  padding:24px 20px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo .logo-mark{
+  font-family:'Roboto',sans-serif;
+  font-size:16px;
+  font-weight:800;
+  color:white;
+  letter-spacing:-.3px;
+}
+.sidebar-logo .logo-sub{
+    font-size:12px;
+    color:rgba(255,255,255,0.45);
+    margin-top:3px;
+}
+
+.doc-profile{
+  padding:16px 20px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.doc-avatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid var(--green);
+}
+.doc-avatar-placeholder{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:var(--blue);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  border:2px solid var(--green);
+  flex-shrink:0;
+}
+.doc-info .doc-name{
+    font-size:13px;
+    font-weight:600;
+    color:white;
+    line-height:1.3;
+}
+.doc-info .doc-disc{
+    font-size:12px;
+    color:rgba(255,255,255,0.45);
+    margin-top:2px;}
+.online-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--green);
+  display:inline-block;
+  margin-right:5px;
+  box-shadow:0 0 6px var(--green);
+}
+
+nav{
+    flex:1;
+    padding:12px 0;overflow-y:auto;
+}
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:11px 20px;
+  cursor:pointer;
+  border-left:3px solid transparent;
+  transition:all .18s;color:rgba(255,255,255,0.6);
+  font-size:14px;font-weight:500;
+  text-decoration:none;
+}
+.nav-item:hover{
+    background:rgba(255,255,255,0.07);
+    color:white;
+    border-left-color:rgba(255,255,255,0.4);
+}
+.nav-item.active{
+  background:rgba(59,130,246,0.15);
+  color:var(--accent);
+  border-left-color:var(--accent);
+}
+.nav-item .nav-icon{
+    font-size:15px;width:20px;
+    text-align:center;
+}
+.nav-badge{
+  margin-left:auto;
+  background:var(--red);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  padding:2px 7px;
+  border-radius:20px;
+  display:none;
+}
+.nav-badge.show{
+    display:block;
+}
+
+.sidebar-footer{
+  padding:16px 20px;
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+.logout-btn{
+  width:100%;
+  padding:10px;
+  background:transparent;
+  border:1px solid rgba(239,68,68,0.4);
+  border-radius:8px;
+  color:#fca5a5;
+  font-family:'Roboto',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .18s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.logout-btn:hover{
+    background:rgba(239,68,68,0.15);
+    border-color:var(--red);
+    color:var(--red);}
+
+/* Main content */
+.main{
+  margin-left:var(--nav-w);
+  flex:1;
+  height:100vh;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Top bar */
+.topbar{
+  padding:14px 28px;
+  border-bottom:1px solid var(--border);
+  background:var(--white);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+  position:sticky;top:0;z-index:50;
+  box-shadow:0 1px 8px rgba(0,0,0,0.06);
+}
+.topbar-title{
+    font-family:'Roboto',sans-serif;
+    font-size:20px;
+    font-weight:700;
+    color:var(--navy);
+}
+.topbar-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+.icon-btn{
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  cursor:pointer;font-size:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background .18s;
+  color:var(--muted);
+}
+.icon-btn:hover{
+    background:var(--border);
+}
+
+/* Sections / pages */
+.page{display:none;padding:24px 28px;flex:1;}
+.page.active{display:block;}
+
+/*  Stats cards  */
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;margin-bottom:28px;
+}
+.stat-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  position:relative;
+  overflow:hidden;
+  transition:box-shadow .2s,transform .15s;
+  box-shadow:var(--shadow);
+  border-top:3px solid var(--accent);
+}
+.stat-card:hover{
+    box-shadow:0 8px 24px rgba(0,0,0,0.12);
+    transform:translateY(-2px);
+}
+.stat-label{
+    font-size:12px;
+    color:var(--muted);
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:10px;
+}
+.stat-value{
+    font-family:'Roboto',sans-serif;
+    font-size:32px;
+    font-weight:800;
+    color:var(--navy);
+}
+.stat-icon{
+    position:absolute;
+    right:16px;
+    top:16px;
+    font-size:22px;
+    opacity:.25;}
+
+/* Section blocks */
+.section-block{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:20px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.section-head{
+  padding:14px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--navy);
+}
+.section-head h2{
+    font-family:'Roboto',sans-serif;
+    font-size:14px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:8px;color:white;
+}
+.section-body{
+    padding:20px;
+}
+
+/* Table  */
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+thead th{
+  text-align:left;
+  padding:10px 16px;
+  font-size:12px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  border-bottom:1px solid var(--border);
+  background:#f8faff;
+  font-weight:700;
+}
+tbody td{
+    padding:12px 16px;
+    font-size:14px;
+    border-bottom:1px solid var(--border);
+    color:var(--text);
+}
+tbody tr:last-child td{
+    border-bottom:none;
+}
+tbody tr:hover{
+    background:#f8faff;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+}
+.badge.pending{
+    background:#fef3c7;
+    color:#d97706;
+}
+.badge.confirmed{
+    background:#d1fae5;
+    color:#059669;
+}
+.badge.cancelled{
+    background:#fee2e2;
+    color:var(--red);
+}
+.badge.rescheduled{
+    background:#eff6ff;
+    color:#2563eb;
+}
+
+/* Action btn  */
+.btn{
+  padding:7px 12px;
+  border-radius:7px;
+  border:none;
+  cursor:pointer;
+  font-family:'Roboto',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  transition:all .18s;
+}
+.btn-primary{
+    background:var(--accent);
+    color:#fff;
+}
+.btn-primary:hover{
+    background:#2563eb;
+}
+.btn-outline{
+    background:transparent;
+    border:1.5px solid var(--border);
+    color:var(--muted);
+}
+.btn-outline:hover{
+    background:var(--bg);
+    color:var(--text);
+
+}
+.btn-danger{
+    background:var(--red-dim);
+    color:var(--red);
+    border:1px solid #fca5a5;
+}
+.btn-danger:hover{
+    background:var(--red);
+    color:#fff;
+}
+.btn-sm{
+    padding:5px 10px;
+    font-size:12px;
+}
+
+/* 
+   MESSAGING
+ */
+.msg-layout{
+    display:grid;
+    grid-template-columns:260px 1fr;
+    height:calc(100vh - 64px - 48px);
+    gap:0;
+    border-radius:var(--radius);
+    overflow:hidden;
+    border:1px solid var(--border);
+    box-shadow:var(--shadow);
+}
+
+.patient-list-panel{
+    background:var(--white);
+    border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.patient-list-head{padding:14px 16px;
+    border-bottom:1px solid var(--border);background:var(--navy);}
+.patient-list-head h3{
+    font-family:'Roboto',sans-serif;
+    font-size:14px;
+    font-weight:700;
+    color:white;
+}
+.patient-search{
+  width:100%;
+  margin-top:10px;
+  padding:8px 12px;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.2);
+  border-radius:8px;
+  color:white;
+  font-family:'Roboto',sans-serif;
+  font-size:13px;
+  outline:none;
+}
+.patient-search::placeholder{
+    color:rgba(255,255,255,0.45);
+}
+.patient-search:focus{
+    border-color:var(--accent);
+}
+.patient-list{
+    flex:1;
+    overflow-y:auto;
+}
+.patient-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 16px;
+  cursor:pointer;
+  border-bottom:1px solid var(--border);
+  transition:background .15s;
+}
+.patient-item:hover{
+    background:var(--bg);
+}
+.patient-item.active{
+    background:#eff6ff;
+    border-left:3px solid var(--accent);
+}
+.patient-item-avatar{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  background:var(--navy);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  flex-shrink:0;
+}
+.patient-item-name{
+    font-size:13px;
+    font-weight:600;
+    color:var(--text);
+}
+.patient-item-preview{
+    font-size:11px;
+    color:var(--muted);
+    margin-top:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    max-width:140px;
+}
+
+.chat-panel{
+    display:flex;
+    flex-direction:column;
+    background:var(--bg);
+}
+.chat-header{
+  padding:12px 18px;
+  background:var(--navy);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:60px;
+}
+.chat-header-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+}
+.chat-header-name{
+  font-size:15px;
+  font-weight:600;
+  color:white;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.chat-header-status{
+    font-size:12px;
+    color:var(--green);
+}
+.chat-call-btns{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-shrink:0;
+}
+.call-icon-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:9px 16px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.2);
+  cursor:pointer;
+  font-size:13px;
+  font-weight:600;
+  font-family:'Roboto',sans-serif;
+  color:white;
+  transition:all 0.18s;
+  white-space:nowrap;
+}
+.call-icon-btn:hover{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+  transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(59,130,246,0.35);
+}
+
+.messages-area{flex:1;
+    overflow-y:auto;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+.msg-bubble-wrap{
+    display:flex;
+}
+.msg-bubble-wrap.mine{
+    justify-content:flex-end;
+}
+.msg-bubble{
+  max-width:68%;
+  padding:10px 14px;
+  border-radius:16px;
+  font-size:14px;
+  line-height:1.5;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+.msg-bubble.mine{background:var(--accent);
+    color:#fff;
+    border-bottom-right-radius:4px;
+}
+.msg-bubble.theirs{
+    background:var(--white);
+    color:var(--text);
+    border-bottom-left-radius:4px;
+}
+.msg-time{
+    font-size:11px;
+    opacity:.55;
+    margin-top:4px;
+    text-align:right;
+}
+
+.chat-input-area{
+  padding:12px 16px;
+  background:var(--white);
+  border-top:1px solid var(--border);
+  display:flex;
+  gap:10px;
+  align-items:flex-end;
+}
+.chat-textarea{
+  flex:1;
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:20px;
+  padding:10px 16px;
+  color:var(--text);
+  font-family:'Roboto',sans-serif;
+  font-size:14px;
+  resize:none;
+  outline:none;
+  max-height:120px;
+  line-height:1.5;
+}
+.chat-textarea:focus{
+    border-color:var(--accent);
+}
+.send-btn{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:var(--accent);
+  border:none;
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background .18s;
+  flex-shrink:0;
+}
+.send-btn:hover{
+    background:#2563eb;
+}
+.chat-empty{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  flex:1;
+  color:var(--muted);
+  gap:10px;
+}
+.chat-empty .empty-icon{
+    font-size:48px;
+    opacity:.3;
+}
+
+/* ngi
+   TIME SLOTS
+ */
+.slots-controls{
+    display:flex;
+    gap:12px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+
+}
+.slots-controls input[type="date"]{
+  padding:9px 14px;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:'Roboto',sans-serif;
+  font-size:14px;
+  outline:none;
+}
+.slots-controls input[type="date"]:focus{
+    border-color:var(--accent);
+}
+
+.time-inputs{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+.time-input-group{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+.time-input-group label{
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:700;
+}
+.time-input-group input[type="time"]{
+  padding:9px 14px;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:'Roboto',sans-serif;
+  font-size:14px;
+  outline:none;
+}
+.time-input-group input[type="time"]:focus{
+    border-color:var(--accent);
+}
+
+.slot-interval{
+    display:flex;
+    flex-direction:column;
+    gap:4px;}
+.slot-interval label{
+    font-size:11px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    font-weight:700;
+}
+.slot-interval select{
+  padding:9px 14px;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:'Roboto',sans-serif;
+  font-size:14px;
+  outline:none;
+  appearance:none;
+  padding-right:28px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+}
+
+.slots-grid-display{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+    gap:8px;
+    margin-top:16px;
+}
+.slot-pill{
+  padding:9px 6px;
+  border-radius:8px;
+  text-align:center;
+  font-size:13px;
+  font-weight:600;
+  border:1.5px solid var(--border);
+  background:var(--bg);
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .18s;
+  position:relative;
+}
+.slot-pill.open{
+    background:#d1fae5;
+    border-color:var(--green);
+    color:#059669;
+}
+.slot-pill.booked{
+    background:#fef3c7;
+    border-color:var(--yellow);
+    color:#d97706;cursor:default;
+}
+.slot-pill:hover:not(.booked){
+    border-color:var(--accent);
+    color:var(--accent);
+}
+.slot-pill.open:hover:not(.booked){
+    background:var(--red-dim);
+    border-color:var(--red);
+    color:var(--red);
+}
+.slots-legend{display:flex;
+    gap:16px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+}
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:500;}
+.legend-dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--border);}
+.legend-dot.open{
+    background:var(--green);
+}
+.legend-dot.booked{
+    background:var(--yellow);
+}
+.legend-dot.closed{
+    background:var(--border);
+}
+
+/*
+   VIDEO CALL
+*/
+.call-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(8px);
+  align-items:center;
+  justify-content:center;
+}
+.call-overlay.show{
+    display:flex;
+}
+.call-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:36px 40px;
+  text-align:center;
+  max-width:360px;
+  width:90%;
+  box-shadow:0 32px 80px rgba(0,0,0,.3);
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{
+    from{
+        transform:scale(.8);opacity:0
+    }
+    to{
+        transform:scale(1);opacity:1
+    }
+}
+.call-card .caller-avatar{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:var(--navy);
+  margin:0 auto 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:36px;
+  border:3px solid var(--green);
+  animation:pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse{
+    0%,100%{
+        box-shadow:0 0 0 0 rgba(16,185,129,.4)
+    }
+    50%{
+        box-shadow:0 0 0 14px rgba(16,185,129,0)
+    }
+}
+.call-card .caller-name{
+    font-family:'Roboto',sans-serif;
+    font-size:22px;
+    font-weight:700;
+    color:var(--navy);
+    margin-bottom:4px;
+}
+.call-card .call-type{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:28px;
+}
+.call-actions{
+    display:flex;
+    justify-content:center;
+    gap:24px;
+}
+.call-action-btn{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  border:none;
+  cursor:pointer;
+  font-size:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .15s,opacity .15s;
+}
+.call-action-btn:hover{
+    transform:scale(1.1);
+}
+.call-action-btn.accept{
+    background:var(--green);
+
+}
+.call-action-btn.reject{
+    background:var(--red);
+}
+
+.active-call-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:999;
+  background:#000;
+  flex-direction:column;
+  overflow:hidden;
+}
+.active-call-overlay.show{
+  display:flex;
+  flex-direction:column;
+}
+.active-call-overlay.show{display:flex;}
+.video-wrap{
+  position:relative;
+  flex:1;
+  background:#111;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+#remoteVideo{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  position:absolute;
+  inset:0;
+}
+#localVideo{
+  position:absolute;
+  bottom:100px;
+  right:20px;
+  width:140px;
+  height:190px;
+  border-radius:14px;
+  object-fit:cover;
+  border:2px solid rgba(255,255,255,0.3);
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  z-index:20;
+  background:#000;
+}
+.call-top-bar{
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  padding:20px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.75),transparent);
+  z-index:30;
+  pointer-events:none;
+}
+.call-patient-info .call-p-name{
+    font-family:'Roboto',sans-serif;
+    font-size:18px;
+    font-weight:700;
+    color:#fff;
+}
+.call-patient-info .call-timer{
+    font-size:13px;
+    color:rgba(255,255,255,.7);
+    margin-top:2px;
+}
+.call-quality{font-size:12px;
+    color:var(--green);
+    background:rgba(0,0,0,.4);
+    padding:4px 10px;
+    border-radius:20px;
+}
+
+.call-bottom-bar{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  padding:28px 24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  background:linear-gradient(to top,rgba(0,0,0,0.85),transparent);
+  z-index:30;
+}
+.ctrl{
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  border:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  font-family:'Roboto',sans-serif;
+  transition:all 0.18s;
+  background:rgba(255,255,255,0.18);
+  backdrop-filter:blur(8px);
+  color:#fff;
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+  flex-shrink:0;
+}
+.ctrl:hover{
+  background:rgba(255,255,255,0.28);
+  transform:scale(1.07);
+}
+.ctrl.active{
+  background:var(--red);
+  box-shadow:0 2px 12px rgba(239,68,68,0.4);
+}
+.ctrl.end-call{
+  background:var(--red);
+  width:64px;
+  height:64px;
+  font-size:24px;
+  box-shadow:0 4px 20px rgba(239,68,68,0.5);
+}
+.ctrl.end-call:hover{
+  background:#dc2626;
+  transform:scale(1.08);
+}
+
+.outgoing-card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:36px 40px;
+  text-align:center;
+  max-width:360px;
+  width:90%;
+  box-shadow:0 32px 80px rgba(0,0,0,.3);
+  animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+.ringing-dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin:16px 0;
+}
+.ringing-dots span{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--green);
+  animation:dot-bounce .9s ease-in-out infinite;
+}
+.ringing-dots span:nth-child(2){
+    animation-delay:.2s;
+}
+.ringing-dots span:nth-child(3){
+    animation-delay:.4s;
+}
+@keyframes dot-bounce{
+    0%,100%{
+        transform:translateY(0);opacity:.4
+    }
+    50%{
+        transform:translateY(-8px);opacity:1
+    
+    }
+}
+
+/*  Toasts */
+#toast{
+  position:fixed;
+  bottom:28px;
+  left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--navy);
+  border:1px solid var(--border);
+  color:white;
+  padding:12px 22px;
+  border-radius:50px;
+  font-size:14px;
+  font-weight:600;
+  box-shadow:0 8px 32px rgba(0,0,0,.2);
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  z-index:9999;
+  white-space:nowrap;
+}
+#toast.show{
+    transform:translateX(-50%) translateY(0);
+}
+#toast.success{
+    background:var(--green);
+    border-color:var(--green);
+    color:#fff;
+}
+#toast.error{
+    background:var(--red);
+    border-color:var(--red);
+    color:#fff;
+}
+#toast.warn{
+    background:var(--yellow);
+    border-color:var(--yellow);
+    color:#fff;
+}
+
+/* Location btn  */
+.location-section{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+}
+.loc-btn{
+  padding:10px 18px;
+  border-radius:8px;
+  border:1.5px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Roboto',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all .18s;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.loc-btn:hover{
+    background:var(--border);
+    border-color:var(--accent);
+    color:var(--accent);
+}
+.loc-btn.active{
+    background:var(--red-dim);
+    border-color:var(--red);
+    color:var(--red);
+}
+#locationStatus{
+    font-size:12px;
+    color:var(--muted);
+}
+
+/* Misc  */
+.empty-state{
+    padding:32px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+}
+.spinner{
+    display:inline-block;
+    width:16px;
+    height:16px;
+    border:2px solid var(--border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    vertical-align:middle;
+    margin-right:6px;
+}
+@keyframes spin{
+    to{
+        transform:rotate(360deg)
+    }
+}
+.input-field{
+  padding:10px 14px;
+  background:var(--bg);
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:'Roboto',sans-serif;
+  font-size:14px;
+  outline:none;
+  width:100%;
+}
+.input-field:focus{
+    border-color:var(--accent);
+}
+
+/* Appointments filter row */
+.filter-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+}
+.filter-btn{
+  padding:7px 16px;
+  border-radius:20px;
+  border:1.5px solid var(--border);
+  background:var(--white);
+  color:var(--muted);
+  font-family:'Roboto',sans-serif;
+  font-size:13px;
+  cursor:pointer;
+  transition:all .18s;
+  font-weight:500;
+}
+.filter-btn.active,.filter-btn:hover{
+    background:#eff6ff;
+    border-color:var(--accent);
+    color:var(--accent);
+}
+
+/* Call me section in appointments */
+.call-mini-btn{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  background:#d1fae5;
+  border:none;
+  color:#059669;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  transition:all .18s;
+}
+.call-mini-btn:hover{
+    background:var(--green);
+    color:#fff;
+    }
+
+/* ══════════════════════════════════════
+   RESPONSIVE — MOBILE & TABLET
+══════════════════════════════════════ */
+
+/* Tablet (max 1024px) */
+@media(max-width:1024px){
+  :root{ --nav-w:200px; }
+
+  .stats-grid{ grid-template-columns:repeat(2,1fr); }
+
+  .msg-layout{
+    grid-template-columns:200px 1fr;
+    height:calc(100vh - 64px - 40px);
+  }
+}
+
+/* Mobile (max 768px) */
+@media(max-width:768px){
+
+  /* ── Body layout ── */
+  body{ flex-direction:column; overflow:auto; }
+
+  /* ── Sidebar becomes top nav bar ── */
+  .sidebar{
+    width:100%;
+    height:auto;
+    min-height:auto;
+    position:relative;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    padding:0;
+    z-index:200;
+  }
+
+  .sidebar-logo{ 
+    padding:12px 16px;
+    border-bottom:none;
+    border-right:1px solid rgba(255,255,255,0.08);
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+
+  .doc-profile{ 
+    padding:8px 12px;
+    border-bottom:none;
+    border-right:1px solid rgba(255,255,255,0.08);
+    flex-shrink:0;
+  }
+  .doc-info .doc-disc{ display:none; }
+
+  /* ── Nav items become horizontal scrollable row ── */
+  nav{
+    display:flex;
+    flex-direction:row;
+    padding:0;
+    overflow-x:auto;
+    flex:1;
+  }
+
+  .nav-item{
+    padding:14px 14px;
+    border-left:none;
+    border-bottom:3px solid transparent;
+    white-space:nowrap;
+    flex-shrink:0;
+    font-size:13px;
+  }
+
+  .nav-item:hover{ border-left:none; border-bottom-color:rgba(255,255,255,0.4); }
+  .nav-item.active{ border-left:none; border-bottom-color:var(--accent); }
+
+  .nav-badge{ font-size:9px; padding:1px 5px; }
+
+  .sidebar-footer{
+    padding:8px 12px;
+    border-top:none;
+    border-left:1px solid rgba(255,255,255,0.08);
+    flex-shrink:0;
+  }
+
+  .logout-btn{ width:auto; padding:8px 12px; font-size:12px; }
+
+  /* ── Main content ── */
+  .main{
+    margin-left:0;
+    height:auto;
+    overflow-y:auto;
+    flex:1;
+  }
+
+  .topbar{ padding:12px 16px; }
+  .topbar-title{ font-size:16px; }
+
+  .page{ padding:16px; }
+
+  /* ── Stats grid ── */
+  .stats-grid{ grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
+  .stat-value{ font-size:24px; }
+
+  /* ── Tables — horizontal scroll ── */
+  .section-block{ overflow-x:auto; }
+  table{ min-width:500px; }
+  thead th{ padding:8px 10px; font-size:11px; }
+  tbody td{ padding:10px; font-size:13px; }
+
+  /* ── Filter buttons ── */
+  .filter-row{ gap:6px; }
+  .filter-btn{ padding:6px 12px; font-size:12px; }
+
+  /* ── Messages layout — stack vertically ── */
+  .msg-layout{
+    grid-template-columns:1fr;
+    height:auto;
+    min-height:calc(100vh - 120px);
+  }
+
+  .patient-list-panel{
+    height:200px;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+  }
+
+  .chat-panel{ height:calc(100vh - 340px); min-height:300px; }
+  .messages-area{ height:200px; }
+
+  /* ── Slots controls ── */
+  .slots-controls{ gap:8px; }
+  .slots-grid-display{ grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:6px; }
+  .slot-pill{ padding:7px 4px; font-size:12px; }
+
+  /* ── Location section ── */
+  .location-section{ flex-direction:column; align-items:flex-start; gap:10px; }
+
+  /* ── Call overlays ── */
+  .call-card, .outgoing-card{
+    padding:24px 20px;
+    max-width:90vw;
+  }
+  .call-card .caller-name{ font-size:18px; }
+
+  #localVideo{
+    width:100px;
+    height:140px;
+    bottom:90px;
+    right:12px;
+  }
+
+  .call-bottom-bar{ padding:20px 16px; gap:12px; }
+  .ctrl{ width:46px; height:46px; font-size:18px; }
+  .ctrl.end-call{ width:56px; height:56px; font-size:20px; }
+
+  /* ── Section head ── */
+  .section-head{ padding:12px 14px; }
+  .section-head h2{ font-size:13px; }
+  .section-body{ padding:14px; }
+
+  /* ── Buttons ── */
+  .btn-sm{ padding:4px 8px; font-size:11px; }
+}
+
+/* Small mobile (max 480px) */
+@media(max-width:480px){
+  .stats-grid{ grid-template-columns:1fr; }
+  .stat-card{ padding:14px; }
+  .stat-value{ font-size:28px; }
+
+  .sidebar-logo .logo-mark{ font-size:13px; }
+  .nav-item{ padding:12px 10px; font-size:12px; }
+  .nav-item .nav-icon{ font-size:13px; }
+
+  .page{ padding:12px; }
+  .topbar{ padding:10px 12px; }
+  .topbar-title{ font-size:15px; }
+
+  .call-icon-btn{ padding:7px 10px; font-size:12px; }
+}
+/* ── HAMBURGER & SIDEBAR MOBILE TOGGLE ── */
+.hamburger {
+  display: none;
+  background: none; border: none; font-size: 24px;
+  cursor: pointer; color: var(--navy); padding: 6px 8px;
+  border-radius: 8px; line-height: 1;
+}
+.hamburger:hover { background: rgba(11,28,61,.07); }
+
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 99;
+}
+.sidebar-overlay.open { display: block; }
+
+@media(max-width:768px) {
+  .hamburger { display: block; }
+
+  /* Override the horizontal strip — proper slide-in panel */
+  .sidebar {
+    width: 240px !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0; left: 0;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 0 !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 100;
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* Restore vertical nav layout inside panel */
+  nav {
+    flex-direction: column !important;
+    overflow-x: hidden !important;
+  }
+  .nav-item {
+    border-left: 3px solid transparent !important;
+    border-bottom: none !important;
+    white-space: normal !important;
+  }
+  .nav-item.active {
+    border-left-color: var(--accent) !important;
+    border-bottom: none !important;
+  }
+  .sidebar-logo { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
+  .doc-profile  { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
+  .doc-info .doc-disc { display: block !important; }
+  .sidebar-footer { border-left: none !important; border-top: 1px solid rgba(255,255,255,0.08) !important; }
+  .logout-btn { width: 100% !important; }
+
+  /* Main fills full width */
+  .main { margin-left: 0 !important; }
+}    
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<!--
+     SIDEBAR
+-->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">e-Health Connect Hub</div>
+    <div class="logo-sub">Doctor Portal</div>
+  </div>
+
+  <div class="doc-profile">
+    <div class="doc-avatar-placeholder" id="sidebarAvatar">👨‍⚕️</div>
+    <div class="doc-info">
+      <div class="doc-name" id="sidebarName">Loading...</div>
+      <div class="doc-disc"><span class="online-dot"></span><span id="sidebarDisc">Online</span></div>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
+      <span class="nav-icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" data-page="appointments" onclick="showPage('appointments')">
+      <span class="nav-icon">📅</span> Appointments
+      <span class="nav-badge" id="apptBadge">0</span>
+    </div>
+    <div class="nav-item" data-page="prescriptions" onclick="location.href='prescribe.html'">
+      <span class="nav-icon">💊</span> Prescriptions
+    </div>
+    <div class="nav-item" data-page="messages" onclick="showPage('messages')">
+      <span class="nav-icon">💬</span> Messages
+      <span class="nav-badge" id="msgBadge">0</span>
+    </div>
+    <div class="nav-item" data-page="slots" onclick="showPage('slots')">
+      <span class="nav-icon">🕐</span> My Time Slots
+    </div>
+    <div class="nav-item" data-page="records" onclick="showPage('records')">
+      <span class="nav-icon">💰</span> Financial Records
+    </div>
+    <div class="nav-item" data-page="location" onclick="showPage('location')">
+      <span class="nav-icon">📍</span> Location
+    </div>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="logout()">🚪 Log Out</button>
+  </div>
+</aside>
+
+<!-- 
+     MAIN
+-->
+<div class="main">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-actions">
+      <div class="icon-btn" title="Refresh" onclick="initPage()">🔄</div>
+    </div>
+    <button class="hamburger" id="sidebarToggle" aria-label="Open menu">&#9776;</button>
+  </div>
+
+  <!-- DASHBOARD PAGE  -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Today's Appointments</div><div class="stat-value" id="statToday">0</div><div class="stat-icon">📅</div></div>
+      <div class="stat-card"><div class="stat-label">Total Patients</div><div class="stat-value" id="statPatients">0</div><div class="stat-icon">👥</div></div>
+      <div class="stat-card"><div class="stat-label">Unread Messages</div><div class="stat-value" id="statMessages">0</div><div class="stat-icon">💬</div></div>
+    </div>
+
+    <div class="section-block">
+      <div class="section-head"><h2>📅 Today's Schedule</h2></div>
+      <div class="section-body" style="padding:0;overflow-x:auto;">
+        <table style="min-width:500px;">
+          <thead><tr><th>Time</th><th>Patient</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="todayTable"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPOINTMENTS PAGE  -->
+   <!-- FINANCIAL RECORDS PAGE -->
+  <div class="page" id="page-records">
+    <div class="section-block">
+      <div class="section-head"><h2>💰 Financial Records & History</h2></div>
+      <div class="section-body" style="padding:0;overflow-x:auto;">
+        <table style="min-width:600px;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Patient</th>
+              <th>Bank / Method</th>
+              <th>Consult Fee</th>
+              <th>Payment Status</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTableBody">
+            <tr><td colspan="5" class="empty-state">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="page" id="page-appointments">
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="filterAppts('all',this)">All</button>
+      <button class="filter-btn" onclick="filterAppts('pending',this)">Pending</button>
+      <button class="filter-btn" onclick="filterAppts('confirmed',this)">Confirmed</button>
+      <button class="filter-btn" onclick="filterAppts('cancelled',this)">Cancelled</button>
+    </div>
+    <div class="section-block">
+      <div class="section-head"><h2>📋 All Appointments</h2></div>
+      <div class="section-body" style="padding:0;overflow-x:auto;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Date</th><th>Time</th><th>Patient</th><th>Reason</th><th>Bank / Method</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="allApptsTable"><tr><td colspan="6" class="empty-state">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSAGES PAGE  -->
+  <div class="page" id="page-messages">
+    <div class="msg-layout">
+      <div class="patient-list-panel">
+        <div class="patient-list-head">
+          <h3>Patients</h3>
+          <input class="patient-search" type="text" placeholder="🔍 Search patients..." oninput="filterPatients(this.value)" id="patientSearch"/>
+        </div>
+        <div class="patient-list" id="patientListEl"></div>
+      </div>
+      <div class="chat-panel">
+        <div class="chat-header" id="chatHeader">
+          <div class="chat-header-info">
+            <div class="doc-avatar-placeholder" style="width:34px;height:34px;font-size:14px;">👤</div>
+            <div>
+              <div class="chat-header-name" id="chatPatientName">Select a patient</div>
+              <div class="chat-header-status" id="chatPatientStatus"></div>
+            </div>
+          </div>
+        <div class="chat-call-btns">
+          <button class="call-icon-btn" title="Video call" onclick="initiateCall()" id="chatVideoBtn" style="display:none;">📹 Video Call</button>
+        </div>
+        </div>
+        <div class="messages-area" id="messagesArea">
+          <div class="chat-empty"><div class="empty-icon">💬</div><span>Select a patient to start chatting</span></div>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-textarea" id="msgInput" placeholder="Type a message..." rows="1" onkeydown="msgKeydown(event)"></textarea>
+          <button class="send-btn" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--  TIME SLOTS PAGE -->
+  <div class="page" id="page-slots">
+    <div class="section-block">
+      <div class="section-head"><h2>🕐 Manage Available Slots</h2></div>
+      <div class="section-body">
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">Set the time slots you are available for on a specific date. Patients will only be able to book from these slots.</p>
+
+        <div class="slots-controls">
+          <div class="time-input-group">
+            <label>Date</label>
+            <input type="date" id="slotDate" onchange="loadSlotsForDate()"/>
+          </div>
+          <div class="time-input-group">
+            <label>From</label>
+            <input type="time" id="slotFrom" value="08:00"/>
+          </div>
+          <div class="time-input-group">
+            <label>To</label>
+            <input type="time" id="slotTo" value="17:00"/>
+          </div>
+          <div class="slot-interval">
+            <label>Interval</label>
+            <select id="slotInterval">
+              <option value="30">30 min</option>
+              <option value="60">60 min</option>
+              <option value="20">20 min</option>
+              <option value="45">45 min</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700;">&nbsp;</label>
+            <button class="btn btn-primary" onclick="generateSlots()">Generate Slots</button>
+          </div>
+        </div>
+
+        <div class="slots-legend">
+          <div class="legend-item"><div class="legend-dot open"></div>Open (patients can book)</div>
+          <div class="legend-item"><div class="legend-dot booked"></div>Already booked</div>
+          <div class="legend-item"><div class="legend-dot closed"></div>Closed (click to open)</div>
+        </div>
+
+        <div class="slots-grid-display" id="slotsDisplay"><div class="empty-state">Select a date and generate slots to manage your availability.</div></div>
+
+        <div style="margin-top:16px;display:none;gap:10px;" id="slotSaveRow">
+          <button class="btn btn-primary" onclick="saveSlots()">💾 Save Availability</button>
+          <button class="btn btn-outline" onclick="closeAllSlots()">Close All</button>
+          <button class="btn btn-outline" onclick="openAllSlots()">Open All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--  LOCATION PAGE  -->
+  <div class="page" id="page-location">
+  <div class="section-block">
+    <div class="section-head"><h2>📍 Location Sharing</h2></div>
+    <div class="section-body">
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">
+        Share your location so patients can find your practice on the map.
+        Your location updates every 10 seconds while sharing is active.
+      </p>
+      <div class="location-section" style="margin-bottom:20px;">
+        <button class="loc-btn" id="locBtn" onclick="toggleShareLocation()">
+          📍 Share My Location
+        </button>
+        <span id="locationStatus"></span>
+      </div>
+
+      <!-- ── Map preview ── -->
+      <div style="
+        height:340px;border-radius:10px;overflow:hidden;
+        box-shadow:var(--shadow);border:1px solid var(--border);
+      ">
+        <div id="locationMap" style="height:100%;width:100%;"></div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;">
+        📌 The pin shows your current saved location as patients see it.
+      </p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!--
+     INCOMING CALL OVERLAY
+ -->
+<div class="call-overlay" id="incomingOverlay">
+  <div class="call-card">
+    <div class="caller-avatar">👤</div>
+    <div class="caller-name" id="incomingCallerName">Patient Name</div>
+    <div class="call-type">Incoming video call...</div>
+    <div class="call-actions">
+      <button class="call-action-btn reject" onclick="rejectCall()" title="Reject">📵</button>
+      <button class="call-action-btn accept" onclick="acceptCall()" title="Accept">📞</button>
+    </div>
+  </div>
+</div>
+
+<!-- Outgoing call overlay -->
+<div class="call-overlay" id="outgoingOverlay">
+  <div class="outgoing-card">
+    <div class="caller-avatar" style="animation:none;margin:0 auto 16px;width:80px;height:80px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:36px;border:3px solid var(--green);">👤</div>
+    <div class="caller-name" id="outgoingPatientName" style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px;">Patient Name</div>
+    <div class="call-type" style="font-size:13px;color:var(--muted);margin-bottom:8px;">Calling...</div>
+    <div class="ringing-dots"><span></span><span></span><span></span></div>
+    <div class="call-actions" style="justify-content:center;">
+      <button class="call-action-btn reject" onclick="cancelOutgoingCall()" title="Cancel">📵</button>
+    </div>
+  </div>
+</div>
+
+<!-- Active call overlay -->
+<div class="active-call-overlay" id="activeCallOverlay">
+  <div class="video-wrap">
+    <video id="remoteVideo" autoplay playsinline></video>
+    <video id="localVideo"  autoplay playsinline muted></video>
+
+    <div class="call-top-bar">
+      <div class="call-patient-info">
+        <div class="call-p-name" id="callPatientNameLabel">Patient</div>
+        <div class="call-timer" id="callTimer">00:00</div>
+      </div>
+      <div class="call-quality" id="callQuality">🟢 Connected</div>
+    </div>
+
+    <div class="call-bottom-bar">
+      <button class="ctrl" id="muteBtn" onclick="toggleMute()" title="Mute">🎤</button>
+      <button class="ctrl" id="camBtn"  onclick="toggleCam()"  title="Camera">📷</button>
+      <button class="ctrl end-call" onclick="endCall()" title="End call">📵</button>
+      <button class="ctrl" id="speakerBtn" onclick="toggleSpeaker()" title="Speaker">🔊</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+
+<script>
+const sidebarToggle  = document.getElementById('sidebarToggle');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const sidebar        = document.querySelector('.sidebar');
+
+sidebarToggle.addEventListener('click', () => {
+  sidebar.classList.add('open');
+  sidebarOverlay.classList.add('open');
+  sidebarToggle.innerHTML = '&#x2715;';
+});
+
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.remove('open');
+  sidebarToggle.innerHTML = '&#9776;';
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeSidebar();
+  });
+});
+const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+const client = supabase.createClient(supabaseUrl, supabaseKey);
+const ICE_SERVERS = {iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]};
+
+let DOCTOR_ID = null, DOCTOR_NAME = "";
+let allPatients = [], allAppointments = [], currentPatientId = null;
+let messageChannel = null, incomingChannel = null, activeChannel = null;
+let localStream = null, peerConnection = null;
+let currentCallId = null, isOutgoing = false;
+let isMuted = false, isCamOff = false;
+let callTimerInterval = null, callSeconds = 0;
+let locationInterval = null, isSharingLocation = false;
+let generatedSlots = [], existingSlots = {};
+
+const el = id => document.getElementById(id);
+function safeSet(id,p,v){const n=el(id);if(n)n[p]=v;}
+function showToast(msg,type=""){
+  const t=el("toast");t.textContent=msg;t.className="show "+(type||"");
+  setTimeout(()=>{t.className="";},3000);
+}
+function fmt12(hhmm){
+  const [h,m]=hhmm.split(":").map(Number);
+  const ap=h>=12?"PM":"AM";const hh=h%12||12;
+  return `${hh}:${String(m).padStart(2,"0")} ${ap}`;
+}
+function fmtDate(d){return new Date(d+"T00:00").toLocaleDateString("en-ZA",{weekday:"short",day:"numeric",month:"short",year:"numeric"});}
+
+const pageTitles = {dashboard:"Dashboard",appointments:"Appointments",messages:"Messages",slots:"My Time Slots",location:"Location Sharing"};
+
+function showPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  el("page-"+name).classList.add("active");
+  document.querySelector(`[data-page="${name}"]`).classList.add("active");
+  safeSet("pageTitle","textContent",pageTitles[name]||name);
+  if(name==="appointments") loadAllAppointments();
+  if(name==="messages")     loadAllPatients();
+  if(name==="slots")        initSlotDate();
+  if(name==="records")      loadAppointmentRecords();
+  // ── Stop location sharing when leaving location page ──
+  if(name!=="location" && isSharingLocation){
+    clearInterval(locationInterval);
+    locationInterval = null;
+    isSharingLocation = false;
+    const btn = el("locBtn");
+    if(btn){ btn.textContent="📍 Share My Location"; btn.classList.remove("active"); }
+    safeSet("locationStatus","textContent","Location sharing paused — go to Location page to resume.");
+  }
+}
+
+async function loadProfile(){
+  const {data:{session}} = await client.auth.getSession();
+  if(!session){window.location.href="doctorLogin.html";return;}
+  const {data:{user}} = await client.auth.getUser();
+  if(!user){window.location.href="doctorLogin.html";return;}
+  DOCTOR_ID = user.id;
+  const {data} = await client.from("doctors").select("*").eq("id",user.id).single();
+  if(!data) return;
+  DOCTOR_NAME = `Dr. ${data.name} ${data.surname}`;
+  safeSet("sidebarName","textContent",DOCTOR_NAME);
+  safeSet("sidebarDisc","textContent",data.discipline||"General Practitioner");
+  if(data.profile_image_url){
+    const a = el("sidebarAvatar");
+    a.innerHTML=`<img src="${data.profile_image_url}" class="doc-avatar" style="width:40px;height:40px;">`;
+  }
+}
+
+async function logout(){
+  await client.auth.signOut();
+  window.location.href="doctorLogin.html";
+}
+
+async function loadDashboard(){
+  const today = new Date().toISOString().split("T")[0];
+  const [{data:appts},{data:msgs}] = await Promise.all([
+    client.from("appointments").select("*").eq("doctor_id",DOCTOR_ID).eq("date",today),
+    client.from("messages").select("id").eq("doctor_id",DOCTOR_ID).eq("sender","patient")
+  ]);
+
+  safeSet("statToday","textContent",(appts||[]).length);
+  safeSet("statMessages","textContent",(msgs||[]).length);
+
+  const table = el("todayTable");
+  if(!appts||appts.length===0){table.innerHTML=`<tr><td colspan="5" class="empty-state">No appointments today.</td></tr>`;return;}
+  table.innerHTML = "";
+  appts.sort((a,b)=>a.time.localeCompare(b.time)).forEach(a=>{
+    table.innerHTML += `<tr>
+      <td>${fmt12(a.time.slice(0,5))}</td>
+      <td>${a.patient_name}</td>
+      <td>${a.reason}</td>
+      <td><span class="badge ${a.status}">${a.status}</span></td>
+      <td style="display:flex;gap:6px;align-items:center;">
+       ${(a.status==="pending"||a.status==="rescheduled")?`
+      <button class="btn btn-primary btn-sm" onclick="updateApptStatus('${a.id}','confirmed')">✓ Accept & Transfer</button>
+      <button class="btn btn-danger btn-sm" onclick="updateApptStatus('${a.id}','cancelled')">✕ Reject & Refund</button>
+      `:""} 
+      </td>
+    </tr>`;
+  });
+
+  const {data:allA} = await client.from("appointments").select("patient_id").eq("doctor_id",DOCTOR_ID);
+  const unique = new Set((allA||[]).map(a=>a.patient_id));
+  safeSet("statPatients","textContent",unique.size);
+}
+
+async function loadAllAppointments(){
+  const {data} = await client.from("appointments").select("*").eq("doctor_id",DOCTOR_ID).order("date",{ascending:false}).order("time");
+  allAppointments = data||[];
+  renderAppointments(allAppointments);
+  const pending = allAppointments.filter(a=>
+    a.status==="pending" || a.status==="rescheduled"
+  ).length;
+  const b = el("apptBadge");
+  if(b){b.textContent=pending;b.className=pending>0?"nav-badge show":"nav-badge";}
+}
+
+function renderAppointments(list){
+  const t = el("allApptsTable");
+  if(!list||list.length===0){t.innerHTML=`<tr><td colspan="6" class="empty-state">No appointments.</td></tr>`;return;}
+  t.innerHTML="";
+  list.forEach(a=>{
+  t.innerHTML+=`<tr>
+    <td>${fmtDate(a.date)}</td>
+    <td>${fmt12(a.time.slice(0,5))}</td>
+    <td>${a.patient_name}</td>
+    <td>${a.reason}</td>
+    <td>${a.payment_method || '—'}</td>
+    <td><span class="badge ${a.status}">${a.status}</span></td>
+
+      <td style="display:flex;gap:6px;align-items:center;">
+        ${(a.status==="pending"||a.status==="rescheduled")?`
+        <button class="btn btn-primary btn-sm" onclick="updateApptStatus('${a.id}','confirmed')">✓ Confirm</button>
+        <button class="btn btn-danger btn-sm" onclick="updateApptStatus('${a.id}','cancelled')">✕ Reject</button>
+      `:""}
+      <button class="call-mini-btn" onclick="callPatientById('${a.patient_id}','${a.patient_name}')" title="Video call patient">📹</button>  
+      </td>
+    </tr>`;
+  });
+}
+
+function filterAppts(status,btn){
+  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderAppointments(status==="all"?allAppointments:allAppointments.filter(a=>a.status===status));
+}
+
+async function updateApptStatus(id,status){
+  await client.from("appointments").update({status}).eq("id",id);
+  const msg = status === 'confirmed' ? "✅ Accepted — funds transferred to your account." : "❌ Rejected — funds refunded to patient.";
+  showToast(msg, status==="confirmed"?"success":"warn");
+
+  loadAllAppointments();
+  loadDashboard();
+}
+
+async function loadAllPatients(){
+  const [{data:apptPats},{data:msgPats}] = await Promise.all([
+    client.from("appointments").select("patient_id,patient_name").eq("doctor_id",DOCTOR_ID),
+    client.from("messages").select("patient_id").eq("doctor_id",DOCTOR_ID)
+  ]);
+
+  const idSet = new Set();
+  const combined = [];
+  [...(apptPats||[]),...(msgPats||[])].forEach(r=>{
+    if(!r.patient_id||idSet.has(r.patient_id)) return;
+    idSet.add(r.patient_id);
+    combined.push(r);
+  });
+
+  if(idSet.size===0){
+    el("patientListEl").innerHTML=`<div class="empty-state" style="padding:20px;">No patients yet.</div>`;
+    return;
+  }
+
+  const {data:pats} = await client.from("patients").select("id,name,surname,user_id").in("user_id",[...idSet]);
+  allPatients = pats||[];
+  combined.forEach(r=>{
+    if(!allPatients.find(p=>p.user_id===r.patient_id) && r.patient_name){
+      allPatients.push({id:r.patient_id,user_id:r.patient_id,name:r.patient_name,surname:""});
+    }
+  });
+
+  renderPatientList(allPatients);
+}
+
+function renderPatientList(list){
+  const container = el("patientListEl");
+  container.innerHTML="";
+  if(!list||list.length===0){container.innerHTML=`<div class="empty-state" style="padding:20px;">No patients found.</div>`;return;}
+  list.forEach(p=>{
+    const fullName = `${p.name} ${p.surname}`.trim();
+    const div = document.createElement("div");
+    div.className = `patient-item${currentPatientId===p.user_id?" active":""}`;
+    div.dataset.uid = p.user_id||p.id;
+    div.innerHTML=`
+      <div class="patient-item-avatar">👤</div>
+      <div style="min-width:0;">
+        <div class="patient-item-name">${fullName}</div>
+        <div class="patient-item-preview">Click to chat</div>
+      </div>`;
+    div.onclick=()=>selectPatient(p);
+    container.appendChild(div);
+  });
+}
+
+function filterPatients(q){
+  const filtered = q
+    ? allPatients.filter(p =>
+        `${p.name} ${p.surname}`.toLowerCase().includes(q.toLowerCase()))
+    : allPatients;
+  renderPatientList(filtered);
+  // ── Re-highlight active patient after re-render ──
+  document.querySelectorAll(".patient-item").forEach(item => {
+    if(item.dataset.uid === currentPatientId) item.classList.add("active");
+  });
+}
+
+async function selectPatient(patient){
+  currentPatientId = patient.user_id||patient.id;
+  const fullName = `${patient.name} ${patient.surname}`.trim();
+  safeSet("chatPatientName","textContent",fullName);
+  safeSet("chatPatientStatus","textContent","");
+  el("chatVideoBtn").style.display="flex";
+  safeSet("callPatientNameLabel","textContent",fullName);
+  renderPatientList(allPatients);
+  await loadMessages();
+  subscribeMessages();
+  const unread = await countUnread();
+  const b = el("msgBadge");
+  if(b){b.textContent=unread;b.className=unread>0?"nav-badge show":"nav-badge";}
+}
+
+async function loadMessages(){
+  if(!currentPatientId) return;
+  const {data} = await client.from("messages").select("*")
+    .eq("doctor_id",DOCTOR_ID).eq("patient_id",currentPatientId)
+    .order("created_at",{ascending:true});
+  renderMessages(data||[]);
+}
+
+function renderMessages(msgs){
+  const area = el("messagesArea");
+  area.innerHTML="";
+  if(!msgs.length){
+    area.innerHTML=`<div class="chat-empty"><div class="empty-icon">💬</div><span>No messages yet. Say hello!</span></div>`;
+    return;
+  }
+  msgs.forEach(m=>{
+    const mine = m.sender==="doctor";
+    const wrap = document.createElement("div");
+    wrap.className=`msg-bubble-wrap${mine?" mine":""}`;
+    wrap.innerHTML=`<div class="msg-bubble ${mine?"mine":"theirs"}">
+      <div>${m.message}</div>
+      <div class="msg-time">${new Date(m.created_at).toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</div>
+    </div>`;
+    area.appendChild(wrap);
+  });
+  area.scrollTop=area.scrollHeight;
+}
+
+function subscribeMessages(){
+  if(messageChannel){client.removeChannel(messageChannel);}
+  messageChannel = client.channel(`doc-msg-${DOCTOR_ID}-${currentPatientId}`)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:`doctor_id=eq.${DOCTOR_ID}`},
+      ()=>loadMessages()).subscribe();
+}
+
+async function sendMsg(){
+  const text = el("msgInput")?.value?.trim();
+  if(!text) return;
+  if(!currentPatientId){showToast("Select a patient first","warn");return;}
+
+  // ── Optimistic update — doctor sees message instantly ──
+  const area = el("messagesArea");
+  const wrap = document.createElement("div");
+  wrap.className = "msg-bubble-wrap mine";
+  wrap.innerHTML = `<div class="msg-bubble mine">
+    <div>${text}</div>
+    <div class="msg-time">${new Date().toLocaleTimeString("en-ZA",{hour:"2-digit",minute:"2-digit"})}</div>
+  </div>`;
+  // Remove empty state if present
+  const empty = area.querySelector(".chat-empty");
+  if(empty) empty.remove();
+  area.appendChild(wrap);
+  area.scrollTop = area.scrollHeight;
+
+  // Clear input immediately
+  safeSet("msgInput","value","");
+
+  // Save to Supabase in background
+  const {error} = await client.from("messages").insert([{
+    doctor_id:DOCTOR_ID, patient_id:currentPatientId, sender:"doctor", message:text
+  }]);
+  if(error){
+    showToast("Message failed to send","error");
+    wrap.style.opacity = "0.5"; // visually mark as failed
+  }
+}
+
+function msgKeydown(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}}
+
+async function countUnread(){
+  if(!currentPatientId) return 0;
+  const {data} = await client
+    .from("messages")
+    .select("id")
+    .eq("doctor_id", DOCTOR_ID)
+    .eq("patient_id", currentPatientId)
+    .eq("sender", "patient");
+  return (data||[]).length;
+}
+
+function initSlotDate(){
+  const today = new Date().toISOString().split("T")[0];
+  el("slotDate").min = today;
+  if(!el("slotDate").value) el("slotDate").value = today;
+  loadSlotsForDate();
+}
+
+async function loadSlotsForDate(){
+  const date = el("slotDate").value;
+  if(!date||!DOCTOR_ID) return;
+  const {data} = await client.from("time_slots").select("*").eq("doctor_id",DOCTOR_ID).eq("date",date);
+  existingSlots = {};
+  (data||[]).forEach(s=>{
+    const t = s.time.slice(0,5);
+    existingSlots[t] = {id:s.id, is_booked:s.is_booked, open:true};
+  });
+  if(Object.keys(existingSlots).length>0){
+    generatedSlots = Object.keys(existingSlots).sort();
+    renderSlotPills();
+    el("slotSaveRow").style.display="flex";
+  } else {
+    el("slotsDisplay").innerHTML=`<div class="empty-state">No slots set for this date. Generate slots below.</div>`;
+    el("slotSaveRow").style.display="none";
+    generatedSlots=[];
+  }
+}
+
+function generateSlots(){
+  const from = el("slotFrom").value;
+  const to   = el("slotTo").value;
+  const interval = parseInt(el("slotInterval").value)||30;
+  if(!from||!to){showToast("Set from/to times","warn");return;}
+  if(!el("slotDate").value){showToast("Pick a date first","warn");return;}
+  const [fh,fm] = from.split(":").map(Number);
+  const [th,tm] = to.split(":").map(Number);
+  let h=fh,m=fm;
+  generatedSlots=[];
+  while(h<th||(h===th&&m<tm)){
+    const slot = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+    generatedSlots.push(slot);
+    m+=interval;
+    if(m>=60){m-=60;h++;}
+  }
+  if(generatedSlots.length===0){showToast("No slots generated — check your times","warn");return;}
+  generatedSlots.forEach(s=>{
+    if(!existingSlots[s]) existingSlots[s]={id:null,is_booked:false,open:true};
+  });
+  renderSlotPills();
+  el("slotSaveRow").style.display="flex";
+}
+
+function renderSlotPills(){
+  const grid = el("slotsDisplay");
+  grid.innerHTML="";
+  generatedSlots.forEach(slot=>{
+    const info = existingSlots[slot]||{open:false,is_booked:false};
+    const pill = document.createElement("div");
+    pill.className = `slot-pill ${info.is_booked?"booked":info.open?"open":""}`;
+    pill.textContent = fmt12(slot);
+    pill.dataset.slot = slot;
+    pill.title = info.is_booked?"Patient booked":info.open?"Click to close":"Click to open";
+    if(!info.is_booked){
+      pill.onclick=()=>{
+        const cur = existingSlots[slot]||{open:false};
+        existingSlots[slot]={...cur,open:!cur.open};
+        renderSlotPills();
+      };
+    }
+    grid.appendChild(pill);
+  });
+}
+
+function openAllSlots(){generatedSlots.forEach(s=>{if(!existingSlots[s]?.is_booked) existingSlots[s]={...existingSlots[s],open:true};});renderSlotPills();}
+function closeAllSlots(){generatedSlots.forEach(s=>{if(!existingSlots[s]?.is_booked) existingSlots[s]={...existingSlots[s],open:false};});renderSlotPills();}
+
+async function saveSlots(){
+  const date = el("slotDate").value;
+  if(!date){showToast("No date selected","warn");return;}
+  await client.from("time_slots").delete().eq("doctor_id",DOCTOR_ID).eq("date",date).eq("is_booked",false);
+  const toInsert = generatedSlots
+    .filter(s=>existingSlots[s]?.open && !existingSlots[s]?.is_booked)
+    .map(s=>({doctor_id:DOCTOR_ID,date,time:s,is_booked:false}));
+  if(toInsert.length>0){
+    const {error} = await client.from("time_slots").insert(toInsert);
+    if(error){showToast("Error saving slots: "+error.message,"error");return;}
+  }
+  showToast(`✅ Saved ${toInsert.length} open slots for ${fmtDate(date)}`,"success");
+  loadSlotsForDate();
+}
+
+function listenForIncomingCalls(){
+  incomingChannel = client.channel(`incoming-doc-${DOCTOR_ID}`)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"calls",filter:`doctor_id=eq.${DOCTOR_ID}`},
+      async payload=>{
+        const call = payload.new;
+        if(currentCallId||call.status!=="calling") return;
+        currentCallId = call.id;
+        isOutgoing = false;
+        const {data:pat} = await client.from("patients").select("name,surname").eq("user_id",call.patient_id).maybeSingle();
+        const pname = pat ? `${pat.name} ${pat.surname}` : "A patient";
+        safeSet("incomingCallerName","textContent",pname);
+        el("incomingOverlay").classList.add("show");
+        playRingtone(true);
+      }).subscribe();
+}
+
+async function initiateCall(){
+  if(!currentPatientId){showToast("Select a patient first","warn");return;}
+  const pname = el("chatPatientName")?.textContent||"Patient";
+  callPatientById(currentPatientId, pname);
+}
+
+async function callPatientById(patientUserId, patientName){
+  if(currentCallId){showToast("Already in a call","warn");return;}
+  isOutgoing = true;
+  currentPatientId = patientUserId;
+  safeSet("outgoingPatientName","textContent",patientName);
+  safeSet("callPatientNameLabel","textContent",patientName);
+
+  try{
+    // ── Get camera FIRST before showing overlay ──
+    localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    el("localVideo").srcObject = localStream;
+    // ── Only show overlay once camera is confirmed ──
+    el("outgoingOverlay").classList.add("show");
+    el("localVideo").srcObject = localStream;
+    peerConnection = new RTCPeerConnection(ICE_SERVERS);
+    localStream.getTracks().forEach(t=>peerConnection.addTrack(t,localStream));
+    peerConnection.ontrack = e=>{el("remoteVideo").srcObject=e.streams[0];setCallQuality("🟢 Connected");};
+    const iceCandidates=[];
+    peerConnection.onicecandidate = e=>{if(e.candidate)iceCandidates.push(e.candidate);};
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    await waitForIce(peerConnection);
+    const {data:callData,error} = await client.from("calls").insert([{
+      patient_id:patientUserId, doctor_id:DOCTOR_ID,
+      offer:JSON.stringify(offer), caller_ice:JSON.stringify(iceCandidates),
+      status:"calling", initiated_by:"doctor"
+    }]).select().single();
+    if(error){showToast("Failed to start call","error");cleanupCall();return;}
+    currentCallId = callData.id;
+    subscribeActiveCall(currentCallId);
+  }catch(err){
+    console.error(err);showToast("Camera/mic error","error");
+    el("outgoingOverlay").classList.remove("show");
+    cleanupCall();
+  }
+}
+
+async function acceptCall(){
+  if(!currentCallId) return;
+  playRingtone(false);
+  el("incomingOverlay").classList.remove("show");
+  setCallQuality("⏳ Connecting...");
+  try{
+    const {data:callData} = await client.from("calls").select("*").eq("id",currentCallId).single();
+    if(!callData?.offer){showToast("Call data missing","error");cleanupCall();return;}
+    localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    el("localVideo").srcObject = localStream;
+    peerConnection = new RTCPeerConnection(ICE_SERVERS);
+    localStream.getTracks().forEach(t=>peerConnection.addTrack(t,localStream));
+    peerConnection.ontrack = e=>{el("remoteVideo").srcObject=e.streams[0];setCallQuality("🟢 Connected");};
+    const iceCandidates=[];
+    peerConnection.onicecandidate = e=>{if(e.candidate)iceCandidates.push(e.candidate);};
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(callData.offer)));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    await waitForIce(peerConnection);
+    await client.from("calls").update({answer:JSON.stringify(answer),callee_ice:JSON.stringify(iceCandidates),status:"connected"}).eq("id",currentCallId);
+    if(callData.caller_ice)
+      for(const c of JSON.parse(callData.caller_ice))
+        await peerConnection.addIceCandidate(new RTCIceCandidate(c));
+    const {data:pat} = await client.from("patients").select("name,surname").eq("user_id",callData.patient_id).maybeSingle();
+    if(pat) safeSet("callPatientNameLabel","textContent",`${pat.name} ${pat.surname}`);
+    showActiveCall();
+    subscribeActiveCall(currentCallId);
+  }catch(err){
+    console.error(err);showToast("Connection error","error");
+    await rejectCall();
+  }
+}
+
+async function rejectCall(){
+  playRingtone(false);
+  if(currentCallId) await client.from("calls").update({status:"rejected"}).eq("id",currentCallId);
+  el("incomingOverlay").classList.remove("show");
+  cleanupCall();
+}
+
+async function cancelOutgoingCall(){
+  if(currentCallId) await client.from("calls").update({status:"rejected"}).eq("id",currentCallId);
+  el("outgoingOverlay").classList.remove("show");
+  cleanupCall();
+}
+
+async function endCall(){
+  if(currentCallId) await client.from("calls").update({status:"ended"}).eq("id",currentCallId);
+  hideActiveCall();
+  cleanupCall();
+  showToast("Call ended");
+}
+
+function subscribeActiveCall(callId){
+  activeChannel = client.channel(`doc-active-${callId}`)
+    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"calls",filter:`id=eq.${callId}`},
+      async payload=>{
+        const u = payload.new;
+        if(isOutgoing && u.status==="connected" && u.answer && peerConnection.remoteDescription===null){
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(u.answer)));
+          if(u.callee_ice)
+            for(const c of JSON.parse(u.callee_ice))
+              await peerConnection.addIceCandidate(new RTCIceCandidate(c));
+          el("outgoingOverlay").classList.remove("show");
+          showActiveCall();
+          setCallQuality("🟢 Connected");
+        }
+        if(u.status==="rejected"){showToast("Call declined","warn");el("outgoingOverlay").classList.remove("show");cleanupCall();}
+        if(u.status==="ended"){showToast("Call ended");hideActiveCall();cleanupCall();}
+      }).subscribe();
+}
+
+function showActiveCall(){el("activeCallOverlay").classList.add("show");startCallTimer();}
+function hideActiveCall(){el("activeCallOverlay").classList.remove("show");stopCallTimer();}
+
+function cleanupCall(){
+  if(activeChannel){client.removeChannel(activeChannel);activeChannel=null;}
+  if(peerConnection){peerConnection.close();peerConnection=null;}
+  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
+  el("localVideo").srcObject=null;el("remoteVideo").srcObject=null;
+  currentCallId=null;isOutgoing=false;isMuted=false;isCamOff=false;
+  el("muteBtn").classList.remove("active");el("camBtn").classList.remove("active");
+}
+
+function toggleMute(){
+  if(!localStream) return;
+  isMuted=!isMuted;
+  localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
+  el("muteBtn").textContent = isMuted?"🔇":"🎤";
+  el("muteBtn").classList.toggle("active",isMuted);
+}
+function toggleCam(){
+  if(!localStream) return;
+  isCamOff=!isCamOff;
+  localStream.getVideoTracks().forEach(t=>t.enabled=!isCamOff);
+  el("camBtn").textContent = isCamOff?"🚫":"📷";
+  el("camBtn").classList.toggle("active",isCamOff);
+}
+function toggleSpeaker(){const btn=el("speakerBtn");btn.textContent=btn.textContent==="🔊"?"🔈":"🔊";}
+function setCallQuality(msg){safeSet("callQuality","textContent",msg);}
+function startCallTimer(){
+  callSeconds=0;stopCallTimer();
+  callTimerInterval=setInterval(()=>{
+    callSeconds++;
+    const m=Math.floor(callSeconds/60),s=callSeconds%60;
+    safeSet("callTimer","textContent",`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`);
+  },1000);
+}
+function stopCallTimer(){clearInterval(callTimerInterval);callTimerInterval=null;safeSet("callTimer","textContent","00:00");}
+function waitForIce(pc){
+  return new Promise(res=>{
+    if(pc.iceGatheringState==="complete") return res();
+    const t=setTimeout(res,5000);
+    pc.onicegatheringstatechange=()=>{if(pc.iceGatheringState==="complete"){clearTimeout(t);res();}};
+  });
+}
+
+let audioCtx=null,ringtoneOscillator=null;
+function playRingtone(play){
+  try{
+    if(!play){
+      if(ringtoneOscillator){
+        try{ringtoneOscillator.stop();}catch(e){}
+        ringtoneOscillator=null;
+      }
+      return;
+    }
+    audioCtx = audioCtx||new(window.AudioContext||window.webkitAudioContext)();
+    // ── Resume context — browsers suspend it until user interaction ──
+    if(audioCtx.state==="suspended") audioCtx.resume();
+    ringtoneOscillator = audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    ringtoneOscillator.connect(gain);gain.connect(audioCtx.destination);
+    ringtoneOscillator.frequency.value=440;gain.gain.value=0.15;
+    ringtoneOscillator.start();
+    let on=true;
+    const interval=setInterval(()=>{if(!ringtoneOscillator){clearInterval(interval);return;}gain.gain.value=on?0.15:0;on=!on;},500);
+  }catch(e){console.log("No audio ctx");}
+}
+
+async function shareLocation(){
+  if(!navigator.geolocation){
+    safeSet("locationStatus","textContent","❌ Geolocation not supported by your browser.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    async pos=>{
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const {error} = await client
+        .from("doctors")
+        .update({lat, lng})
+        .eq("id", DOCTOR_ID);
+      if(error){
+        safeSet("locationStatus","textContent","❌ Failed to update location: "+error.message);
+      } else {
+        safeSet("locationStatus","textContent",
+          `✅ Location updated at ${new Date().toLocaleTimeString("en-ZA")} — patients can now find you.`);
+          // ── Update map preview ──
+          initLocationMap(lat, lng);
+      }
+    },
+    err=>{
+      // ── Show specific error message ──
+      const msgs = {
+        1: "❌ Permission denied — please allow location access in your browser settings.",
+        2: "❌ Position unavailable — check your device GPS.",
+        3: "❌ Location request timed out — please try again."
+      };
+      safeSet("locationStatus","textContent", msgs[err.code]||"❌ Could not get location.");
+      // ── If denied, stop sharing ──
+      if(err.code===1){
+        isSharingLocation = false;
+        clearInterval(locationInterval);
+        locationInterval = null;
+        const btn = el("locBtn");
+        if(btn){
+          btn.textContent = "📍 Share My Location";
+          btn.classList.remove("active");
+        }
+      }
+    },
+    {enableHighAccuracy:true, timeout:10000, maximumAge:0}
+  );
+}
+// ── Location map preview ──
+let locationMap = null, locationMarker = null;
+
+function initLocationMap(lat, lng){
+  if(!locationMap){
+    locationMap = L.map("locationMap").setView([lat, lng], 14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+      attribution:"© OpenStreetMap contributors"
+    }).addTo(locationMap);
+  }
+  if(locationMarker){
+    locationMarker.setLatLng([lat, lng]);
+  } else {
+    locationMarker = L.marker([lat, lng])
+      .addTo(locationMap)
+      .bindPopup(`<b>${DOCTOR_NAME}</b><br>Your current shared location`)
+      .openPopup();
+  }
+  locationMap.setView([lat, lng], 14);
+}
+function toggleShareLocation(){
+  const btn = el("locBtn");
+  if(!isSharingLocation){
+    isSharingLocation=true;
+    btn.textContent="🔴 Stop Sharing";btn.classList.add("active");
+    shareLocation();
+    locationInterval=setInterval(shareLocation,10000);
+  }else{
+    isSharingLocation=false;clearInterval(locationInterval);locationInterval=null;
+    btn.textContent="📍 Share My Location";btn.classList.remove("active");
+    safeSet("locationStatus","textContent","Location sharing stopped.");
+  }
+}
+
+async function loadAppointmentRecords() {
+  const tbody = el("recordsTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">⏳ Loading...</td></tr>`;
+
+  const { data, error } = await client
+    .from("appointments")
+    .select("*")
+    .eq("doctor_id", DOCTOR_ID)
+    .in("status", ["confirmed", "cancelled"])
+    .order("date", { ascending: false });
+
+  tbody.innerHTML = "";
+  if (error || !data || data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No financial records yet.</td></tr>`;
+    return;
+  }
+
+  data.forEach(a => {
+    const isPaid = a.status === "confirmed";
+    tbody.innerHTML += `<tr>
+      <td>${fmtDate(a.date)}</td>
+      <td>${a.patient_name}</td>
+      <td>${a.payment_method || "—"}</td>
+      <td>R ${parseFloat(a.amount_paid || 0).toFixed(2)}</td>
+      <td><span class="badge ${isPaid ? "confirmed" : "cancelled"}">${isPaid ? "💸 Funds Transferred" : "🔄 Refunded"}</span></td>
+    </tr>`;
+  });
+}
+
+async function initPage(){
+  await loadProfile();
+  await loadDashboard();
+  listenForIncomingCalls();
+  // ── Check if doctor already has location saved ──
+  await checkExistingLocation();
+}
+
+async function checkExistingLocation(){
+  if(!DOCTOR_ID) return;
+  const {data} = await client
+    .from("doctors")
+    .select("lat, lng")
+    .eq("id", DOCTOR_ID)
+    .single();
+  if(data?.lat && data?.lng){
+    safeSet("locationStatus","textContent",
+      `📍 Your location is saved — patients can find you. Click to update.`);
+  } else {
+    safeSet("locationStatus","textContent",
+      "Location not shared yet. Click the button to share your location with patients.");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initPage);
+</script>
+</body>
+</html>

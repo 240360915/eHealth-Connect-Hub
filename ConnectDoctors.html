@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- FIX 1: removed duplicate title tag -->
+  <title>Find a Doctor — e-Health Connect</title>
+
+  <!-- FIX 2: switched from jsdelivr (blocked by Edge) to unpkg -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link  rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+        :root {
+      --navy:   #0f1f3d;
+      --blue:   #1b2a4e;
+      --accent: #3b82f6;
+      --green:  #10b981;
+      --red:    #ef4444;
+      --bg:     #f0f4f8;
+      --white:  #ffffff;
+      --border: #e2e8f0;
+      --text:   #1e293b;
+      --muted:  #64748b;
+      --radius: 12px;
+      --shadow: 0 2px 16px rgba(0,0,0,0.08);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:"Roboto",sans-serif; }
+
+    body { background:#f0f4f8; }
+
+    .Heading {
+      display:flex; align-items:center; justify-content:space-between;
+      background:var(--white); padding:12px 28px;
+      box-shadow:0 1px 8px rgba(0,0,0,0.06);
+      position:sticky; top:0; z-index:500;margin-bottom: 2rem;
+    }
+    .brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
+    .brand-logo {
+      width:42px; height:42px; border-radius:10px; background:var(--blue);
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; overflow:hidden; flex-shrink:0;
+    }
+    .brand-logo img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+    .slogan1 { font-size:1.25rem; color:var(--navy); font-weight:700; line-height:1; }
+    .slogan3 { font-size:12px; color:var(--green); font-weight:500; margin-top:2px; }    .Heading {
+      display:flex; align-items:center; justify-content:space-between;
+      background:var(--white); padding:12px 28px;
+      box-shadow:0 1px 8px rgba(0,0,0,0.06);
+      position:sticky; top:0; z-index:500;
+    }
+    .brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
+    .brand-logo {
+      width:42px; height:42px; border-radius:10px; background:var(--blue);
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; overflow:hidden; flex-shrink:0;
+    }
+    .brand-logo img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+    .slogan1 { font-size:1.25rem; color:var(--navy); font-weight:700; line-height:1; }
+    .slogan3 { font-size:12px; color:var(--green); font-weight:500; margin-top:2px; }
+
+    /* ── Page wrapper ── */
+    .page-wrapper { max-width:900px; margin:0 auto; padding:0 20px 40px; }
+
+    /* ── Section card ── */
+    .section-card {
+      background:white; border-radius:14px; padding:28px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.08); margin-bottom:28px;
+    }
+    .section-card h2 { font-size:1.5rem; color:#0b1c3d; margin-bottom:16px;
+      border-bottom:2px solid #e8f5e9; padding-bottom:10px; }
+
+    /* ── Search ── */
+    .search-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+    .search-row input { flex:1; min-width:200px; padding:12px 15px;
+      border-radius:8px; border:1px solid #ccc; font-size:16px; outline:none; }
+    .search-row button { padding:12px 22px; background:#1b2a4e; border:none;
+      border-radius:8px; color:white; font-size:16px; cursor:pointer; transition:0.3s; }
+    .search-row button:hover { background:#385a9e; }
+
+    /* ── Doctor list ── */
+    .doctor-item {
+      background:#f9f9f9; padding:16px; margin-bottom:14px;
+      border-radius:10px; border-left:5px solid #1b2a4e;
+      display:flex; justify-content:space-between;
+      align-items:flex-start; flex-wrap:wrap; gap:10px;
+    }
+    .doctor-item-info h3 { color:#0b1c3d; margin-bottom:4px; font-size:16px; }
+    .doctor-item-info p  { color:#666; font-size:14px; margin:2px 0; }
+    .rate-tag { background:#eff6ff; color:#1b2a4e; padding:4px 10px;
+      border-radius:20px; font-size:13px; font-weight:700; border:1px solid #bfdbfe;
+      display:inline-block; margin-top:4px; }
+    .doctor-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .btn { padding:8px 16px; background:#1b2a4e; color:white; border:none;
+      border-radius:6px; cursor:pointer; font-size:14px; transition:0.2s; }
+    .btn:hover { background:#385a9e; }
+    .btn-green  { background:#2e7d32; }
+    .btn-green:hover { background:#1b5e20; }
+    .btn-outline { background:white; color:#1b2a4e; border:1.5px solid #1b2a4e; }
+    .btn-outline:hover { background:#f0f4ff; }
+
+    /* ── Map ── */
+    .map-container { height:380px; border-radius:10px; overflow:hidden;
+      box-shadow:0 4px 14px rgba(0,0,0,0.1); margin-top:16px; }
+    #map { height:100%; width:100%; }
+    #mapStatus { font-size:13px; color:#666; margin-bottom:8px; min-height:20px; }
+
+    /* ══════════════════════════════════════
+       APPOINTMENT SCHEDULER
+    ══════════════════════════════════════ */
+    .appt-form { display:none; }  /* hidden until doctor selected */
+    .appt-form.visible { display:block; }
+
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+    @media (max-width:600px) { .form-grid { grid-template-columns:1fr; } }
+
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-group label { font-size:13px; font-weight:600; color:#444;
+      text-transform:uppercase; letter-spacing:0.4px; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding:10px 12px; border:1.5px solid #ddd; border-radius:8px;
+      font-size:15px; font-family:inherit; outline:none; transition:border 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color:#1b2a4e; }
+    .form-group textarea { resize:vertical; min-height:80px; }
+
+    .selected-doctor-banner {
+      background:#f0f7ff; border:1px solid #bfdbfe; border-radius:8px;
+      padding:12px 16px; margin-bottom:20px; font-size:14px; color:#1b2a4e; font-weight:600;
+    }
+
+    #apptStatus { text-align:center; font-size:15px; margin-top:12px; min-height:24px; }
+
+    .submit-btn { width:100%; padding:13px; background:#1b2a4e; color:white;
+      border:none; border-radius:8px; font-size:16px; font-weight:700;
+      cursor:pointer; transition:0.2s; margin-top:4px; }
+    .submit-btn:hover { background:#385a9e; }
+    .submit-btn:disabled { opacity:0.6; cursor:not-allowed; }
+
+    /* ── Loading / empty states ── */
+    .loading-msg { color:#888; text-align:center; padding:20px; font-size:14px; }
+  </style>
+</head>
+<body>
+<header class="Heading">
+  <a href="PatientDashboard.html" class="brand">
+    <div class="brand-logo">
+      <img src="LOGO.jpg" alt="Logo" onerror="this.parentElement.textContent='🏥'">
+    </div>
+    <div>
+      <div class="slogan1">e-Health Connect</div>
+      <div class="slogan3">health-care made easier for you</div>
+    </div>
+  </a>
+</header>
+
+  <div class="page-wrapper">
+
+    <!-- ══ FIND DOCTOR ══ -->
+    <div class="section-card">
+      <h2>🔍 Find a Doctor</h2>
+
+      <!-- FIX 3: unified search — one input controls both the list and the map -->
+      <div class="search-row">
+        <input type="text" id="searchInput"
+          placeholder="Search by name, discipline, or location..."
+          oninput="filterDoctors(this.value)"/>
+        <button onclick="filterDoctors(document.getElementById('searchInput').value)">Search</button>
+      </div>
+
+      <div id="results" class="doctor-results">
+        <p class="loading-msg">Loading available doctors...</p>
+      </div>
+    </div>
+
+    <!-- ══ DOCTOR LOCATION MAP ══ -->
+    <div class="section-card">
+      <h2>📍 Doctor Location</h2>
+      <p id="mapStatus">Select a doctor above to see their location on the map.</p>
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <!-- ══ BOOK APPOINTMENT ══ -->
+    <div class="section-card">
+      <h2>📅 Book an Appointment</h2>
+
+      <!-- Hidden until a doctor is selected -->
+      <div id="noDocSelected" style="color:#888;font-size:14px;padding:10px 0;">
+        Please select a doctor above first, then fill in your appointment details here.
+      </div>
+
+      <div class="appt-form" id="apptForm">
+
+        <div class="selected-doctor-banner" id="selectedDoctorBanner">
+          🩺 Booking with: <span id="selectedDoctorLabel">—</span>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Your Full Name</label>
+            <input type="text" id="apptPatientName" placeholder="e.g. John Doe" required/>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="apptPhone" placeholder="e.g. 0821234567" required/>
+          </div>
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="apptDate" required/>
+          </div>
+          <div class="form-group">
+            <label>Preferred Time</label>
+            <select id="apptTime" required>
+              <option value="">-- Select time --</option>
+              <option>08:00</option><option>08:30</option>
+              <option>09:00</option><option>09:30</option>
+              <option>10:00</option><option>10:30</option>
+              <option>11:00</option><option>11:30</option>
+              <option>12:00</option><option>12:30</option>
+              <option>13:00</option><option>13:30</option>
+              <option>14:00</option><option>14:30</option>
+              <option>15:00</option><option>15:30</option>
+              <option>16:00</option><option>16:30</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Reason for Visit</label>
+            <textarea id="apptReason" placeholder="Briefly describe your reason for the visit..."></textarea>
+          </div>
+        </div>
+
+        <button class="submit-btn" id="apptSubmitBtn" onclick="bookAppointment()">
+          ✅ Confirm Appointment
+        </button>
+        <div id="apptStatus"></div>
+      </div>
+    </div>
+
+  </div><!-- /page-wrapper -->
+
+  <script>
+    // ─── Supabase ────────────────────────────────────────────────────────────
+    const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // ─── State ───────────────────────────────────────────────────────────────
+    let allDoctors       = [];
+    let map              = null;
+    let marker           = null;
+    let CURRENT_DOCTOR   = null; // full doctor object
+    // FIX 5: store interval so we can clear it when doctor changes or page unloads
+    let locationInterval = null;
+
+    // ─── Map init ────────────────────────────────────────────────────────────
+    function initMap() {
+      map = L.map("map").setView([-25.4745, 30.9703], 12);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors"
+      }).addTo(map);
+    }
+
+    // ─── Load all doctors ────────────────────────────────────────────────────
+    async function loadDoctors() {
+      const { data, error } = await client
+        .from("doctors")
+        .select("id, name, surname, discipline, email, phone, hourly_rate, lat, lng, location")
+        .eq("verification_status", "approved")
+        .order("name");
+
+      if (error) { console.error(error); return; }
+      allDoctors = data || [];
+      renderDoctors(allDoctors);
+    }
+
+    // ─── Render doctor list ──────────────────────────────────────────────────
+    function renderDoctors(doctors) {
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "";
+
+      if (!doctors || doctors.length === 0) {
+        resultsDiv.innerHTML = `<p class="loading-msg">No doctors found.</p>`;
+        return;
+      }
+
+      doctors.forEach(doc => {
+        const rate = doc.hourly_rate
+          ? `R ${parseFloat(doc.hourly_rate).toFixed(2)}/hr`
+          : "Rate not set";
+
+        const hasLocation = doc.lat && doc.lng;
+
+        const div = document.createElement("div");
+        div.className = "doctor-item";
+        div.innerHTML = `
+          <div class="doctor-item-info">
+            <h3>Dr. ${doc.name} ${doc.surname}</h3>
+            <p>🩺 ${doc.discipline || "General Practitioner"}</p>
+            ${doc.email  ? `<p>✉️ ${doc.email}</p>` : ""}
+            ${doc.phone  ? `<p>📞 ${doc.phone}</p>` : ""}
+            ${doc.location ? `<p>📍 ${doc.location}</p>` : ""}
+            <span class="rate-tag">💰 ${rate}</span>
+          </div>
+          <div class="doctor-actions">
+            <button class="btn${hasLocation ? "" : " btn-outline"}"
+              onclick="selectDoctor('${doc.id}')"
+              ${hasLocation ? "" : 'title="Location not shared yet"'}>
+              📍 ${hasLocation ? "View Location" : "No Location"}
+            </button>
+            <button class="btn btn-green" onclick="openBooking('${doc.id}')">
+              📅 Book
+            </button>
+          </div>`;
+        resultsDiv.appendChild(div);
+      });
+    }
+
+    // FIX 3: unified filter — searches name, discipline, location in one place
+    function filterDoctors(query) {
+      const q = query.toLowerCase().trim();
+      if (!q) { renderDoctors(allDoctors); return; }
+      renderDoctors(allDoctors.filter(doc =>
+        `${doc.name} ${doc.surname}`.toLowerCase().includes(q) ||
+        (doc.discipline || "").toLowerCase().includes(q) ||
+        (doc.location   || "").toLowerCase().includes(q)
+      ));
+    }
+
+    // ─── Select doctor → show on map ─────────────────────────────────────────
+    function selectDoctor(doctorId) {
+      const doc = allDoctors.find(d => d.id === doctorId);
+      if (!doc) return;
+
+      if (!doc.lat || !doc.lng) {
+        document.getElementById("mapStatus").textContent =
+          "This doctor has not shared their location yet. Try again later.";
+        return;
+      }
+
+      CURRENT_DOCTOR = doc;
+      placeMarker(doc.lat, doc.lng, `Dr. ${doc.name} ${doc.surname}`, doc.discipline);
+
+      // FIX 5: clear previous interval before starting a new one
+      if (locationInterval) clearInterval(locationInterval);
+
+      // Poll for live location updates every 5 seconds
+      locationInterval = setInterval(async () => {
+        if (!CURRENT_DOCTOR) return;
+        const { data } = await client
+          .from("doctors").select("lat, lng").eq("id", CURRENT_DOCTOR.id).single();
+        if (data?.lat && data?.lng && marker) {
+          marker.setLatLng([data.lat, data.lng]);
+        }
+      }, 5000);
+    }
+
+    function placeMarker(lat, lng, name, discipline) {
+      if (marker) map.removeLayer(marker);
+      marker = L.marker([lat, lng]).addTo(map)
+        .bindPopup(`<b>${name}</b><br>${discipline || ""}`)
+        .openPopup();
+      map.setView([lat, lng], 14);
+      document.getElementById("mapStatus").textContent =
+        `Showing location for ${name}. Updates every 5 seconds if doctor is sharing live location.`;
+    }
+
+    // ─── Open booking form for a specific doctor ──────────────────────────────
+    function openBooking(doctorId) {
+      const doc = allDoctors.find(d => d.id === doctorId);
+      if (!doc) return;
+
+      CURRENT_DOCTOR = doc;
+
+      // Show the form, hide the placeholder
+      document.getElementById("noDocSelected").style.display = "none";
+      document.getElementById("apptForm").classList.add("visible");
+
+      // Show selected doctor name
+      document.getElementById("selectedDoctorLabel").textContent =
+        `Dr. ${doc.name} ${doc.surname} — ${doc.discipline || "General Practitioner"}`;
+
+      // Set minimum date to today
+      document.getElementById("apptDate").min = new Date().toISOString().split("T")[0];
+
+      // Clear previous status
+      document.getElementById("apptStatus").textContent = "";
+
+      // Scroll to form
+      document.getElementById("apptForm").scrollIntoView({ behavior:"smooth", block:"start" });
+    }
+
+    // ─── Book appointment ─────────────────────────────────────────────────────
+    async function bookAppointment() {
+      if (!CURRENT_DOCTOR) { alert("Please select a doctor first."); return; }
+
+      const patientName = document.getElementById("apptPatientName").value.trim();
+      const phone       = document.getElementById("apptPhone").value.trim();
+      const date        = document.getElementById("apptDate").value;
+      const time        = document.getElementById("apptTime").value;
+      const reason      = document.getElementById("apptReason").value.trim();
+
+      if (!patientName || !phone || !date || !time) {
+        showApptStatus("Please fill in all required fields.", "red");
+        return;
+      }
+
+      const btn = document.getElementById("apptSubmitBtn");
+      btn.disabled    = true;
+      btn.textContent = "Booking...";
+      showApptStatus("", "");
+
+      // Check if logged in
+      const { data:{ user } } = await client.auth.getUser();
+      if(!user){
+        showApptStatus("Please log in to book an appointment.", "error");
+        showToast("Please log in first.", "warn");
+        return;
+      }
+      const { error } = await client
+        .from("appointments")
+        .insert([{
+          doctor_id:    CURRENT_DOCTOR.id,
+          patient_id:   user.id,
+          patient_name: patientName,
+          phone:        phone,
+          date:         date,
+          time:         time,
+          reason:       reason || "General consultation",
+          status:       "pending"
+        }]);
+
+      btn.disabled    = false;
+      btn.textContent = "✅ Confirm Appointment";
+
+      if (error) {
+        console.error(error);
+        showApptStatus("Failed to book appointment: " + error.message, "red");
+        return;
+      }
+
+      showApptStatus("✅ Appointment booked successfully! The doctor will confirm shortly.", "green");
+
+      // Clear form
+      document.getElementById("apptPatientName").value = "";
+      document.getElementById("apptPhone").value       = "";
+      document.getElementById("apptDate").value        = "";
+      document.getElementById("apptTime").value        = "";
+      document.getElementById("apptReason").value      = "";
+    }
+
+    function showApptStatus(msg, color) {
+      const el = document.getElementById("apptStatus");
+      el.textContent = msg;
+      el.style.color = color === "red" ? "#ef4444" : "#10b981";
+    }
+
+    // FIX 5: clear interval when page unloads
+    window.addEventListener("beforeunload", () => {
+      if (locationInterval) clearInterval(locationInterval);
+    });
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+      initMap();
+      loadDoctors();
+    });
+  </script>
+
+</body>
+</html>
