@@ -5,15 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medical Records</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Sora', sans-serif;
             background: #f0f2f5;
             min-height: 100vh;
-            padding: 40px 20px;
+            padding: 0;
+        }
+
+        .site-header {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #ffffff; padding: 0 28px; height: 64px;
+            position: sticky; top: 0; z-index: 500;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .brand-logo {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; overflow: hidden; flex-shrink: 0;
+        }
+        .brand-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+        .brand-name { font-size: 1.25rem; font-weight: 700; color: #0f1f3d; letter-spacing: -0.3px; }
+        .brand-sub  { font-size: 12px; color: #10b981; font-weight: 500; margin-top: 2px; }
+
+        .layout { display: flex; min-height: calc(100vh - 64px); }
+
+        .sidebar {
+            width: 220px; background: #102035; flex-shrink: 0;
+            padding: 24px 14px; display: flex; flex-direction: column; gap: 4px;
+            position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto;
+        }
+        .sidebar-label {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: rgba(255,255,255,0.25); padding: 0 10px; margin-bottom: 8px; margin-top: 12px;
+        }
+        .sidebar-label:first-child { margin-top: 0; }
+        .sidebar-link, .sidebar-btn {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            border-radius: 10px; color: rgba(255,255,255,0.6); text-decoration: none;
+            font-size: 13.5px; font-weight: 500; transition: all 0.18s;
+            background: none; border: none; cursor: pointer; width: 100%;
+            text-align: left; font-family: 'Sora', sans-serif;
+        }
+        .sidebar-link:hover, .sidebar-btn:hover { background: rgba(255,255,255,0.07); color: #fff; }
+        .sidebar-link.active {
+            background: linear-gradient(135deg, rgba(13,148,136,0.3), rgba(20,184,166,0.15));
+            color: #fff; border: 1px solid rgba(13,148,136,0.35);
+        }
+        .sidebar-btn.danger { color: #fca5a5; }
+        .sidebar-btn.danger:hover { background: rgba(239,68,68,0.12); color: #ef4444; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 499;
+        }
+        .sidebar-overlay.open { display: block; }
+        .hamburger {
+            display: none; background: none; border: none; color: #0f1f3d;
+            font-size: 22px; cursor: pointer; padding: 6px; border-radius: 8px;
+        }
+        .hamburger:hover { background: rgba(11,28,61,0.07); }
+
+        .page-content { flex: 1; padding: 40px 32px; max-width: 860px; }
+
+        @media(max-width: 768px) {
+            .hamburger { display: block; }
+            .sidebar {
+                position: fixed; top: 0; left: 0; width: 250px; height: 100vh;
+                z-index: 500; transform: translateX(-100%); transition: transform 0.3s ease;
+                padding-top: 20px;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .page-content { padding: 20px 16px; }
         }
 
         .container { max-width: 800px; margin: 0 auto; }
@@ -156,32 +223,61 @@
 </head>
 <body>
 
-<div class="container">
-    <div class="page-header">
-        <div>
-            <h1>Medical Records</h1>
-            <p>Your complete health history</p>
+    <header class="site-header">
+    <a href="PatientDashboard.html" class="brand">
+        <div class="brand-logo">
+        <img src="LOGO.jpg" alt="Logo" onerror="this.parentElement.textContent='🏥'">
         </div>
-        <a href="Patient-Dashboard.html" class="back-link">← Back to Dashboard</a>
-    </div>
+        <div>
+        <div class="brand-name">e-Health Connect</div>
+        <div class="brand-sub">health-care made easier for you</div>
+        </div>
+    </a>
+    <button class="hamburger" id="sidebarToggle">&#9776;</button>
+    </header>
+        <div class="layout">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-    <div class="filter-bar">
-        <label>Filter by type:</label>
-        <select id="filterType" onchange="filterRecords()">
-            <option value="all">All Records</option>
-            <option value="prescription">Prescriptions</option>
-        </select>
-        <label style="margin-left:auto;">Sort:</label>
-        <select id="sortOrder" onchange="filterRecords()">
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-        </select>
-    </div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-label">Patient Menu</div>
+            <a href="Profile.html" class="sidebar-link"><span>👤</span>My Profile</a>
+            <a href="updatedpayment.html" class="sidebar-link"><span>📅</span>Appointments</a>
+            <a href="MedicalRecords.html" class="sidebar-link active"><span>📋</span>Medical Records</a>
+            <a href="ConnectDoctors.html" class="sidebar-link"><span>🗺️</span>Find Doctors</a>
+            <a href="HealthTips.html" class="sidebar-link"><span>💡</span>Health Tips</a>
+            <div class="sidebar-label" style="margin-top: auto; padding-top: 20px;">Account</div>
+            <button class="sidebar-btn danger" onclick="window.location.href='patientsLogin.html'"><span>🚪</span>Logout</button>
+        </aside>
 
-    <div class="records-list" id="recordsList">
-        <div class="loading">Loading your medical records...</div>
+        <div class="page-content">
+        <div class="container">
+            <div class="page-header">
+                <div>
+                    <h1>Medical Records</h1>
+                    <p>Your complete health history</p>
+                </div>
+                <a href="Patient-Dashboard.html" class="back-link">← Back to Dashboard</a>
+            </div>
+
+            <div class="filter-bar">
+                <label>Filter by type:</label>
+                <select id="filterType" onchange="filterRecords()">
+                    <option value="all">All Records</option>
+                    <option value="prescription">Prescriptions</option>
+                </select>
+                <label style="margin-left:auto;">Sort:</label>
+                <select id="sortOrder" onchange="filterRecords()">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+            </div>
+
+            <div class="records-list" id="recordsList">
+                <div class="loading">Loading your medical records...</div>
+            </div>
+        </div>
+        </div>
     </div>
-</div>
 
 <script>
     const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
@@ -372,6 +468,26 @@
     });
 
     loadMedicalRecords();
+
+    const sidebarToggle  = document.getElementById('sidebarToggle');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebar        = document.getElementById('sidebar');
+
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.add('open');
+        sidebarOverlay.classList.add('open');
+        sidebarToggle.innerHTML = '&#x2715;';
+    });
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+        sidebarToggle.innerHTML = '&#9776;';
+    }
+
+    document.querySelectorAll('.sidebar-link, .sidebar-btn').forEach(l => {
+        l.addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
+    });
 </script>
 
 </body>

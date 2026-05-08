@@ -764,6 +764,43 @@
     @media(max-width:768px){
     .hamburger{display:block;}
     }
+    
+    /* ── Chart Menu Dropdown ── */
+    .chart-menu-wrapper { position: relative; }
+    .chart-menu-btn {
+        background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+        width: 38px; height: 38px; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 4px; cursor: pointer;
+        transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .chart-menu-btn:hover, .chart-menu-btn.open { background: var(--navy); border-color: var(--navy); }
+    .chart-menu-btn:hover .hline, .chart-menu-btn.open .hline { background: #fff; }
+    .hline { display: block; width: 16px; height: 2px; background: var(--navy); border-radius: 2px; }
+    .chart-dropdown {
+        display: none; position: absolute; top: calc(100% + 8px); right: 0;
+        width: 280px; background: var(--card); border: 1px solid var(--border);
+        border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); z-index: 500;
+        overflow: hidden; animation: dropDown 0.2s ease;
+    }
+    @keyframes dropDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .chart-dropdown.open { display: block; }
+    .cd-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .cd-header strong { font-size: 13px; font-weight: 700; color: var(--navy); }
+    .cd-reset { font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 600; background: none; border: none; }
+    .cd-section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .cd-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; display: block; }
+    .cd-options { display: flex; gap: 6px; flex-wrap: wrap; }
+    .cd-opt { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.18s; background: var(--bg); }
+    .cd-opt:hover { border-color: var(--navy); color: var(--navy); }
+    .cd-opt.selected { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .cd-week-select { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .month-select { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; font-size: 12px; outline: none; }
+    .cd-toggles { display: flex; flex-direction: column; gap: 8px; }
+    .cd-toggle { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text); cursor: pointer; }
+    .toggle-switch { width: 34px; height: 18px; background: var(--border); border-radius: 10px; position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .toggle-switch.on { background: var(--navy); }
+    .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
+    .toggle-switch.on::after { transform: translateX(16px); }
     </style>
 </head>
 <body>
@@ -799,8 +836,13 @@
         </a>
 
         <div class="menu-label">System</div>
+        <a onclick="showTab('subscriptions', this)">
+            <span class="icon">💳</span> Subscriptions
+            <span class="tab-badge" id="subPendingCount">0</span>
+        </a>
         <a onclick="showTab('messages', this)">
             <span class="icon">💬</span> Messages
+            <span class="tab-badge" id="msgBadge" style="display:none">0</span>
         </a>
     </div>
 
@@ -833,6 +875,51 @@
             <span class="pending-badge" id="pendingAlert" style="display:none">
                 ⚠️ <span id="pendingAlertCount">0</span> pending verifications
             </span>
+
+            <div class="chart-menu-wrapper" id="chartMenuWrapper">
+                <button class="chart-menu-btn" id="chartMenuBtn" onclick="toggleChartMenu()">
+                    <span class="hline"></span><span class="hline"></span><span class="hline"></span>
+                </button>
+                <div class="chart-dropdown" id="chartDropdown">
+                    <div class="cd-header"><strong>📊 Chart Options</strong><button class="cd-reset" onclick="resetChartOptions()">Reset</button></div>
+                    <div class="cd-section">
+                        <span class="cd-label">Time Period</span>
+                        <div class="cd-options">
+                            <div class="cd-opt selected" data-group="period" data-value="weekly" onclick="selectOpt(this)">Weekly</div>
+                            <div class="cd-opt" data-group="period" data-value="annual" onclick="selectOpt(this)">Annual</div>
+                        </div>
+                        <div class="cd-week-select" id="weekSelector">
+                            <select class="month-select" id="monthPicker" onchange="updateSelectedMonth(this.value)">
+                                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                                <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+                            </select>
+                            <div class="cd-options" style="margin-top:5px;">
+                                <div class="cd-opt selected" data-group="week" data-value="1" onclick="selectOpt(this)">W1</div>
+                                <div class="cd-opt" data-group="week" data-value="2" onclick="selectOpt(this)">W2</div>
+                                <div class="cd-opt" data-group="week" data-value="3" onclick="selectOpt(this)">W3</div>
+                                <div class="cd-opt" data-group="week" data-value="4" onclick="selectOpt(this)">W4</div>
+                                <div class="cd-opt" data-group="week" data-value="5" onclick="selectOpt(this)">W5</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cd-section">
+                        <span class="cd-label">Chart Style</span>
+                        <div class="cd-options">
+                            <div class="cd-opt selected" data-group="barType" data-value="bar" onclick="selectOpt(this)">Bar</div>
+                            <div class="cd-opt" data-group="barType" data-value="line" onclick="selectOpt(this)">Line</div>
+                        </div>
+                    </div>
+                    <div class="cd-section">
+                        <span class="cd-label">Show Data</span>
+                        <div class="cd-toggles">
+                            <label class="cd-toggle"><span>Doctors</span><div class="toggle-switch on" id="toggleDoctors" onclick="toggleDataset('doctors')"></div></label>
+                            <label class="cd-toggle"><span>Patients</span><div class="toggle-switch on" id="togglePatients" onclick="toggleDataset('patients')"></div></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -868,11 +955,11 @@
     <div class="tab-content active" id="tab-dashboard">
         <div class="charts">
             <div class="chart-card">
-                <h3>📈 Registrations Over Time</h3>
+                <h3>Registrations Trend</h3>
                 <canvas id="barChart"></canvas>
             </div>
             <div class="chart-card">
-                <h3>🥧 Users Breakdown</h3>
+                <h3>User Ratio</h3>
                 <canvas id="pieChart"></canvas>
             </div>
         </div>
@@ -978,23 +1065,130 @@
         </div>
     </div>
 
+    <!--  SUBSCRIPTIONS  -->
+<div class="tab-content" id="tab-subscriptions">
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+        <div class="card">
+            <div class="card-icon">⏳</div>
+            <h3>Pending EFT</h3>
+            <div class="number" id="subStatPending">—</div>
+            <div class="card-sub">Awaiting review</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">✅</div>
+            <h3>Active Subscriptions</h3>
+            <div class="number" id="subStatActive">—</div>
+            <div class="card-sub">Doctors with access</div>
+        </div>
+        <div class="card">
+            <div class="card-icon">💰</div>
+            <h3>Total Collected</h3>
+            <div class="number" id="subStatRevenue">—</div>
+            <div class="card-sub">Approved payments</div>
+        </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <button class="tab-btn active" onclick="filterSubs('all', this)">All</button>
+        <button class="tab-btn" onclick="filterSubs('pending', this)">⏳ Pending</button>
+        <button class="tab-btn" onclick="filterSubs('approved', this)">✅ Approved</button>
+        <button class="tab-btn" onclick="filterSubs('rejected', this)">❌ Rejected</button>
+        <input class="search-input" type="text"
+            placeholder="🔍 Search doctor or reference..."
+            oninput="searchSubs(this.value)"
+            style="margin-left:auto;">
+    </div>
+
+    <!-- Payments table -->
+    <div class="section">
+        <div class="section-header">
+            <div>
+                <h2>💳 Subscription Payments</h2>
+                <p>EFT submissions and card payments from doctors</p>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Reference</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="subsTable">
+                <tr class="empty-row">
+                    <td colspan="7">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
     <!--  MESSAGES  -->
     <div class="tab-content" id="tab-messages">
+
+        <!-- Stats row -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+            <div class="card">
+                <div class="card-icon">📬</div>
+                <h3>Total Messages</h3>
+                <div class="number" id="msgTotal">—</div>
+                <div class="card-sub">All contact submissions</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🔴</div>
+                <h3>New / Unread</h3>
+                <div class="number" id="msgNew">—</div>
+                <div class="card-sub">Awaiting your reply</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">✅</div>
+                <h3>Replied</h3>
+                <div class="number" id="msgReplied">—</div>
+                <div class="card-sub">Already responded to</div>
+            </div>
+        </div>
+
+        <!-- Filter + Search bar -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+            <button class="tab-btn active" onclick="filterMsgs('all', this)">All</button>
+            <button class="tab-btn" onclick="filterMsgs('new', this)">🔴 New</button>
+            <button class="tab-btn" onclick="filterMsgs('replied', this)">✅ Replied</button>
+            <input class="search-input" type="text"
+                placeholder="🔍 Search name, email or subject..."
+                oninput="searchMsgs(this.value)"
+                style="margin-left:auto;">
+        </div>
+
         <div class="section">
             <div class="section-header">
-                <div><h2>💬 Messages</h2><p>Platform messages</p></div>
+                <div>
+                    <h2>📩 Contact Form Submissions</h2>
+                    <p>Messages sent via the Contact Us page</p>
+                </div>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>Sender</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Subject</th>
                         <th>Message</th>
                         <th>Date</th>
-                        <th>Participants</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="messagesTable">
-                    <tr class="empty-row"><td colspan="4">Loading messages...</td></tr>
+                <tbody id="contactMsgsTable">
+                    <tr class="empty-row"><td colspan="7">Loading messages...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -1028,8 +1222,42 @@
     </div>
 </div>
 
+    <!-- REPLY MODAL -->
+    <div class="modal-overlay" id="replyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>✉️ Reply to Message</h3>
+                <button class="modal-close" onclick="closeReplyModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="doctor-detail-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;" id="replyMsgDetails"></div>
 
-<div id="toast"></div>
+                <div class="form-field" style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">
+                        Original Message
+                    </label>
+                    <div id="replyOriginalMsg" style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;color:var(--text);line-height:1.6;"></div>
+                </div>
+
+                <div class="form-field" style="display:flex;flex-direction:column;gap:7px;">
+                    <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">
+                        Your Reply
+                    </label>
+                    <textarea class="notes-area" id="replyText" placeholder="Type your reply here..." style="min-height:140px;"></textarea>
+                </div>
+
+                <p style="font-size:12px;color:var(--muted);margin-top:10px;">
+                    💡 Clicking <strong>Send Reply</strong> will open your email client with this message pre-filled, ready to send.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-lg btn-delete" onclick="closeReplyModal()">Cancel</button>
+                <button class="btn btn-lg btn-primary" onclick="sendReply()">✉️ Send Reply</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
 
 
 <script>
@@ -1062,6 +1290,41 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentDoctorId = null;
 
+// ── Generates a temporary signed URL from whatever format is stored ──
+async function getSignedUrl(rawUrl) {
+    if (!rawUrl) return null;
+
+    let filePath = rawUrl;
+
+    // If it's a full Supabase storage URL, extract just the file path
+    if (rawUrl.includes('/storage/v1/object/')) {
+        const bucketName = 'doctor-documents';
+        const markers = [
+            `/object/public/${bucketName}/`,
+            `/object/sign/${bucketName}/`,
+            `/object/authenticated/${bucketName}/`,
+        ];
+        for (const marker of markers) {
+            if (rawUrl.includes(marker)) {
+                filePath = rawUrl.split(marker)[1].split('?')[0];
+                break;
+            }
+        }
+    }
+
+    // Generate a signed URL valid for 1 hour (3600 seconds)
+    const { data, error } = await client.storage
+        .from('doctor-documents')
+        .createSignedUrl(filePath, 3600);
+
+    if (error) {
+        console.warn('Signed URL error for:', filePath, error.message);
+        return null;
+    }
+
+    return data.signedUrl;
+}
+
 //  Toast 
 
 function showToast(msg, type = 'success') {
@@ -1075,6 +1338,11 @@ function showToast(msg, type = 'success') {
 function showTab(name, el) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+
+    // ── Close chart dropdown when switching tabs ──
+    document.getElementById('chartDropdown')?.classList.remove('open');
+    document.getElementById('chartMenuBtn')?.classList.remove('open');
+    document.getElementById('chartMenuWrapper').style.display = name === 'dashboard' ? 'block' : 'none';
     document.getElementById(`tab-${name}`).classList.add('active');
     if (el) el.classList.add('active');
 
@@ -1084,6 +1352,7 @@ function showTab(name, el) {
         doctors:      ['All Doctors',           'Manage registered practitioners'],
         patients:     ['All Patients',          'Manage registered patients'],
         appointments: ['Appointments',          'All bookings across the platform'],
+        subscriptions:['Subscription Payments', 'Manage doctor subscriptions and payments'],
         messages:     ['Messages',              'Platform messages'],
     };
 
@@ -1098,7 +1367,9 @@ function showTab(name, el) {
     if (name === 'patients')     loadPatients();
     if (name === 'appointments') loadAppointments();
     if (name === 'messages')     loadMessages();
+    if (name === 'subscriptions') loadSubscriptions();
     if (name === 'dashboard')    { loadStats(); loadGraphs(); }
+    
 }
 
 //  Stats 
@@ -1233,6 +1504,8 @@ async function loadPatients() {
     });
 }
 
+
+
 //  Review modal 
 async function openReviewModal(doctorId) {
     currentDoctorId = doctorId;
@@ -1272,25 +1545,45 @@ async function openReviewModal(doctorId) {
         </div>`).join('');
 
     // Documents —
-    const docs = [
-        ['🪪', 'Certified ID Copy',          doc.id_document_url],
-        ['📜', 'HPCSA Certificate',          doc.hpcsa_certificate_url],
-        ['🎓', 'Medical Degree',             doc.medical_degree_url],
-        ['🏅', 'Specialist Certificate',     doc.specialist_certificate_url],
-        ['🏥', 'Practice Certificate',       doc.practice_certificate_url],
-        ['📍', 'Proof of Address',           doc.proof_of_address_url],
+// Documents — generate signed URLs so private files are viewable
+document.getElementById("modalDocs").innerHTML = `
+    <div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--muted);font-size:13px;">
+        🔄 Loading documents...
+    </div>`;
+
+    const docDefs = [
+        ['🪪', 'Certified ID Copy',       doc.id_document_url],
+        ['📜', 'HPCSA Certificate',       doc.hpcsa_certificate_url],
+        ['🎓', 'Medical Degree',          doc.medical_degree_url],
+        ['🏅', 'Specialist Certificate',  doc.specialist_certificate_url],
+        ['🏥', 'Practice Certificate',    doc.practice_certificate_url],
+        ['📍', 'Proof of Address',        doc.proof_of_address_url],
     ];
 
-    document.getElementById("modalDocs").innerHTML = docs.map(([icon, label, url]) => `
+    // Generate all signed URLs in parallel
+    const docsWithUrls = await Promise.all(
+        docDefs.map(async ([icon, label, rawUrl]) => {
+            const signedUrl = rawUrl ? await getSignedUrl(rawUrl) : null;
+            return [icon, label, rawUrl, signedUrl];
+        })
+    );
+
+    document.getElementById("modalDocs").innerHTML = docsWithUrls.map(([icon, label, rawUrl, signedUrl]) => `
         <div class="doc-item">
             <span class="doc-icon">${icon}</span>
             <div class="doc-info">
                 <strong>${label}</strong>
-                <small>${url ? 'Uploaded' : 'Not uploaded'}</small>
+                <small>${rawUrl
+                    ? (signedUrl ? '✅ Ready to view' : '⚠️ Access error')
+                    : 'Not uploaded'}
+                </small>
             </div>
-            ${url
-                ? `<a class="doc-link" href="${url}" target="_blank">View →</a>`
-                : `<span style="font-size:12px;color:#888;">Not submitted</span>`}
+            ${signedUrl
+                ? `<a class="doc-link" href="${signedUrl}" target="_blank">View →</a>`
+                : rawUrl
+                    ? `<span style="font-size:11px;color:#f59e0b;">⚠️ Error</span>`
+                    : `<span style="font-size:12px;color:#888;">Not submitted</span>`
+            }
         </div>`).join('');
 
     document.getElementById("verificationNotes").value = doc.verification_notes || '';
@@ -1367,62 +1660,152 @@ function filterTable(tableId, query) {
 // Charts 
 let barChartInstance = null;
 let pieChartInstance = null;
+let chartData = { doctors: [], patients: [] };
+
+let chartPrefs = {
+    period: 'weekly',
+    selectedMonth: new Date().getMonth(),
+    selectedWeek: 1,
+    barType: 'bar',
+    showDoctors: true,
+    showPatients: true
+};
+
+function toggleChartMenu() {
+    const d = document.getElementById('chartDropdown');
+    const b = document.getElementById('chartMenuBtn');
+    d.classList.toggle('open');
+    b.classList.toggle('open');
+}
+
+document.addEventListener('click', e => {
+    const w = document.getElementById('chartMenuWrapper');
+    if (w && !w.contains(e.target)) {
+        document.getElementById('chartDropdown')?.classList.remove('open');
+        document.getElementById('chartMenuBtn')?.classList.remove('open');
+    }
+});
+
+function selectOpt(el) {
+    const group = el.dataset.group;
+    const val   = el.dataset.value;
+    document.querySelectorAll(`.cd-opt[data-group="${group}"]`).forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    if (group === 'period') {
+        chartPrefs.period = val;
+        document.getElementById('weekSelector').style.display = (val === 'weekly') ? 'block' : 'none';
+    } else if (group === 'week') {
+        chartPrefs.selectedWeek = parseInt(val);
+    } else {
+        chartPrefs[group] = val;
+    }
+    rebuildCharts();
+}
+
+function updateSelectedMonth(val) {
+    chartPrefs.selectedMonth = parseInt(val);
+    rebuildCharts();
+}
+
+function toggleDataset(key) {
+    const prefKey = key === 'doctors' ? 'showDoctors' : 'showPatients';
+    chartPrefs[prefKey] = !chartPrefs[prefKey];
+    document.getElementById(`toggle${key.charAt(0).toUpperCase()+key.slice(1)}`).classList.toggle('on');
+    rebuildCharts();
+}
+
+function resetChartOptions() {
+    chartPrefs = { period:'weekly', selectedMonth:new Date().getMonth(), selectedWeek:1, barType:'bar', showDoctors:true, showPatients:true };
+    document.getElementById('monthPicker').value = chartPrefs.selectedMonth;
+    document.querySelectorAll('.cd-opt').forEach(o => o.classList.remove('selected'));
+    document.querySelectorAll('.toggle-switch').forEach(s => s.classList.add('on'));
+    document.querySelector('[data-value="weekly"]').classList.add('selected');
+    document.querySelector('[data-value="1"]').classList.add('selected');
+    document.querySelector('[data-value="bar"]').classList.add('selected');
+    document.getElementById('weekSelector').style.display = 'block';
+    rebuildCharts();
+}
+
+function rebuildCharts() {
+    if (!chartData.doctors.length && !chartData.patients.length) return;
+    const year = new Date().getFullYear();
+    let startDate, endDate, titleText;
+    if (chartPrefs.period === 'weekly') {
+        const month = chartPrefs.selectedMonth;
+        const week  = chartPrefs.selectedWeek;
+        startDate = new Date(year, month, (week - 1) * 7 + 1);
+        endDate   = new Date(year, month, week * 7);
+        const monthName = new Intl.DateTimeFormat('en-US', {month:'long'}).format(startDate);
+        titleText = `${monthName} — Week ${week}`;
+    } else {
+        startDate = new Date(year, 0, 1);
+        endDate   = new Date(year, 11, 31);
+        titleText = `Annual Summary ${year}`;
+    }
+    const filterFn = d => { const date = new Date(d.date); return date >= startDate && date <= endDate; };
+    drawBarChart(chartData.doctors.filter(filterFn), chartData.patients.filter(filterFn), titleText);
+    drawPieChart(chartData.doctors.filter(filterFn), chartData.patients.filter(filterFn), titleText);
+}
+
+function drawBarChart(docs, pats, subtitle) {
+    if (barChartInstance) barChartInstance.destroy();
+    let labels, docData, patData;
+    if (chartPrefs.period === 'weekly') {
+        labels  = ['Day 1','Day 2','Day 3','Day 4','Day 5','Day 6','Day 7'];
+        docData = new Array(7).fill(0);
+        patData = new Array(7).fill(0);
+        docs.forEach(d => { const day = (new Date(d.date).getDate() - 1) % 7; docData[day]++; });
+        pats.forEach(p => { const day = (new Date(p.date).getDate() - 1) % 7; patData[day]++; });
+    } else {
+        labels  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        docData = new Array(12).fill(0);
+        patData = new Array(12).fill(0);
+        docs.forEach(d => docData[new Date(d.date).getMonth()]++);
+        pats.forEach(p => patData[new Date(p.date).getMonth()]++);
+    }
+    const datasets = [];
+    if (chartPrefs.showDoctors)  datasets.push({ label:'Doctors',  data:docData, backgroundColor:'#1b2a4e', borderColor:'#1b2a4e', tension:0.4 });
+    if (chartPrefs.showPatients) datasets.push({ label:'Patients', data:patData, backgroundColor:'#3b82f6', borderColor:'#3b82f6', tension:0.4 });
+    barChartInstance = new Chart(document.getElementById('barChart'), {
+        type: chartPrefs.barType,
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position:'bottom' },
+                title:  { display:true, text:subtitle, color:'#64748b', font:{ size:12, weight:'normal' }, padding:10 }
+            },
+            scales: { y: { beginAtZero:true, ticks:{ stepSize:1, precision:0, callback: v => v%1===0 ? v : null } } }
+        }
+    });
+}
+
+function drawPieChart(docs, pats, subtitle) {
+    if (pieChartInstance) pieChartInstance.destroy();
+    const vals=[]; const labs=[]; const cols=[];
+    if (chartPrefs.showDoctors)  { labs.push('Doctors');  vals.push(docs.length); cols.push('#1b2a4e'); }
+    if (chartPrefs.showPatients) { labs.push('Patients'); vals.push(pats.length); cols.push('#3b82f6'); }
+    pieChartInstance = new Chart(document.getElementById('pieChart'), {
+        type: 'doughnut',
+        data: { labels: labs, datasets: [{ data:vals, backgroundColor:cols, borderWidth:0 }] },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position:'bottom' },
+                title:  { display:true, text:subtitle, color:'#64748b', font:{ size:11, weight:'normal' } }
+            },
+            cutout: '65%'
+        }
+    });
+}
+
 
 async function loadGraphs() {
-    const { data: doctors }  = await client.from("doctors").select("created_at");
-    const { data: patients } = await client.from("patients").select("created_at");
-
-    const allUsers = [
-        ...(doctors  || []).map(d => ({ date: d.created_at })),
-        ...(patients || []).map(p => ({ date: p.created_at }))
-    ];
-
-    const grouped = {};
-    allUsers.forEach(u => {
-        const d = new Date(u.date).toISOString().split("T")[0];
-        grouped[d] = (grouped[d] || 0) + 1;
-    });
-
-    const labels = Object.keys(grouped).sort();
-    const values = labels.map(l => grouped[l]);
-
-    if (barChartInstance) barChartInstance.destroy();
-    if (pieChartInstance) pieChartInstance.destroy();
-
-    barChartInstance = new Chart(document.getElementById("barChart"), {
-        type: "bar",
-        data: {
-            labels,
-            datasets: [{
-                label: "Registrations per Day",
-                data: values,
-                backgroundColor: "#1b2a4e",
-                borderRadius: 6,
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-        }
-    });
-
-    pieChartInstance = new Chart(document.getElementById("pieChart"), {
-        type: "doughnut",
-        data: {
-            labels: ["Doctors", "Patients"],
-            datasets: [{
-                data: [(doctors || []).length, (patients || []).length],
-                backgroundColor: ["#1b2a4e", "#3b82f6"],
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            responsive: true,
-            cutout: '65%',
-            plugins: { legend: { position: 'bottom' } }
-        }
-    });
+    const {data:d} = await client.from("doctors").select("created_at");
+    const {data:p} = await client.from("patients").select("created_at");
+    chartData.doctors  = (d||[]).map(x => ({ date: x.created_at }));
+    chartData.patients = (p||[]).map(x => ({ date: x.created_at }));
+    rebuildCharts();
 }
 
 //  Logout
@@ -1433,6 +1816,7 @@ async function adminLogout() {
 
 //  Initialization 
 document.addEventListener("DOMContentLoaded", async () => {
+    document.getElementById('monthPicker').value = chartPrefs.selectedMonth;
     // Auth guard — redirect if not logged in as admin
     const { data: { user } } = await client.auth.getUser();
     if (!user) { window.location.href = "adminLogin.html"; return; }
@@ -1462,84 +1846,407 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // messages and groups them by conversation (patient ↔ doctor)
+// ── Contact Messages ──────────────────────────────────────────────────
+let allContactMsgs     = [];
+let currentMsgFilter   = "all";
+let currentMsgSearch   = "";
+let currentReplyMsgId  = null;
+let currentReplyEmail  = "";
+let currentReplySubject = "";
+
 async function loadMessages() {
+    await loadContactMessages();
+}
+
+async function loadContactMessages() {
     const { data, error } = await client
-        .from("messages")
+        .from("contact_messages")
         .select("*")
         .order("created_at", { ascending: false });
 
-    const table = document.getElementById("messagesTable");
-    if (!table) return;
-    table.innerHTML = "";
-
     if (error) {
-        table.innerHTML = `<tr class="empty-row"><td colspan="4">Failed to load messages.</td></tr>`;
+        console.error("Contact messages error:", error);
+        document.getElementById("contactMsgsTable").innerHTML =
+            `<tr class="empty-row"><td colspan="7">Failed to load messages.</td></tr>`;
         return;
     }
 
-    if (!data || data.length === 0) {
-        table.innerHTML = `<tr class="empty-row"><td colspan="4">No messages yet.</td></tr>`;
+    allContactMsgs = data || [];
+
+    // Update stats
+    const total   = allContactMsgs.length;
+    const newMsgs = allContactMsgs.filter(m => !m.status || m.status === "new").length;
+    const replied = allContactMsgs.filter(m => m.status === "replied").length;
+
+    document.getElementById("msgTotal").textContent   = total;
+    document.getElementById("msgNew").textContent     = newMsgs;
+    document.getElementById("msgReplied").textContent = replied;
+
+    // Update sidebar badge (reuse tab-badge next to Messages link)
+    const msgBadge = document.getElementById("msgBadge");
+    if (msgBadge) {
+        msgBadge.textContent      = newMsgs > 0 ? newMsgs : "";
+        msgBadge.style.display    = newMsgs > 0 ? "inline" : "none";
+    }
+
+    renderContactMsgs();
+}
+
+function renderContactMsgs() {
+    const table = document.getElementById("contactMsgsTable");
+    let list    = [...allContactMsgs];
+
+    if (currentMsgFilter !== "all") {
+        list = list.filter(m =>
+            currentMsgFilter === "new"
+                ? (!m.status || m.status === "new")
+                : m.status === "replied"
+        );
+    }
+
+    if (currentMsgSearch) {
+        const q = currentMsgSearch.toLowerCase();
+        list = list.filter(m => {
+            const name    = `${m.first_name || ""} ${m.last_name || ""}`.toLowerCase();
+            const email   = (m.email   || "").toLowerCase();
+            const subject = (m.subject || "").toLowerCase();
+            return name.includes(q) || email.includes(q) || subject.includes(q);
+        });
+    }
+
+    if (list.length === 0) {
+        table.innerHTML = `<tr class="empty-row"><td colspan="7">No messages found.</td></tr>`;
         return;
     }
 
-    // ── Declare maps 
-    const patientMap = {};
-    const doctorMap  = {};
-
-    // ── Get unique IDs ──
-    const patientIds = [...new Set(data.map(m => m.patient_id).filter(Boolean))];
-    const doctorIds  = [...new Set(data.map(m => m.doctor_id).filter(Boolean))];
-
-    // ── Fetch patient names ──
-    if (patientIds.length > 0) {
-        const { data: patients } = await client
-            .from("patients")
-            .select("id, name, surname")
-            .in("id", patientIds);
-        (patients || []).forEach(p => {
-            patientMap[p.id] = `${p.name} ${p.surname}`;
+    table.innerHTML = "";
+    list.forEach(msg => {
+        const date   = new Date(msg.created_at).toLocaleDateString("en-ZA", {
+            day: "2-digit", month: "short", year: "numeric"
         });
-    }
-
-    // ── Fetch doctor names ──
-    if (doctorIds.length > 0) {
-        const { data: doctors } = await client
-            .from("doctors")
-            .select("id, name, surname")
-            .in("id", doctorIds);
-        (doctors || []).forEach(d => {
-            doctorMap[d.id] = `Dr. ${d.name} ${d.surname}`;
-        });
-    }
-
-    // ── Render rows ──
-    data.forEach(msg => {
-        const date = new Date(msg.created_at).toLocaleString("en-ZA", {
-            day: "2-digit", month: "short", year: "numeric",
-            hour: "2-digit", minute: "2-digit"
-        });
-
-        const senderLabel = msg.sender === "patient"
-            ? `<span class="badge badge-pending">Patient</span>`
-            : `<span class="badge badge-approved">Doctor</span>`;
+        const status      = msg.status || "new";
+        const badgeClass  = status === "replied" ? "badge-approved" : "badge-pending";
+        const badgeLabel  = status === "replied" ? "✅ Replied" : "🔴 New";
+        const fullName    = `${msg.first_name || ""} ${msg.last_name || ""}`.trim();
+        const preview     = (msg.message || "").length > 60
+            ? msg.message.substring(0, 60) + "…"
+            : (msg.message || "—");
 
         table.innerHTML += `
             <tr>
-                <td>${senderLabel}</td>
-                <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    ${msg.message}
-                </td>
-                <td>${date}</td>
                 <td>
-                    <small style="color:#888;">
-                        👤 ${patientMap[msg.patient_id] || "Unknown patient"}<br>
-                        🩺 ${doctorMap[msg.doctor_id]  || "Unknown doctor"}
-                    </small>
+                    <div class="doctor-name">${fullName || "—"}</div>
+                    <div class="doctor-email">${msg.phone || ""}</div>
+                </td>
+                <td class="doctor-email">${msg.email || "—"}</td>
+                <td style="font-size:13px;">${msg.subject || "—"}</td>
+                <td style="font-size:13px;color:var(--muted);max-width:220px;
+                           overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    ${preview}
+                </td>
+                <td style="font-size:13px;">${date}</td>
+                <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+                <td>
+                    <div class="btn-group">
+                        <button class="btn btn-view"
+                            onclick="openReplyModal('${msg.id}','${(msg.email||"").replace(/'/g,"\\'")}',
+                                     '${(msg.subject||"General Enquiry").replace(/'/g,"\\'")}',
+                                     \`${(msg.message||"").replace(/`/g,"\\`").replace(/\$/g,"\\$")}\`,
+                                     '${fullName.replace(/'/g,"\\'")}')">
+                            ✉️ Reply
+                        </button>
+                        <button class="btn btn-delete"
+                            onclick="deleteContactMsg('${msg.id}')">
+                            🗑
+                        </button>
+                    </div>
                 </td>
             </tr>`;
     });
 }
 
+function filterMsgs(filter, btn) {
+    currentMsgFilter = filter;
+    document.querySelectorAll("#tab-messages .tab-btn")
+        .forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderContactMsgs();
+}
+
+function searchMsgs(q) {
+    currentMsgSearch = q;
+    renderContactMsgs();
+}
+
+function openReplyModal(id, email, subject, message, name) {
+    currentReplyMsgId  = id;
+    currentReplyEmail  = email;
+    currentReplySubject = subject;
+
+    document.getElementById("replyMsgDetails").innerHTML = `
+        <div class="detail-item">
+            <label>From</label>
+            <span>${name}</span>
+        </div>
+        <div class="detail-item">
+            <label>Email</label>
+            <span>${email}</span>
+        </div>
+        <div class="detail-item">
+            <label>Subject</label>
+            <span>${subject}</span>
+        </div>`;
+
+    document.getElementById("replyOriginalMsg").textContent = message;
+    document.getElementById("replyText").value = "";
+    document.getElementById("replyModal").classList.add("open");
+}
+
+function closeReplyModal() {
+    document.getElementById("replyModal").classList.remove("open");
+    currentReplyMsgId = null;
+}
+
+async function sendReply() {
+    const replyText = document.getElementById("replyText").value.trim();
+    if (!replyText) { showToast("Please write a reply first.", "error"); return; }
+
+    // Open email client with pre-filled reply
+    const subject  = encodeURIComponent("Re: " + currentReplySubject);
+    const body     = encodeURIComponent(
+        replyText +
+        "\n\n—\ne-Health Connect Team\nInfo@EhealthConnect.co.za"
+    );
+    window.location.href = `mailto:${currentReplyEmail}?subject=${subject}&body=${body}`;
+
+    // Mark as replied in Supabase
+    const { error } = await client
+        .from("contact_messages")
+        .update({ status: "replied" })
+        .eq("id", currentReplyMsgId);
+
+    if (error) {
+        showToast("Email opened but status update failed: " + error.message, "error");
+    } else {
+        showToast("✅ Email client opened & message marked as replied!", "success");
+    }
+
+    closeReplyModal();
+    loadContactMessages();
+}
+
+async function deleteContactMsg(id) {
+    if (!confirm("Delete this message? This cannot be undone.")) return;
+    const { error } = await client.from("contact_messages").delete().eq("id", id);
+    if (error) { showToast("Delete failed: " + error.message, "error"); return; }
+    showToast("Message deleted.", "success");
+    loadContactMessages();
+}
+
+
+// ── Subscriptions ─────────────────────────────────────────────────────
+let allSubs      = [];
+let allSubDoctors = {};
+let currentSubFilter = "all";
+let currentSubSearch = "";
+
+async function loadSubscriptions() {
+    // Load all subscription payments
+    const { data: payments, error } = await client
+        .from("payments")
+        .select("*")
+        .eq("payment_type", "subscription")
+        .order("created_at", { ascending: false });
+
+    if (error) { console.error("Subs error:", error); return; }
+    allSubs = payments || [];
+
+    // Load all doctors to match names
+    const { data: doctors } = await client
+        .from("doctors")
+        .select("id, name, surname, email, subscription_status");
+
+    (doctors || []).forEach(d => {
+        allSubDoctors[d.id] = d;
+    });
+
+    // Update stats
+    const pending  = allSubs.filter(p => p.status === "pending").length;
+    const approved = allSubs.filter(p => p.status === "approved").length;
+    const revenue  = allSubs
+        .filter(p => p.status === "approved")
+        .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+    const activeDocs = (doctors || []).filter(d => d.subscription_status === "active").length;
+
+    document.getElementById("subStatPending").textContent = pending;
+    document.getElementById("subStatActive").textContent  = activeDocs;
+    document.getElementById("subStatRevenue").textContent = revenue > 0
+    ? "R" + revenue.toFixed(2)
+    : "R0.00";
+
+    // Update sidebar badge
+    document.getElementById("subPendingCount").textContent = pending;
+    document.getElementById("subPendingCount").style.display = pending > 0 ? "inline" : "none";
+
+    renderSubs();
+}
+
+function renderSubs() {
+    const table = document.getElementById("subsTable");
+    let list = [...allSubs];
+
+    // Apply filter
+    if (currentSubFilter !== "all") {
+        list = list.filter(p => p.status === currentSubFilter);
+    }
+
+    // Apply search
+    if (currentSubSearch) {
+        const q = currentSubSearch.toLowerCase();
+        list = list.filter(p => {
+            const doc = allSubDoctors[p.doctor_id];
+            const name = doc ? (doc.name + " " + doc.surname).toLowerCase() : "";
+            const ref  = (p.payment_ref || "").toLowerCase();
+            return name.includes(q) || ref.includes(q);
+        });
+    }
+
+    if (list.length === 0) {
+        table.innerHTML = `<tr class="empty-row"><td colspan="7">No payments found.</td></tr>`;
+        return;
+    }
+
+    table.innerHTML = "";
+
+    list.forEach(p => {
+        const doc     = allSubDoctors[p.doctor_id];
+        const docName = doc ? "Dr. " + doc.name + " " + doc.surname : "Unknown";
+        const email   = doc ? doc.email : "—";
+        const ref     = p.payment_ref || p.reference || "—";
+        const method  = p.payment_method === "card"
+            ? "💳 Card — " + (p.card_bank || "Card")
+            : "🏦 EFT";
+        const dateStr = new Date(p.created_at).toLocaleDateString("en-ZA", {
+            day: "numeric", month: "short", year: "numeric"
+        });
+
+        const badgeClass = p.status === "approved" ? "badge-approved"
+            : p.status === "rejected" ? "badge-rejected"
+            : "badge-pending";
+
+        const actionBtns = p.status === "pending"
+            ? `<button class="btn btn-approve"
+                    onclick="approvePayment('${p.id}','${p.doctor_id}')">
+                    ✓ Approve</button>
+               <button class="btn btn-reject"
+                    onclick="rejectPayment('${p.id}','${p.doctor_id}')">
+                    ✕ Reject</button>`
+            : `<span style="font-size:12px;color:var(--muted);">
+                ${p.status === "approved" ? "✅ Approved" : "❌ Rejected"}</span>`;
+
+        const proofBtn = p.proof_url
+            ? `<button class="btn btn-view"
+                onclick="window.open('${p.proof_url}','_blank')">
+                👁 Proof</button>`
+            : "";
+
+        table.innerHTML += `
+            <tr>
+                <td>
+                    <div class="doctor-name">${docName}</div>
+                    <div class="doctor-email">${email}</div>
+                </td>
+                <td>
+                    <code style="font-size:12px;">${ref}</code>
+                </td>
+                <td style="font-weight:700;color:var(--navy);">
+                    R${parseFloat(p.amount).toFixed(2)}
+                </td>
+                <td style="font-size:13px;">${method}</td>
+                <td style="font-size:13px;">${dateStr}</td>
+                <td>
+                    <span class="badge ${badgeClass}">
+                        ${p.status}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group">
+                        ${proofBtn}
+                        ${actionBtns}
+                    </div>
+                </td>
+            </tr>`;
+    });
+}
+
+function filterSubs(filter, btn) {
+    currentSubFilter = filter;
+    document.querySelectorAll("#tab-subscriptions .tab-btn")
+        .forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderSubs();
+}
+
+function searchSubs(q) {
+    currentSubSearch = q;
+    renderSubs();
+}
+
+async function approvePayment(paymentId, doctorId) {
+    if (!confirm("Approve this payment and activate the doctor's subscription for 30 days?")) return;
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const now       = new Date().toISOString();
+
+    // Update payment status
+    const { error: payError } = await client
+        .from("payments")
+        .update({ status: "approved", paid_at: now })
+        .eq("id", paymentId);
+
+    if (payError) { showToast("Failed: " + payError.message, "error"); return; }
+
+    // Activate doctor subscription
+    const { error: docError } = await client
+        .from("doctors")
+        .update({
+            subscription_status:     "active",
+            subscription_paid_at:    now,
+            subscription_expires_at: expiresAt
+        })
+        .eq("id", doctorId);
+
+    if (docError) { showToast("Payment approved but doctor update failed: " + docError.message, "error"); return; }
+
+    showToast("✅ Subscription activated for 30 days!", "success");
+    loadSubscriptions();
+    loadStats();
+}
+
+async function rejectPayment(paymentId, doctorId) {
+    if (!confirm("Reject this payment? The doctor will be notified to resubmit.")) return;
+
+    // Update payment status
+    const { error: payError } = await client
+        .from("payments")
+        .update({ status: "rejected" })
+        .eq("id", paymentId);
+
+    if (payError) { showToast("Failed: " + payError.message, "error"); return; }
+
+    // Set doctor back to unpaid
+    const { error: docError } = await client
+        .from("doctors")
+        .update({ subscription_status: "unpaid" })
+        .eq("id", doctorId);
+
+    if (docError) { showToast("Rejected but doctor update failed", "error"); return; }
+
+    showToast("❌ Payment rejected.", "error");
+    loadSubscriptions();
+    loadStats();
+}
 
 // ── Load Appointments ──
 async function loadAppointments() {

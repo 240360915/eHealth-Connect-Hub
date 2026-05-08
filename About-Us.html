@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>About Us — e-Health Connect</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -246,7 +247,7 @@ footer{background:var(--navy);color:#fff;padding:64px 80px 0;}
 
 <!-- NAV -->
 <nav class="topnav">
-  <a href="BestHomepage.html" class="nav-brand">
+  <a href="index.html" class="nav-brand">
     <div class="nav-logo"><span class="nav-logo-text"><img src="LOGO.jpg" width="50px" alt=""></span></div>
     <div>
       <div class="brand-name">e-Health Connect</div>
@@ -254,7 +255,7 @@ footer{background:var(--navy);color:#fff;padding:64px 80px 0;}
     </div>
   </a>
   <div class="nav-links">
-    <a href="BestHomepage.html">Home</a>
+    <a href="index.html">Home</a>
     <a href="About-Us.html" class="active">About Us</a>
     <a href="Contact-Us.html">Contact</a>
     <a href="Choose.html">Register</a>
@@ -266,7 +267,7 @@ footer{background:var(--navy);color:#fff;padding:64px 80px 0;}
   <button class="hamburger" id="menuToggle" aria-label="Open menu">&#9776;</button>
 </nav>
 <div class="mobile-menu" id="mobileMenu">
-  <a href="BestHomepage.html">Home</a>
+  <a href="index.html">Home</a>
   <a href="About-Us.html" class="active">About Us</a>
   <a href="Contact-Us.html">Contact</a>
   <a href="Choose.html">Register</a>
@@ -296,14 +297,22 @@ footer{background:var(--navy);color:#fff;padding:64px 80px 0;}
     </div>
     <div class="who-visual reveal reveal-delay-2">
       <div class="stat-row">
-        <div class="who-stat"><div class="n">500+</div><div class="l">Patients served</div></div>
-        <div class="who-stat"><div class="n">50+</div><div class="l">Verified doctors</div></div>
+        <div class="who-stat">
+          <div class="n" id="aboutPatients">—</div>
+          <div class="l">Patients served</div>
+        </div>
+
+        <div class="who-stat">
+          <div class="n" id="aboutDoctors">—</div>
+          <div class="l">Verified doctors</div>
+        </div>
       </div>
       <div class="stat-row">
         <div class="who-stat"><div class="n">24/7</div><div class="l">Always online</div></div>
         <div class="who-stat"><div class="n">100%</div><div class="l">Secure & private</div></div>
       </div>
-      <p>Serving patients across Mpumalanga and growing every day.</p>
+      
+      <p>Serving patients across South Africa and growing every day.</p>
     </div>
   </div>
 </section>
@@ -375,14 +384,14 @@ footer{background:var(--navy);color:#fff;padding:64px 80px 0;}
   </div>
   <div class="team-grid">
     <div class="team-card reveal reveal-delay-1">
-      <img src="members/justine.jpg" class="team-avatar" alt="Mogau Justine"/>
-      <div class="team-name">Mogau Justine</div>
+      <img src="members/petros.jpg" class="team-avatar" alt="Petros Tsambo"/>
+      <div class="team-name">Petros Tsambo</div>
       <div class="team-role">Co-founder</div>
     </div>
     <div class="team-card reveal reveal-delay-2">
-      <img src="members/petros.jpg" class="team-avatar" alt="Petros"/>
-      <div class="team-name">Petros</div>
-      <div class="team-role">Co-founder</div>
+      <img src="members/justine.jpg" class="team-avatar" alt="Mogau Justine"/>
+      <div class="team-name">Mogau Justine</div>
+      <div class="team-role">Developer</div>
     </div>
 
     <div class="team-card reveal reveal-delay-1">
@@ -391,71 +400,73 @@ footer{background:var(--navy);color:#fff;padding:64px 80px 0;}
       <div class="team-role">Designer</div>
     </div>
     <div class="team-card reveal reveal-delay-3">
-      <img src="members/keamogetswe.jpg" class="team-avatar" alt="Keamogetswe Bontseng"/>
-      <div class="team-name">Keamogetswe Bontseng</div>
-      <div class="team-role">Developer</div>
+      <img src="members/tshepang.jpeg" class="team-avatar" alt="Tshepang Makhobela"/>
+      <div class="team-name">Tshepang Makhobela</div>
+      <div class="team-role">Support</div>
     </div>
     <div class="team-card reveal reveal-delay-2">
-      <img src="members/team-member.jpg" class="team-avatar" alt="Team member"/>
-      <div class="team-name">Team Member</div>
-      <div class="team-role">Developer</div>
+      <img src="members/hlogi.jpeg" class="team-avatar" alt="Team member"/>
+      <div class="team-name">Lehlogonolo Maloba</div>
+      <div class="team-role">Support</div>
     </div>
     <div class="team-card reveal reveal-delay-3">
-      <img src="members/team-member.jpg" class="team-avatar" alt="Team member"/>
-      <div class="team-name">Team Member</div>
-      <div class="team-role">Operations</div>
+      <img src="members/noxy.jpeg" class="team-avatar" alt="Team member"/>
+      <div class="team-name">Keamogetswe Bontseng</div>
+      <div class="team-role">Support</div>
     </div>
     <div class="team-card reveal reveal-delay-1">
-      <img src="members/team-member.jpg" class="team-avatar" alt="Team member"/>
-      <div class="team-name">Team Member</div>
-      <div class="team-role">Marketing</div>
+      <img src="members/esther.jpeg" class="team-avatar" alt="Team member"/>
+      <div class="team-name">Esther Mtomane</div>
+      <div class="team-role">Support</div>
     </div>
     <div class="team-card reveal reveal-delay-2">
-      <img src="members/team-member.jpg" class="team-avatar" alt="Team member"/>
-      <div class="team-name">Team Member</div>
+      <img src="members/viviane.jpeg" class="team-avatar" alt="Team member"/>
+      <div class="team-name">Viviane Kutumela</div>
       <div class="team-role">Support</div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <div class="name">e-Health Connect</div>
-      <p>Making healthcare accessible to everyone in Mpumalanga and beyond. Connect with verified doctors from the comfort of your home.</p>
-      <div class="footer-socials">
-        <a href="#" class="social-btn"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" width="18"/></a>
-        <a href="#" class="social-btn"><img src="https://static.vecteezy.com/system/resources/previews/023/741/129/original/tiktok-logo-icon-social-media-icon-free-png.png" width="18"/></a>
-        <a href="#" class="social-btn"><img src="https://static.vecteezy.com/system/resources/previews/016/716/481/non_2x/facebook-icon-free-png.png" width="18"/></a>
+ <!-- ═══ FOOTER ═══ -->
+    <footer>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="name">e-Health Connect</div>
+          <p>Making healthcare accessible to everyone across South Africa and beyond. Connect with verified doctors from the comfort of your home.</p>
+          <div class="footer-socials">
+            <a href="https://www.instagram.com/ehealth_connect/" class="social-btn"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" width="18"/></a>
+            <a href="https://www.tiktok.com/@user7259726361914?is_from_webapp=1&sender_device=pc" class="social-btn"><img src="https://static.vecteezy.com/system/resources/previews/023/741/129/original/tiktok-logo-icon-social-media-icon-free-png.png" width="18"/></a>
+            <a href="https://www.facebook.com/profile.php?id=61589451509019" class="social-btn"><img src="https://static.vecteezy.com/system/resources/previews/016/716/481/non_2x/facebook-icon-free-png.png" width="18"/></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Navigate</h4>
+          <a href="index.html">Home</a>
+          <a href="About-Us.html">About Us</a>
+          <a href="Contact-Us.html">Contact</a>
+          <a href="Choose.html">Register</a>
+        </div>
+        <div class="footer-col">
+          <h4>For Doctors</h4>
+          <a href="Choose.html">Register</a>
+          <a href="patientsLogin.html">Login</a>
+          <a href="patientsLogin.html">Dashboard</a>
+        </div>
+        <div class="footer-col">
+        <h4>Contact</h4>
+         <a href="mailto:info@EhealthConnect.com">📧 Email Us</a>
+         <a href="tel:+27825638965">📞 Call Us</a>
+         <a href="https://www.google.com/maps/search/?api=1&query=321+Nelspruit+South+Africa" target="_blank">
+            📍 Find Us on Map
+          </a>
+         <a href="tel:119" style="margin-top:8px;">🚨 Emergency: 119</a>
+        </div>
       </div>
-    </div>
-    <div class="footer-col">
-      <h4>Navigate</h4>
-      <a href="BestHomepage.html">Home</a>
-      <a href="About-Us.html">About Us</a>
-      <a href="Contact-Us.html">Contact</a>
-      <a href="Choose.html">Register</a>
-    </div>
-    <div class="footer-col">
-      <h4>Help</h4>
-      <a href="#">FAQs</a>
-      <a href="#">Terms & Conditions</a>
-      <a href="#">Privacy Policy</a>
-      <p>🚨 Emergency: 119</p>
-    </div>
-    <div class="footer-col">
-      <h4>Contact</h4>
-      <p>📞 082 563 8965</p>
-      <p>✉️ Info@EhealthConnect</p>
-      <p>📍 321 Health Street,<br/>Nelspruit, Mpumalanga</p>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2026 e-Health Connect. All Rights Reserved.</span>
-    <span>Terms & Conditions &nbsp;·&nbsp; Privacy Policy</span>
-  </div>
-</footer>
+      <div class="footer-bottom">
+        <span>© 2026 e-Health Connect. All Rights Reserved.</span>
+        <span>Terms & Conditions &nbsp;·&nbsp; Privacy Policy</span>
+      </div>
+    </footer>
 
 <script>
   const menuBtn = document.getElementById('menuToggle');
@@ -470,6 +481,46 @@ footer{background:var(--navy);color:#fff;padding:64px 80px 0;}
     entries.forEach(e=>{if(e.isIntersecting) e.target.classList.add('visible');});
   },{threshold:0.1});
   document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+
+const supabaseKey ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+
+const sbClient = supabase.createClient(
+  supabaseUrl,
+  supabaseKey
+);
+
+// ── Load live stats ──
+async function loadAboutStats() {
+
+  // Patients count
+  const { count: patientCount } = await sbClient
+    .from("patients")
+    .select("*", {
+      count: "exact",
+      head: true
+    });
+
+  // Approved doctors count
+  const { count: doctorCount } = await sbClient
+    .from("doctors")
+    .select("*", {
+      count: "exact",
+      head: true
+    })
+    .eq("verification_status", "approved");
+
+  // Update UI
+  document.getElementById("aboutPatients").textContent =
+    patientCount > 0 ? patientCount + "+" : "0";
+
+  document.getElementById("aboutDoctors").textContent =
+    doctorCount > 0 ? doctorCount + "+" : "0";
+}
+
+// Run
+loadAboutStats();
 </script>
 </body>
 </html>

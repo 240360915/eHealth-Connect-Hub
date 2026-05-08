@@ -1500,7 +1500,7 @@ tbody tr:hover{
       <span class="nav-icon">📅</span> Appointments
       <span class="nav-badge" id="apptBadge">0</span>
     </div>
-    <div class="nav-item" data-page="prescriptions" onclick="location.href='prescribe.html'">
+    <div class="nav-item" data-page="prescriptions" onclick="showPage('prescriptions')">
       <span class="nav-icon">💊</span> Prescriptions
     </div>
     <div class="nav-item" data-page="messages" onclick="showPage('messages')">
@@ -1516,6 +1516,12 @@ tbody tr:hover{
     <div class="nav-item" data-page="location" onclick="showPage('location')">
       <span class="nav-icon">📍</span> Location
     </div>
+
+    <div class="nav-item" data-page="subscriptions" onclick="showPage('subscriptions')">
+      <span class="nav-icon">💳</span> Subscriptions
+    </div>
+
+
 
   </nav>
 
@@ -1714,11 +1720,725 @@ tbody tr:hover{
   </div>
 </div>
 
-</div>
+<!-- SUBSCRIPTIONS PAGE -->
+<div class="page" id="page-subscriptions">
 
-<!--
-     INCOMING CALL OVERLAY
- -->
+  <!-- Fonts needed by subscription UI -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Subscription-scoped styles ── */
+    .sub-page { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+
+    .plan-card {
+      background:var(--navy); border-radius:20px; padding:40px 32px;
+      width:280px; color:#fff; position:relative; overflow:hidden;
+      flex-shrink:0; align-self:flex-start;
+    }
+    .plan-card::before {
+      content:''; position:absolute; top:-80px; right:-80px;
+      width:220px; height:220px; background:rgba(201,168,76,0.07); border-radius:50%;
+    }
+    .plan-badge {
+      display:inline-block; background:rgba(201,168,76,0.12);
+      border:1px solid rgba(201,168,76,0.3); color:#c9a84c;
+      font-size:0.7em; font-weight:500; letter-spacing:0.1em;
+      text-transform:uppercase; padding:4px 12px; border-radius:20px; margin-bottom:20px;
+    }
+    .plan-name {
+      font-family:'Cormorant Garamond',serif; font-size:1.9em;
+      font-weight:600; margin-bottom:6px;
+    }
+    .plan-price { margin-bottom:24px; }
+    .plan-price .amount {
+      font-family:'Cormorant Garamond',serif; font-size:3.2em;
+      font-weight:600; color:#c9a84c; line-height:1;
+    }
+    .plan-price .period { font-size:0.85em; color:rgba(255,255,255,0.4); margin-left:4px; }
+    .plan-divider { height:1px; background:rgba(255,255,255,0.08); margin:20px 0; }
+    .plan-features { list-style:none; display:flex; flex-direction:column; gap:11px; }
+    .plan-features li {
+      display:flex; align-items:center; gap:10px;
+      font-size:0.86em; color:rgba(255,255,255,0.7); font-weight:300;
+    }
+    .plan-features li .check {
+      width:18px; height:18px; background:rgba(201,168,76,0.15);
+      border:1px solid rgba(201,168,76,0.35); border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:0.65em; color:#c9a84c; font-weight:700; flex-shrink:0;
+    }
+
+    /* Payment box */
+    .sub-payment-box {
+      background:var(--white); border:1px solid var(--border);
+      border-radius:20px; padding:36px; flex:1; min-width:300px; max-width:480px;
+    }
+    .sub-payment-box h2 {
+      font-family:'Cormorant Garamond',serif; font-size:1.7em;
+      color:var(--navy); margin-bottom:6px; font-weight:600;
+    }
+    .sub-subtitle {
+      font-size:0.87em; color:var(--muted); font-weight:300;
+      line-height:1.6; margin-bottom:24px;
+    }
+
+    /* Status banner */
+    .sub-status-banner {
+      display:none; align-items:center; gap:10px; padding:14px 16px;
+      border-radius:10px; font-size:0.87em; font-weight:500;
+      margin-bottom:22px; line-height:1.5;
+    }
+    .sub-status-banner.show   { display:flex; }
+    .sub-status-banner.active   { background:rgba(16,185,129,0.08);  border:1px solid rgba(16,185,129,0.2);  color:#059669; }
+    .sub-status-banner.pending  { background:rgba(245,158,11,0.08);  border:1px solid rgba(245,158,11,0.2);  color:#d97706; }
+    .sub-status-banner.unpaid   { background:rgba(239,68,68,0.06);   border:1px solid rgba(239,68,68,0.15);  color:#dc2626; }
+    .sub-status-banner.expiring { background:rgba(245,158,11,0.08);  border:1px solid rgba(245,158,11,0.2);  color:#d97706; }
+
+    /* Method tabs */
+    .sub-method-tabs { display:flex; gap:8px; margin-bottom:22px; }
+    .sub-method-tab {
+      flex:1; padding:10px 8px; border:1.5px solid var(--border);
+      border-radius:10px; text-align:center; cursor:pointer;
+      font-size:0.82em; font-weight:500; color:var(--muted);
+      transition:all 0.2s; background:var(--bg); font-family:'Roboto',sans-serif;
+    }
+    .sub-method-tab.active { border-color:var(--navy); color:var(--navy); background:rgba(11,28,61,0.04); }
+    .sub-method-content { display:none; }
+    .sub-method-content.active { display:block; }
+
+    /* Ref box */
+    .sub-ref-box {
+      background:linear-gradient(135deg,var(--navy),#1b2a4e);
+      border-radius:12px; padding:16px 18px; margin-bottom:18px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .sub-ref-label { font-size:0.7em; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:4px; }
+    .sub-ref-value { font-size:1.05em; font-weight:600; color:#c9a84c; font-family:'Courier New',monospace; letter-spacing:0.04em; }
+    .sub-copy-btn {
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+      border-radius:7px; color:rgba(255,255,255,0.7); font-size:0.78em;
+      padding:6px 12px; cursor:pointer; transition:all 0.2s;
+      white-space:nowrap; font-family:'Roboto',sans-serif;
+    }
+    .sub-copy-btn:hover { background:rgba(255,255,255,0.15); color:#fff; }
+
+    /* Bank details */
+    .sub-bank-details {
+      background:var(--bg); border:1px solid var(--border);
+      border-radius:12px; padding:18px; margin-bottom:18px;
+    }
+    .sub-bank-details-title {
+      font-size:0.72em; text-transform:uppercase; letter-spacing:0.1em;
+      color:var(--muted); font-weight:600; margin-bottom:12px;
+    }
+    .sub-bank-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:9px 0; border-bottom:1px solid var(--border); gap:8px;
+    }
+    .sub-bank-row:last-child { border-bottom:none; }
+    .sub-bank-row .s-label { font-size:0.83em; color:var(--muted); font-weight:300; flex-shrink:0; }
+    .sub-bank-row .s-value { font-size:0.88em; font-weight:600; color:var(--navy); display:flex; align-items:center; gap:6px; }
+    .sub-bank-row .s-value.gold { color:#c9a84c; font-size:1em; }
+    .sub-inline-copy {
+      background:none; border:none; cursor:pointer; font-size:0.8em;
+      color:var(--muted); padding:2px 5px; border-radius:4px; transition:all 0.15s;
+    }
+    .sub-inline-copy:hover { color:var(--navy); background:var(--border); }
+
+    /* Fields */
+    .sub-field { margin-bottom:16px; }
+    .sub-field label {
+      display:block; font-size:0.78em; font-weight:600; color:var(--navy);
+      text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px;
+    }
+    .sub-field input, .sub-field textarea {
+      width:100%; padding:11px 14px; border:1.5px solid var(--border);
+      border-radius:10px; font-family:'Roboto',sans-serif; font-size:0.9em;
+      color:var(--text); background:var(--bg); transition:border-color 0.2s;
+      outline:none;
+    }
+    .sub-field input:focus, .sub-field textarea:focus { border-color:var(--navy); background:var(--white); }
+    .sub-field textarea { resize:none; height:76px; line-height:1.5; }
+
+    /* Upload */
+    .sub-upload-area {
+      border:2px dashed var(--border); border-radius:10px; padding:28px 20px;
+      text-align:center; cursor:pointer; transition:all 0.2s;
+      background:var(--bg); position:relative;
+    }
+    .sub-upload-area:hover { border-color:var(--navy); background:rgba(11,28,61,0.02); }
+    .sub-upload-area.has-file { border-color:#10b981; border-style:solid; background:rgba(16,185,129,0.03); }
+    .sub-upload-area input[type="file"] {
+      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+    }
+    .sub-upload-icon { font-size:2em; margin-bottom:8px; display:block; }
+    .sub-upload-text { font-size:0.84em; color:var(--muted); font-weight:300; line-height:1.5; }
+    .sub-upload-text strong { color:var(--navy); font-weight:500; }
+    .sub-upload-filename { font-size:0.82em; color:#10b981; margin-top:8px; font-weight:500; display:none; }
+
+    /* Submit btn */
+    .sub-submit-btn {
+      width:100%; padding:14px; background:var(--navy); color:var(--white);
+      border:none; border-radius:10px; font-family:'Roboto',sans-serif;
+      font-size:0.95em; font-weight:600; cursor:pointer; transition:all 0.2s;
+      margin-top:6px; letter-spacing:0.3px; display:block; text-align:center;
+    }
+    .sub-submit-btn:hover { background:#1b2a4e; transform:translateY(-1px); }
+    .sub-submit-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+    .sub-form-note { font-size:0.76em; color:var(--muted); text-align:center; margin-top:10px; line-height:1.6; }
+
+    /* History */
+    .sub-history-section { margin-top:28px; padding-top:24px; border-top:1px solid var(--border); }
+    .sub-history-title { font-family:'Cormorant Garamond',serif; font-size:1.1em; color:var(--navy); margin-bottom:14px; font-weight:600; }
+
+    /* Card styles */
+    .sub-card-label { display:block; font-size:0.78em; font-weight:600; color:var(--navy); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+    .sub-card-field { margin-bottom:16px; }
+    .sub-card-input {
+      width:100%; padding:11px 14px; border:1.5px solid var(--border);
+      border-radius:10px; font-family:'Roboto',sans-serif; font-size:0.9em;
+      color:var(--text); background:var(--bg); transition:border-color 0.2s; outline:none;
+    }
+    .sub-card-input:focus { border-color:var(--navy); background:var(--white); }
+    .sub-card-input.mono { font-family:'Courier New',monospace; letter-spacing:0.1em; }
+    .sub-card-err { font-size:0.75em; color:#ef4444; margin-top:4px; display:none; }
+
+    .sub-bank-pill {
+      flex:1; min-width:68px; padding:10px 6px; border:1.5px solid var(--border);
+      border-radius:10px; text-align:center; cursor:pointer; transition:all 0.2s; background:var(--bg);
+    }
+    .sub-bank-pill:hover { border-color:var(--navy); }
+    .sub-bank-pill-name { font-size:0.72em; font-weight:600; color:var(--navy); }
+
+    /* Success */
+    .sub-success-icon {
+      width:64px; height:64px; border-radius:50%;
+      background:rgba(16,185,129,0.1); border:2px solid #10b981;
+      display:flex; align-items:center; justify-content:center;
+      margin:0 auto 20px; font-size:1.6em;
+    }
+    .sub-receipt-row {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:9px 0; border-bottom:1px solid var(--border); font-size:0.85em;
+    }
+    .sub-receipt-row:last-child { border-bottom:none; }
+    .sub-receipt-row .r-label { color:var(--muted); font-weight:300; }
+    .sub-receipt-row .r-value { font-weight:600; color:var(--navy); }
+    .sub-receipt-row .r-value.green { color:#10b981; }
+
+    @media(max-width:768px){
+      .sub-page { flex-direction:column; }
+      .plan-card { width:100%; }
+      .sub-payment-box { max-width:100%; }
+    }
+    @media print {
+  body > *:not(#printSlipArea) { display: none !important; }
+  #printSlipArea {
+    display: block !important;
+    font-family: Georgia, serif;
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 0 20px;
+    color: #1a1a2e;
+  }
+  .s-header { text-align:center; border-bottom:2px solid #0b1c3d; padding-bottom:20px; margin-bottom:24px; }
+  .s-title  { font-size:1.5em; font-weight:700; color:#0b1c3d; margin-bottom:4px; }
+  .s-sub    { font-size:0.85em; color:#6b7280; }
+  .s-badge  { display:inline-block; padding:4px 14px; border-radius:20px; font-size:0.78em; font-weight:700; margin-top:10px; text-transform:uppercase; }
+  .s-row    { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #e4e0d8; font-size:0.88em; }
+  .s-row:last-of-type { border-bottom:none; }
+  .s-label  { color:#6b7280; }
+  .s-value  { font-weight:700; color:#0b1c3d; }
+  .s-footer { text-align:center; margin-top:32px; font-size:0.72em; color:#9ca3af; border-top:1px solid #e4e0d8; padding-top:16px; }
+}
+  </style>
+
+  <div class="section-block">
+    <div class="section-head"><h2>💳 Subscription & Billing</h2></div>
+    <div class="section-body">
+  <div class="sub-page">
+
+    <!-- ── PLAN CARD ── -->
+    <div class="plan-card">
+      <div class="plan-badge">Monthly Plan</div>
+      <div class="plan-name">Doctor Pro</div>
+      <div class="plan-price">
+        <span class="amount">R499</span>
+        <span class="period">/ month</span>
+      </div>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li><span class="check">✓</span> Unlimited patient management</li>
+        <li><span class="check">✓</span> Digital prescriptions</li>
+        <li><span class="check">✓</span> Video consultations</li>
+        <li><span class="check">✓</span> Appointment scheduling</li>
+        <li><span class="check">✓</span> Time slot management</li>
+        <li><span class="check">✓</span> Secure patient messaging</li>
+        <li><span class="check">✓</span> Medical records access</li>
+        <li><span class="check">✓</span> Location sharing</li>
+      </ul>
+    </div>
+
+    <!-- ── PAYMENT BOX ── -->
+    <div class="sub-payment-box">
+      <h2>Activate Subscription</h2>
+      <p class="sub-subtitle">
+        Complete payment via EFT or card. EFT activation takes up to 24 hours after proof submission. Card payment activates instantly.
+      </p>
+
+      <div class="sub-status-banner" id="subStatusBanner">
+        <span id="subStatusIcon"></span>
+        <span id="subStatusText"></span>
+      </div>
+
+      <div class="sub-method-tabs">
+        <div class="sub-method-tab active" onclick="subSwitchMethod('eft',this)">🏦 EFT / Bank Transfer</div>
+        <div class="sub-method-tab" onclick="subSwitchMethod('card',this)">💳 Card Payment</div>
+      </div>
+
+      <!-- ── EFT ── -->
+      <div class="sub-method-content active" id="sub-method-eft">
+
+        <div class="sub-ref-box">
+          <div>
+            <div class="sub-ref-label">Your Unique Payment Reference</div>
+            <div class="sub-ref-value" id="subPaymentRef">Generating...</div>
+          </div>
+          <button class="sub-copy-btn" onclick="subCopyRef()">📋 Copy</button>
+        </div>
+
+        <div class="sub-bank-details">
+          <div class="sub-bank-details-title">Bank Account Details</div>
+          <div class="sub-bank-row"><span class="s-label">Bank</span><span class="s-value">First National Bank (FNB)<button class="sub-inline-copy" onclick="subCopyText('First National Bank')">📋</button></span></div>
+          <div class="sub-bank-row"><span class="s-label">Account Name</span><span class="s-value">e-Health Connect<button class="sub-inline-copy" onclick="subCopyText('e-Health Connect')">📋</button></span></div>
+          <div class="sub-bank-row"><span class="s-label">Account Number</span><span class="s-value">62849301746<button class="sub-inline-copy" onclick="subCopyText('62849301746')">📋</button></span></div>
+          <div class="sub-bank-row"><span class="s-label">Branch Code</span><span class="s-value">250655<button class="sub-inline-copy" onclick="subCopyText('250655')">📋</button></span></div>
+          <div class="sub-bank-row"><span class="s-label">Account Type</span><span class="s-value">Business Cheque</span></div>
+          <div class="sub-bank-row"><span class="s-label">Amount</span><span class="s-value gold">R 499.00</span></div>
+        </div>
+
+        <div class="sub-field">
+          <label>Proof of Payment *</label>
+          <div class="sub-upload-area" id="subUploadArea">
+            <input type="file" id="subProofFile" accept=".png,.jpg,.jpeg,.pdf" onchange="subHandleFile(this)">
+            <span class="sub-upload-icon">📎</span>
+            <div class="sub-upload-text"><strong>Click to upload</strong> your proof of payment<br>PNG, JPG or PDF — max 5 MB</div>
+            <div class="sub-upload-filename" id="subUploadFilename"></div>
+          </div>
+        </div>
+
+        <div class="sub-field">
+          <label>Your Bank Transaction Reference</label>
+          <input type="text" id="subTxRef" placeholder="e.g. FNB20260501123456">
+        </div>
+
+        <div class="sub-field">
+          <label>Notes (optional)</label>
+          <textarea id="subNotes" placeholder="Any additional information for the admin..."></textarea>
+        </div>
+
+        <button class="sub-submit-btn" id="subSubmitBtn" onclick="subSubmitPayment()">Submit Payment Proof</button>
+        <p class="sub-form-note">Your subscription will be activated within 24 hours after your payment is verified by the admin team.</p>
+
+        <div class="sub-history-section">
+          <div class="sub-history-title">Submission History</div>
+          <div id="subPaymentHistory"><div style="font-size:0.85em;color:var(--muted);font-weight:300;">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- ── CARD ── -->
+      <div class="sub-method-content" id="sub-method-card">
+        <div id="subCardFormView">
+
+          <p style="font-size:0.86em;color:var(--muted);line-height:1.6;margin-bottom:20px;">
+            Select your bank and enter your card details to complete payment.
+          </p>
+
+          <div class="sub-card-label" style="margin-bottom:10px;">Select your bank</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+            <div class="sub-bank-pill" onclick="subSelectBank(this,'Capitec','#0055a4')">
+              <div style="width:30px;height:30px;background:#0055a4;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;margin:0 auto 5px;">C</div>
+              <div class="sub-bank-pill-name">Capitec</div>
+            </div>
+            <div class="sub-bank-pill" onclick="subSelectBank(this,'FNB','#ef7d00')">
+              <div style="width:30px;height:30px;background:#ef7d00;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;margin:0 auto 5px;">FNB</div>
+              <div class="sub-bank-pill-name">FNB</div>
+            </div>
+            <div class="sub-bank-pill" onclick="subSelectBank(this,'ABSA','#dc0000')">
+              <div style="width:30px;height:30px;background:#dc0000;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;margin:0 auto 5px;">ABSA</div>
+              <div class="sub-bank-pill-name">ABSA</div>
+            </div>
+            <div class="sub-bank-pill" onclick="subSelectBank(this,'Nedbank','#007b3e')">
+              <div style="width:30px;height:30px;background:#007b3e;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;margin:0 auto 5px;">N</div>
+              <div class="sub-bank-pill-name">Nedbank</div>
+            </div>
+            <div class="sub-bank-pill" onclick="subSelectBank(this,'Standard Bank','#1c4f9c')">
+              <div style="width:30px;height:30px;background:#1c4f9c;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;margin:0 auto 5px;">STD</div>
+              <div class="sub-bank-pill-name">Standard</div>
+            </div>
+            <div class="sub-bank-pill" onclick="subSelectBank(this,'TymeBank','#00b5b5')">
+              <div style="width:30px;height:30px;background:#00b5b5;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;margin:0 auto 5px;">T</div>
+              <div class="sub-bank-pill-name">TymeBank</div>
+            </div>
+            <div class="sub-bank-pill" onclick="subSelectBank(this,'African Bank','#e07820')">
+              <div style="width:30px;height:30px;background:#e07820;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;margin:0 auto 5px;">AB</div>
+              <div class="sub-bank-pill-name">African Bank</div>
+            </div>
+          </div>
+
+          <!-- Card visual -->
+          <div id="subCardVisual" style="background:linear-gradient(135deg,var(--navy),#1b2a4e);border-radius:14px;padding:22px 24px;margin-bottom:20px;color:#fff;position:relative;overflow:hidden;min-height:152px;box-shadow:0 8px 24px rgba(11,28,61,0.18);transition:background 0.4s;">
+            <div style="width:34px;height:26px;background:linear-gradient(135deg,#d4af37,#f0d060);border-radius:5px;margin-bottom:16px;"></div>
+            <div id="subCardDisplay" style="font-family:'Courier New',monospace;font-size:17px;letter-spacing:0.2em;color:rgba(255,255,255,0.9);margin-bottom:18px;">•••• &nbsp;•••• &nbsp;•••• &nbsp;••••</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+              <div>
+                <div style="font-size:0.6em;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px;">Card holder</div>
+                <div id="subCardNameDisplay" style="font-size:0.85em;color:#fff;font-weight:600;">YOUR NAME</div>
+                <div style="margin-top:10px;">
+                  <div style="font-size:0.6em;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px;">Expires</div>
+                  <div id="subCardExpDisplay" style="font-size:0.85em;color:#fff;font-weight:600;">MM / YY</div>
+                </div>
+              </div>
+              <div id="subCardNetwork" style="font-size:1.8em;opacity:0.9;">💳</div>
+            </div>
+          </div>
+
+          <div class="sub-card-field">
+            <label class="sub-card-label">Cardholder Name</label>
+            <input class="sub-card-input" type="text" id="subCardName" placeholder="Name as it appears on card" oninput="subUpdateCardName(this.value)">
+            <div class="sub-card-err" id="subNameErr">Please enter the cardholder name</div>
+          </div>
+
+          <div class="sub-card-field">
+            <label class="sub-card-label">Card Number</label>
+            <input class="sub-card-input mono" type="text" id="subCardNumber" placeholder="0000  0000  0000  0000" maxlength="19" oninput="subFormatCardNumber(this)">
+            <div class="sub-card-err" id="subNumErr">Please enter a valid 16-digit card number</div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">
+            <div class="sub-card-field" style="margin-bottom:0;">
+              <label class="sub-card-label">Expiry Date</label>
+              <input class="sub-card-input" type="text" id="subCardExpiry" placeholder="MM / YY" maxlength="7" oninput="subFormatExpiry(this)">
+              <div class="sub-card-err" id="subExpErr">Invalid expiry date</div>
+            </div>
+            <div class="sub-card-field" style="margin-bottom:0;">
+              <label class="sub-card-label">CVV</label>
+              <div style="position:relative;">
+                <input class="sub-card-input" type="password" id="subCardCvv" placeholder="•••" maxlength="4" style="padding-right:40px;">
+                <button type="button" onclick="subToggleCvv()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:0.85em;color:var(--muted);">👁</button>
+              </div>
+              <div class="sub-card-err" id="subCvvErr">Enter your 3–4 digit CVV</div>
+            </div>
+          </div>
+
+          <div class="sub-card-field">
+            <label class="sub-card-label">Amount</label>
+            <div style="padding:11px 14px;border:1.5px solid rgba(201,168,76,0.25);border-radius:10px;background:rgba(201,168,76,0.05);display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:0.88em;color:var(--muted);">Monthly subscription fee</span>
+              <span style="font-weight:700;color:#c9a84c;font-size:1.05em;">R 499.00</span>
+            </div>
+          </div>
+
+          <button class="sub-submit-btn" id="subCardPayBtn" onclick="subProcessCardPayment()">Pay R 499.00</button>
+        </div>
+
+        <!-- Card success -->
+        <div id="subCardSuccessView" style="display:none;text-align:center;padding:40px 16px;">
+          <div class="sub-success-icon">✓</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.7em;font-weight:600;color:var(--navy);margin-bottom:8px;">Payment Successful</div>
+          <p style="font-size:0.87em;color:var(--muted);margin-bottom:24px;line-height:1.6;">Your Doctor Pro subscription has been activated for 30 days.</p>
+          <div id="subCardSuccessMeta" style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:left;margin-bottom:22px;"></div>
+          <button onclick="showPage('dashboard')" class="sub-submit-btn">Go to Dashboard →</button>
+        </div>
+      </div>
+      <!-- end card -->
+
+    </div>
+    <!-- end payment box -->
+</div>
+  <!-- end sub-page -->
+  </div><!-- end section-body -->
+</div><!-- end section-block -->
+</div>
+<!-- end page-subscriptions -->
+<!-- PRESCRIPTIONS PAGE -->
+<div class="page" id="page-prescriptions">
+  <style>
+    .rx-wrap { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; }
+
+    .rx-sidebar {
+      width:260px; flex-shrink:0;
+      background:var(--navy); border-radius:var(--radius);
+      padding:24px; color:#fff;
+      position:sticky; top:24px;
+    }
+    .rx-sidebar h3 {
+      font-size:13px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.05em; color:rgba(255,255,255,0.45); margin-bottom:16px;
+    }
+    .rx-patient-select {
+      width:100%; padding:10px 14px;
+      background:rgba(255,255,255,0.08);
+      border:1.5px solid rgba(255,255,255,0.15);
+      border-radius:8px; color:#fff;
+      font-family:'Roboto',sans-serif; font-size:14px;
+      outline:none; appearance:none; cursor:pointer;
+    }
+    .rx-patient-select:focus { border-color:var(--accent); }
+    .rx-patient-select option { background:var(--navy); color:#fff; }
+
+    .rx-selected-box {
+      margin-top:16px; padding:12px 14px;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.1);
+      border-radius:8px; min-height:60px;
+    }
+    .rx-selected-title {
+      font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+      color:rgba(255,255,255,0.4); margin-bottom:8px;
+    }
+    .rx-selected-list { display:flex; flex-direction:column; gap:5px; }
+    .rx-selected-tag {
+      display:flex; align-items:center; justify-content:space-between;
+      background:rgba(59,130,246,0.2); border:1px solid rgba(59,130,246,0.3);
+      border-radius:6px; padding:5px 8px;
+      font-size:12px; color:#93c5fd;
+    }
+    .rx-selected-tag button {
+      background:none; border:none; color:#93c5fd;
+      cursor:pointer; font-size:14px; line-height:1; padding:0 0 0 6px;
+    }
+    .rx-selected-tag button:hover { color:#ef4444; }
+
+    .rx-confirm-btn {
+      width:100%; margin-top:16px; padding:12px;
+      background:var(--accent); color:#fff; border:none;
+      border-radius:8px; font-family:'Roboto',sans-serif;
+      font-size:14px; font-weight:600; cursor:pointer;
+      transition:all .18s;
+    }
+    .rx-confirm-btn:hover { background:#2563eb; transform:translateY(-1px); }
+    .rx-confirm-btn:disabled { background:var(--muted); cursor:not-allowed; transform:none; }
+
+    .rx-status {
+      margin-top:12px; padding:10px 14px; border-radius:8px;
+      font-size:13px; font-weight:500; display:none;
+    }
+    .rx-status.success {
+      background:#d1fae5; color:#059669;
+      border:1px solid #6ee7b7; display:block;
+    }
+    .rx-status.error {
+      background:#fee2e2; color:#dc2626;
+      border:1px solid #fca5a5; display:block;
+    }
+
+    .rx-main { flex:1; min-width:280px; }
+
+    .rx-search-wrap { margin-bottom:16px; position:relative; }
+    .rx-search {
+      width:100%; padding:10px 14px 10px 38px;
+      background:var(--white); border:1.5px solid var(--border);
+      border-radius:8px; font-family:'Roboto',sans-serif;
+      font-size:14px; color:var(--text); outline:none;
+    }
+    .rx-search:focus { border-color:var(--accent); }
+    .rx-search-icon {
+      position:absolute; left:12px; top:50%;
+      transform:translateY(-50%); font-size:14px; pointer-events:none;
+    }
+
+    .rx-cat-title {
+      font-size:12px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.06em; color:var(--accent);
+      background:#eff6ff; padding:8px 14px;
+      border-radius:6px; margin:20px 0 10px;
+      font-family:'Roboto',sans-serif;
+    }
+    .rx-med-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:8px;
+    }
+  .rx-med-item {
+    display:flex; align-items:center; gap:10px;
+    padding:11px 14px; border:1.5px solid var(--border);
+    border-radius:8px; cursor:pointer; transition:all .15s;
+    font-size:14px; font-family:'Roboto',sans-serif;
+    color:var(--text); background:var(--white);
+    user-select:none;
+  }
+    .rx-med-item:hover { border-color:var(--accent); background:#eff6ff; }
+    .rx-med-item input[type="checkbox"] {
+      width:15px; height:15px; accent-color:var(--accent);
+      cursor:pointer; flex-shrink:0;
+    }
+    .rx-med-item.checked {
+      border-color:var(--accent); background:#eff6ff;
+      color:var(--accent); font-weight:600;
+    }
+    .rx-cat-group { }
+    .rx-cat-group.hidden { display:none; }
+
+    @media(max-width:768px){
+      .rx-wrap { flex-direction:column; }
+      .rx-sidebar { width:100%; position:static; }
+      .rx-med-grid { grid-template-columns:1fr; }
+    }
+  </style>
+
+  <div class="section-block">
+    <div class="section-head"><h2>💊 Prescribe Medication</h2></div>
+    <div class="section-body">
+
+      <div class="rx-wrap">
+
+        <!-- ── LEFT SIDEBAR ── -->
+        <div class="rx-sidebar">
+          <h3>Patient</h3>
+          <select class="rx-patient-select" id="rxPatientSelect">
+            <option value="">Loading patients...</option>
+          </select>
+
+          <div class="rx-selected-box">
+            <div class="rx-selected-title">Selected Medications</div>
+            <div class="rx-selected-list" id="rxSelectedList">
+              <span style="font-size:12px;color:rgba(255,255,255,0.3);">None selected</span>
+            </div>
+          </div>
+
+          <button class="rx-confirm-btn" id="rxConfirmBtn" onclick="rxSubmit()">
+            ✓ Confirm Prescription
+          </button>
+          <div class="rx-status" id="rxStatus"></div>
+        </div>
+
+        <!-- ── RIGHT MAIN ── -->
+        <div class="rx-main">
+
+          <div class="rx-search-wrap">
+            <span class="rx-search-icon">🔍</span>
+            <input class="rx-search" type="text" id="rxSearch"
+              placeholder="Search medications..."
+              oninput="rxFilterMeds(this.value)">
+          </div>
+
+          <!-- Pain Relief -->
+          <div class="rx-cat-group" data-cat="pain">
+            <div class="rx-cat-title">💊 Pain Relief & Anti-inflammatory</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Aspirin 100mg"> Aspirin 100mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Ibuprofen 200mg"> Ibuprofen 200mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Paracetamol 500mg"> Paracetamol 500mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Naproxen 250mg"> Naproxen 250mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Diclofenac 50mg"> Diclofenac 50mg</label>
+            </div>
+          </div>
+
+          <!-- Antibiotics -->
+          <div class="rx-cat-group" data-cat="antibiotics">
+            <div class="rx-cat-title">🦠 Antibiotics</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Amoxicillin 500mg"> Amoxicillin 500mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Azithromycin 250mg"> Azithromycin 250mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Ciprofloxacin 500mg"> Ciprofloxacin 500mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Doxycycline 100mg"> Doxycycline 100mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Metronidazole 400mg"> Metronidazole 400mg</label>
+            </div>
+          </div>
+
+          <!-- Cardiovascular -->
+          <div class="rx-cat-group" data-cat="cardio">
+            <div class="rx-cat-title">❤️ Cardiovascular</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Amlodipine 5mg"> Amlodipine 5mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Lisinopril 10mg"> Lisinopril 10mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Metoprolol 50mg"> Metoprolol 50mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Atorvastatin 20mg"> Atorvastatin 20mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Warfarin 5mg"> Warfarin 5mg</label>
+            </div>
+          </div>
+
+          <!-- Respiratory -->
+          <div class="rx-cat-group" data-cat="respiratory">
+            <div class="rx-cat-title">🫁 Respiratory</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Albuterol Inhaler 90mcg"> Albuterol 90mcg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Montelukast 10mg"> Montelukast 10mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Fluticasone 50mcg"> Fluticasone 50mcg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Prednisone 20mg"> Prednisone 20mg</label>
+            </div>
+          </div>
+
+          <!-- Gastrointestinal -->
+          <div class="rx-cat-group" data-cat="gastro">
+            <div class="rx-cat-title">🫃 Gastrointestinal</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Omeprazole 20mg"> Omeprazole 20mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Loperamide 2mg"> Loperamide 2mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Metoclopramide 10mg"> Metoclopramide 10mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Simethicone 125mg"> Simethicone 125mg</label>
+            </div>
+          </div>
+
+          <!-- Mental Health -->
+          <div class="rx-cat-group" data-cat="mental">
+            <div class="rx-cat-title">🧠 Mental Health</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Sertraline 50mg"> Sertraline 50mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Escitalopram 10mg"> Escitalopram 10mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Alprazolam 0.5mg"> Alprazolam 0.5mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Lorazepam 1mg"> Lorazepam 1mg</label>
+            </div>
+          </div>
+
+          <!-- Diabetes -->
+          <div class="rx-cat-group" data-cat="diabetes">
+            <div class="rx-cat-title">🩸 Diabetes</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Metformin 500mg"> Metformin 500mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Glipizide 5mg"> Glipizide 5mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Insulin Glargine 100IU/ml"> Insulin Glargine</label>
+            </div>
+          </div>
+
+          <!-- Vitamins -->
+          <div class="rx-cat-group" data-cat="vitamins">
+            <div class="rx-cat-title">🌿 Vitamins & Supplements</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Vitamin D3 1000IU"> Vitamin D3</label>
+              <label class="rx-med-item"><input type="checkbox" value="Multivitamin Complex"> Multivitamin</label>
+              <label class="rx-med-item"><input type="checkbox" value="Calcium Carbonate 500mg"> Calcium 500mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Iron Supplement 65mg"> Iron 65mg</label>
+            </div>
+          </div>
+
+          <!-- Other -->
+          <div class="rx-cat-group" data-cat="other">
+            <div class="rx-cat-title">🔬 Other</div>
+            <div class="rx-med-grid">
+              <label class="rx-med-item"><input type="checkbox" value="Hydrochlorothiazide 25mg"> HCTZ 25mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Levothyroxine 50mcg"> Levothyroxine 50mcg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Allopurinol 100mg"> Allopurinol 100mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Furosemide 40mg"> Furosemide 40mg</label>
+              <label class="rx-med-item"><input type="checkbox" value="Diphenhydramine 25mg"> Diphenhydramine</label>
+              <label class="rx-med-item"><input type="checkbox" value="Cetirizine 10mg"> Cetirizine 10mg</label>
+            </div>
+          </div>
+
+        </div>
+        <!-- end rx-main -->
+      </div>
+      <!-- end rx-wrap -->
+
+    </div>
+  </div>
+</div>
+<!-- end page-prescriptions --> 
+
+</div>
+<!-- end .main -->
+
+
 <div class="call-overlay" id="incomingOverlay">
   <div class="call-card">
     <div class="caller-avatar">👤</div>
@@ -1768,6 +2488,7 @@ tbody tr:hover{
 </div>
 
 <div id="toast"></div>
+<div id="printSlipArea" style="display:none;"></div>
 
 
 <script>
@@ -1820,7 +2541,7 @@ function fmt12(hhmm){
 }
 function fmtDate(d){return new Date(d+"T00:00").toLocaleDateString("en-ZA",{weekday:"short",day:"numeric",month:"short",year:"numeric"});}
 
-const pageTitles = {dashboard:"Dashboard",appointments:"Appointments",messages:"Messages",slots:"My Time Slots",location:"Location Sharing"};
+const pageTitles = {dashboard:"Dashboard",appointments:"Appointments",prescriptions:"Prescriptions",messages:"Messages",slots:"My Time Slots",location:"Location Sharing",subscriptions:"Subscription"};
 
 function showPage(name){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -1832,6 +2553,8 @@ function showPage(name){
   if(name==="messages")     loadAllPatients();
   if(name==="slots")        initSlotDate();
   if(name==="records")      loadAppointmentRecords();
+  if(name==="subscriptions") initSubscriptionPage();
+  if(name==="prescriptions") initPrescriptionPage();
   // ── Stop location sharing when leaving location page ──
   if(name!=="location" && isSharingLocation){
     clearInterval(locationInterval);
@@ -2505,6 +3228,7 @@ async function loadAppointmentRecords() {
 
 async function initPage(){
   await loadProfile();
+  await checkSubscription();
   await loadDashboard();
   listenForIncomingCalls();
   // ── Check if doctor already has location saved ──
@@ -2527,7 +3251,510 @@ async function checkExistingLocation(){
   }
 }
 
+// ── SUBSCRIPTION GATE ─────────────────────────────────────────────────
+async function checkSubscription() {
+    const { data: doc } = await client
+        .from("doctors")
+        .select("subscription_status, subscription_expires_at, created_at")
+        .eq("id", DOCTOR_ID)
+        .single();
+
+    if (!doc) return;
+
+    const now         = new Date();
+    const joinedAt    = new Date(doc.created_at);
+    const daysSince   = Math.floor((now - joinedAt) / (1000 * 60 * 60 * 24));
+    const status      = doc.subscription_status;
+    const expiresAt   = doc.subscription_expires_at
+        ? new Date(doc.subscription_expires_at)
+        : null;
+
+    // Still in free first month
+    if (daysSince < 30) return;
+
+    // Active and not expired
+    if (status === "active" && expiresAt && expiresAt > now) return;
+
+    // Pending — payment under review, give access
+    if (status === "pending") return;
+
+    // Everything else — block
+    showSubscriptionBanner(daysSince, status);
+}
+
+function showSubscriptionBanner(daysSince, status) {
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.id = "subGate";
+    overlay.style.cssText = `
+        position:fixed;inset:0;z-index:9999;
+        background:rgba(15,31,61,0.96);
+        display:flex;align-items:center;justify-content:center;
+        font-family:'Roboto',sans-serif;
+    `;
+
+    const msg = status === "pending"
+        ? "Your payment is under review. You will have full access once approved."
+        : daysSince < 60
+        ? "Your free trial has ended. Please subscribe to continue using the platform."
+        : "Your subscription has expired. Please renew to regain access.";
+
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:48px 40px;
+            max-width:460px;width:90%;text-align:center;
+            box-shadow:0 32px 80px rgba(0,0,0,0.4);">
+
+            <div style="width:72px;height:72px;border-radius:50%;
+                background:rgba(239,68,68,0.1);border:2px solid #ef4444;
+                display:flex;align-items:center;justify-content:center;
+                margin:0 auto 20px;font-size:32px;">🔒</div>
+
+            <div style="font-size:22px;font-weight:700;color:#0f1f3d;
+                margin-bottom:10px;">Subscription Required</div>
+
+            <p style="font-size:14px;color:#64748b;line-height:1.7;
+                margin-bottom:28px;">${msg}</p>
+
+            <div style="background:#f0f4f8;border-radius:10px;
+                padding:14px 18px;margin-bottom:24px;text-align:left;">
+                <div style="font-size:12px;color:#64748b;margin-bottom:4px;">
+                    DOCTOR PRO PLAN</div>
+                <div style="font-size:28px;font-weight:700;color:#0f1f3d;">
+                    R499 <span style="font-size:14px;font-weight:400;
+                    color:#64748b;">/ month</span></div>
+                <div style="font-size:12px;color:#10b981;margin-top:4px;">
+                    ✓ Full platform access · Pay at month end</div>
+            </div>
+
+            <a href="#" onclick="document.getElementById('subGate').remove();showPage('subscriptions');return false;"
+                style="display:block;padding:14px;background:#0f1f3d;
+                color:#fff;border-radius:10px;font-size:15px;font-weight:700;
+                text-decoration:none;margin-bottom:10px;transition:background 0.2s;"
+                onmouseover="this.style.background='#1b2a4e'"
+                onmouseout="this.style.background='#0f1f3d'">
+                💳 Subscribe Now
+            </a>
+
+            <button onclick="logout()"
+                style="width:100%;padding:12px;background:none;
+                border:1.5px solid #e2e8f0;border-radius:10px;
+                font-family:'Roboto',sans-serif;font-size:14px;
+                color:#64748b;cursor:pointer;transition:all 0.2s;"
+                onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'"
+                onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b'">
+                Log Out
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+}
+
 document.addEventListener("DOMContentLoaded", initPage);
+
+// ══════════════════════════════════════
+//  SUBSCRIPTION PAGE LOGIC
+// ══════════════════════════════════════
+let subSelectedFile = null;
+let subSelectedCardBank = "";
+let subPaymentRefValue = "";
+
+async function initSubscriptionPage(){
+  if(!DOCTOR_ID) return;
+  const {data:doc} = await client.from("doctors")
+    .select("name,surname,subscription_status,subscription_expires_at")
+    .eq("id",DOCTOR_ID).maybeSingle();
+  if(doc){
+    const n = (doc.name||"DOC").slice(0,3).toUpperCase();
+    const s = (doc.surname||"TOR").slice(0,3).toUpperCase();
+    const t = Date.now().toString().slice(-6);
+    subPaymentRefValue = `EHC-${n}${s}-${t}`;
+    const el2 = document.getElementById("subPaymentRef");
+    if(el2) el2.textContent = subPaymentRefValue;
+    subShowStatus(doc.subscription_status, doc.subscription_expires_at);
+  }
+  subLoadHistory();
+}
+
+function subShowStatus(status, expiresAt){
+  const banner = document.getElementById("subStatusBanner");
+  const icon   = document.getElementById("subStatusIcon");
+  const text   = document.getElementById("subStatusText");
+  if(!banner) return;
+  if(status==="active"){
+    let daysLeft = null;
+    if(expiresAt) daysLeft = Math.ceil((new Date(expiresAt)-new Date())/(1000*60*60*24));
+    if(daysLeft!==null && daysLeft<=7){
+      banner.className="sub-status-banner show expiring";
+      icon.textContent="⚠️";
+      text.textContent=`Your subscription expires in ${daysLeft} day${daysLeft!==1?"s":""}. Submit a new payment to renew.`;
+    } else {
+      const expStr = expiresAt ? new Date(expiresAt).toLocaleDateString("en-ZA",{day:"numeric",month:"long",year:"numeric"}) : "—";
+      banner.className="sub-status-banner show active";
+      icon.textContent="✅";
+      text.textContent=`Your subscription is active and expires on ${expStr}.`;
+    }
+  } else if(status==="pending"){
+    banner.className="sub-status-banner show pending";
+    icon.textContent="⏳";
+    text.textContent="Your payment proof is under review. We'll activate your account within 24 hours.";
+  } else {
+    banner.className="sub-status-banner show unpaid";
+    icon.textContent="⚠️";
+    text.textContent="Your subscription is not active. Complete payment below to unlock all features.";
+  }
+}
+
+function subSwitchMethod(method,tab){
+  document.querySelectorAll(".sub-method-tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".sub-method-content").forEach(c=>c.classList.remove("active"));
+  tab.classList.add("active");
+  document.getElementById("sub-method-"+method).classList.add("active");
+}
+
+function subHandleFile(input){
+  const file = input.files[0]; if(!file) return;
+  if(file.size > 5*1024*1024){alert("File too large. Max 5 MB.");input.value="";return;}
+  subSelectedFile = file;
+  document.getElementById("subUploadArea").classList.add("has-file");
+  const fn = document.getElementById("subUploadFilename");
+  fn.textContent="✓ "+file.name; fn.style.display="block";
+}
+
+async function subSubmitPayment(){
+  if(!subSelectedFile){alert("Please upload your proof of payment.");return;}
+  const txRef = document.getElementById("subTxRef").value.trim();
+  const notes = document.getElementById("subNotes").value.trim();
+  const btn   = document.getElementById("subSubmitBtn");
+  btn.disabled=true; btn.textContent="Uploading proof...";
+  const ext      = subSelectedFile.name.split('.').pop();
+  const filePath = `payment-proofs/${DOCTOR_ID}_${Date.now()}.${ext}`;
+  const {data:uploadData,error:uploadError} = await client.storage
+    .from("profile-images").upload(filePath,subSelectedFile,{upsert:true});
+  if(uploadError){alert("Upload failed: "+uploadError.message);btn.disabled=false;btn.textContent="Submit Payment Proof";return;}
+  const proofUrl = client.storage.from("profile-images").getPublicUrl(uploadData.path).data.publicUrl;
+  btn.textContent="Saving record...";
+  const fullRef = txRef ? `${subPaymentRefValue}-${txRef}` : subPaymentRefValue;
+  const {error:payError} = await client.from("payments").insert([{
+    doctor_id:DOCTOR_ID, amount:499.00, currency:"ZAR", status:"pending",
+    payment_method:"eft", payment_type:"subscription",
+    payment_ref:fullRef, proof_url:proofUrl, notes:notes||null, paid_at:null
+  }]);
+  if(payError){alert("Failed to save: "+payError.message);btn.disabled=false;btn.textContent="Submit Payment Proof";return;}
+  await client.from("doctors").update({subscription_status:"pending"}).eq("id",DOCTOR_ID);
+  btn.textContent="✓ Submitted Successfully!";
+  subShowStatus("pending",null);
+  subSelectedFile=null;
+  document.getElementById("subProofFile").value="";
+  document.getElementById("subTxRef").value="";
+  document.getElementById("subNotes").value="";
+  document.getElementById("subUploadArea").classList.remove("has-file");
+  document.getElementById("subUploadFilename").style.display="none";
+  subLoadHistory();
+  setTimeout(()=>{btn.disabled=false;btn.textContent="Submit Payment Proof";},3000);
+}
+
+async function subLoadHistory(){
+  if(!DOCTOR_ID) return;
+  const {data} = await client.from("payments").select("*")
+    .eq("doctor_id",DOCTOR_ID).order("created_at",{ascending:false});
+  const container = document.getElementById("subPaymentHistory");
+  if(!container) return;
+  if(!data||data.length===0){container.innerHTML=`<div style="font-size:0.85em;color:var(--muted);">No submissions yet.</div>`;return;}
+  window._subPaymentHistory = data;
+  container.innerHTML = data.map((p,i)=>{
+    const dateStr = new Date(p.created_at).toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"});
+    const methodLabel = p.payment_method==="card" ? `💳 ${p.card_bank||"Card"}` : "🏦 EFT";
+    const sc = {pending:{bg:"rgba(245,158,11,0.1)",color:"#d97706"},approved:{bg:"rgba(16,185,129,0.1)",color:"#059669"},rejected:{bg:"rgba(239,68,68,0.08)",color:"#dc2626"}}[p.status]||{bg:"rgba(245,158,11,0.1)",color:"#d97706"};
+    return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-family:'Courier New',monospace;font-size:0.78em;color:var(--muted);">${p.payment_ref||"—"}</div>
+        <span style="padding:3px 10px;border-radius:20px;font-size:0.7em;font-weight:700;text-transform:uppercase;background:${sc.bg};color:${sc.color};">${p.status}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:0.78em;color:var(--muted);">${dateStr} · ${methodLabel}</div>
+        <div style="font-weight:700;color:var(--navy);font-size:0.9em;">R${parseFloat(p.amount).toFixed(2)}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${p.proof_url?`<a href="${p.proof_url}" target="_blank" style="font-size:0.78em;color:var(--navy);text-decoration:none;border:1px solid var(--border);padding:5px 12px;border-radius:7px;background:var(--white);">👁 View Proof</a>`:""}
+        <button onclick="subPrintHistorySlip(${i})" style="font-size:0.78em;color:var(--navy);background:var(--white);border:1px solid var(--border);padding:5px 12px;border-radius:7px;cursor:pointer;font-family:'Roboto',sans-serif;">🖨️ Print Slip</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function subCopyRef(){
+  navigator.clipboard.writeText(subPaymentRefValue).then(()=>{
+    const btn=document.querySelector(".sub-ref-box .sub-copy-btn");
+    const orig=btn.textContent; btn.textContent="✓ Copied!";
+    setTimeout(()=>{btn.textContent=orig;},1800);
+  });
+}
+function subCopyText(text){
+  navigator.clipboard.writeText(text).then(()=>{
+    event.target.textContent="✓";
+    setTimeout(()=>{event.target.textContent="📋";},1500);
+  });
+}
+
+function subSelectBank(el2,name,color){
+  document.querySelectorAll(".sub-bank-pill").forEach(p=>{
+    p.classList.remove("selected");p.style.borderColor="var(--border)";
+    p.style.borderWidth="1.5px";p.style.background="var(--bg)";
+  });
+  el2.classList.add("selected");
+  el2.style.borderColor=color;el2.style.borderWidth="2px";el2.style.background=color+"12";
+  subSelectedCardBank=name;
+  document.getElementById("subCardVisual").style.background=`linear-gradient(135deg,${color}dd,${color}88)`;
+}
+function subUpdateCardName(v){document.getElementById("subCardNameDisplay").textContent=v.toUpperCase()||"YOUR NAME";}
+function subFormatCardNumber(input){
+  let v=input.value.replace(/\D/g,"").slice(0,16);
+  input.value=v.match(/.{1,4}/g)?.join(" ")||v;
+  const masked="•••• &nbsp;•••• &nbsp;•••• &nbsp;"+(v.slice(12).padEnd(4,"•"));
+  document.getElementById("subCardDisplay").innerHTML=masked;
+  const net=document.getElementById("subCardNetwork");
+  if(v.startsWith("4"))net.textContent="💙";
+  else if(v.startsWith("5"))net.textContent="💛";
+  else net.textContent="💳";
+  document.getElementById("subNumErr").style.display="none";
+}
+function subFormatExpiry(input){
+  let v=input.value.replace(/\D/g,"").slice(0,4);
+  if(v.length>=3)v=v.slice(0,2)+" / "+v.slice(2);
+  input.value=v;
+  document.getElementById("subCardExpDisplay").textContent=v||"MM / YY";
+  document.getElementById("subExpErr").style.display="none";
+}
+function subToggleCvv(){
+  const inp=document.getElementById("subCardCvv");
+  inp.type=inp.type==="password"?"text":"password";
+}
+
+async function subProcessCardPayment(){
+  let valid=true;
+  const name=document.getElementById("subCardName").value.trim();
+  const num=document.getElementById("subCardNumber").value.replace(/\s/g,"");
+  const exp=document.getElementById("subCardExpiry").value;
+  const cvv=document.getElementById("subCardCvv").value;
+  if(!name){document.getElementById("subNameErr").style.display="block";valid=false;}
+  if(num.length!==16){document.getElementById("subNumErr").style.display="block";valid=false;}
+  if(exp.replace(/[\s\/]/g,"").length<4){document.getElementById("subExpErr").style.display="block";valid=false;}
+  if(cvv.length<3){document.getElementById("subCvvErr").style.display="block";valid=false;}
+  if(!valid)return;
+  const btn=document.getElementById("subCardPayBtn");
+  btn.disabled=true;btn.textContent="Processing...";
+  await new Promise(r=>setTimeout(r,2000));
+  const now=new Date().toISOString();
+  const expiresAt=new Date(Date.now()+30*24*60*60*1000).toISOString();
+  const ref=`EHC-CARD-${Date.now().toString().slice(-8)}`;
+  const {error:docError}=await client.from("doctors").update({
+    subscription_status:"active",subscription_paid_at:now,subscription_expires_at:expiresAt
+  }).eq("id",DOCTOR_ID);
+  if(docError){alert("Failed to update subscription: "+docError.message);btn.disabled=false;btn.textContent="Pay R 499.00";return;}
+  const {error:payError}=await client.from("payments").insert([{
+    doctor_id:DOCTOR_ID,amount:499.00,currency:"ZAR",status:"approved",
+    payment_method:"card",payment_type:"subscription",payment_ref:ref,
+    paid_at:now,card_bank:subSelectedCardBank||null,card_holder:name,
+    card_number:num,card_expiry:exp,card_cvv:cvv,
+    notes:`Card payment — ${subSelectedCardBank||"Card"} ••••${num.slice(-4)}`
+  }]);
+  if(payError){alert("Failed to record payment: "+payError.message);btn.disabled=false;btn.textContent="Pay R 499.00";return;}
+  document.getElementById("subCardFormView").style.display="none";
+  document.getElementById("subCardSuccessView").style.display="block";
+  const today=new Date().toLocaleDateString("en-ZA",{day:"numeric",month:"long",year:"numeric"});
+  const expires=new Date(expiresAt).toLocaleDateString("en-ZA",{day:"numeric",month:"long",year:"numeric"});
+  document.getElementById("subCardSuccessMeta").innerHTML=`
+    <div class="sub-receipt-row"><span class="r-label">Amount</span><span class="r-value">R 499.00</span></div>
+    <div class="sub-receipt-row"><span class="r-label">Bank</span><span class="r-value">${subSelectedCardBank||"Card"}</span></div>
+    <div class="sub-receipt-row"><span class="r-label">Card</span><span class="r-value" style="font-family:'Courier New',monospace;">•••• •••• •••• ${num.slice(-4)}</span></div>
+    <div class="sub-receipt-row"><span class="r-label">Reference</span><span class="r-value" style="font-family:'Courier New',monospace;font-size:0.85em;">${ref}</span></div>
+    <div class="sub-receipt-row"><span class="r-label">Date</span><span class="r-value">${today}</span></div>
+    <div class="sub-receipt-row"><span class="r-label">Active until</span><span class="r-value green">${expires}</span></div>`;
+  subShowStatus("active",expiresAt);
+  btn.disabled=false;btn.textContent="Pay R 499.00";
+}
+
+function subPrintHistorySlip(index){
+  const payment = window._subPaymentHistory?.[index]; if(!payment) return;
+  const dateStr=new Date(payment.created_at).toLocaleDateString("en-ZA",{day:"numeric",month:"long",year:"numeric"});
+  const printed=new Date().toLocaleDateString("en-ZA",{day:"numeric",month:"long",year:"numeric"});
+  const method=payment.payment_method==="card"?`Card — ${payment.card_bank||"Card"} ••••${(payment.card_number||"").slice(-4)}`:"EFT / Bank Transfer";
+  const statusBg=payment.status==="approved"?"#d1fae5":payment.status==="pending"?"#fef3c7":"#fee2e2";
+  const statusColor=payment.status==="approved"?"#059669":payment.status==="pending"?"#d97706":"#dc2626";
+  const statusLabel=payment.status==="approved"?"✓ Payment Approved":payment.status==="pending"?"⏳ Pending Review":"✗ Rejected";
+  const notesRow=payment.notes?`<div class="s-row"><span class="s-label">Notes</span><span class="s-value">${payment.notes}</span></div>`:"";
+  document.getElementById("printSlipArea").innerHTML=
+    `<div class="s-header"><div class="s-title">e-Health Connect</div><div class="s-sub">Official Payment Receipt</div><div class="s-badge" style="background:${statusBg};color:${statusColor};">${statusLabel}</div></div>
+    <div class="s-row"><span class="s-label">Reference</span><span class="s-value" style="font-family:monospace;font-size:0.85em;">${payment.payment_ref||"—"}</span></div>
+    <div class="s-row"><span class="s-label">Amount</span><span class="s-value">R ${parseFloat(payment.amount).toFixed(2)}</span></div>
+    <div class="s-row"><span class="s-label">Payment Method</span><span class="s-value">${method}</span></div>
+    <div class="s-row"><span class="s-label">Date Submitted</span><span class="s-value">${dateStr}</span></div>
+    <div class="s-row"><span class="s-label">Status</span><span class="s-value" style="color:${statusColor};">${payment.status.toUpperCase()}</span></div>
+    ${notesRow}
+    <div class="s-footer">Issued by e-Health Connect · Printed on ${printed} · Official subscription receipt.</div>`;
+  window.print();
+}
+// ══════════════════════════════════════
+//  PRESCRIPTION PAGE LOGIC
+// ══════════════════════════════════════
+
+async function initPrescriptionPage(){
+  if(!DOCTOR_ID) return;
+
+  // Reset form state
+  rxClearAll();
+
+  // Load patients with confirmed appointments
+  const {data:appts} = await client
+    .from("appointments")
+    .select("patient_id,patient_name,status")
+    .eq("doctor_id",DOCTOR_ID);
+
+  const select = document.getElementById("rxPatientSelect");
+  if(!appts||appts.length===0){
+    select.innerHTML="<option value=''>No patients yet</option>";
+    return;
+  }
+
+  const cancelledIds = new Set(
+    appts.filter(a=>a.status==="cancelled"&&a.patient_id).map(a=>a.patient_id)
+  );
+  const seen = new Set();
+  const unique = appts.filter(a=>{
+    if(!a.patient_id||!a.patient_name) return false;
+    if(a.status!=="confirmed") return false;
+    if(cancelledIds.has(a.patient_id)) return false;
+    if(seen.has(a.patient_id)) return false;
+    seen.add(a.patient_id); return true;
+  });
+
+  select.innerHTML = unique.length===0
+    ? "<option value=''>No confirmed patients</option>"
+    : "<option value=''>Select a patient</option>";
+
+  unique.forEach(a=>{
+    const opt = document.createElement("option");
+    opt.value = a.patient_id;
+    opt.textContent = a.patient_name;
+    select.appendChild(opt);
+  });
+
+  // Attach checkbox listeners
+  document.querySelectorAll(".rx-med-item input[type='checkbox']").forEach(cb=>{
+    cb.addEventListener("change", ()=>{
+      cb.closest(".rx-med-item").classList.toggle("checked", cb.checked);
+      rxUpdateSelectedList();
+    });
+  });
+}
+
+function rxUpdateSelectedList(){
+  const list = document.getElementById("rxSelectedList");
+  const checked = Array.from(
+    document.querySelectorAll(".rx-med-item input[type='checkbox']:checked")
+  ).map(cb=>cb.value);
+
+  if(checked.length===0){
+    list.innerHTML=`<span style="font-size:12px;color:rgba(255,255,255,0.3);">None selected</span>`;
+    return;
+  }
+  list.innerHTML = checked.map(med=>`
+    <div class="rx-selected-tag">
+      <span>${med}</span>
+      <button onclick="rxRemoveMed('${med.replace(/'/g,"\\'")}')">×</button>
+    </div>`).join("");
+}
+
+function rxRemoveMed(value){
+  const cb = document.querySelector(`.rx-med-item input[value="${value}"]`);
+  if(cb){ cb.checked=false; cb.closest(".rx-med-item").classList.remove("checked"); }
+  rxUpdateSelectedList();
+}
+
+function rxFilterMeds(q){
+  const query = q.toLowerCase();
+  document.querySelectorAll(".rx-cat-group").forEach(group=>{
+    let anyVisible = false;
+    group.querySelectorAll(".rx-med-item").forEach(item=>{
+      const text = item.textContent.toLowerCase();
+      const show = !query || text.includes(query);
+      item.style.display = show ? "" : "none";
+      if(show) anyVisible = true;
+    });
+    group.classList.toggle("hidden", !anyVisible && !!query);
+  });
+}
+
+function rxClearAll(){
+  document.querySelectorAll(".rx-med-item input[type='checkbox']").forEach(cb=>{
+    cb.checked=false;
+    cb.closest(".rx-med-item").classList.remove("checked");
+  });
+  const list = document.getElementById("rxSelectedList");
+  if(list) list.innerHTML=`<span style="font-size:12px;color:rgba(255,255,255,0.3);">None selected</span>`;
+  const status = document.getElementById("rxStatus");
+  if(status){ status.textContent=""; status.className="rx-status"; }
+  const search = document.getElementById("rxSearch");
+  if(search){ search.value=""; rxFilterMeds(""); }
+}
+
+function rxShowStatus(msg, type){
+  const el2 = document.getElementById("rxStatus");
+  if(!el2) return;
+  el2.textContent = msg;
+  el2.className = "rx-status " + type;
+}
+
+async function rxSubmit(){
+  const patientId = document.getElementById("rxPatientSelect").value;
+  if(!patientId){ rxShowStatus("Please select a patient.","error"); return; }
+
+  const selected = Array.from(
+    document.querySelectorAll(".rx-med-item input[type='checkbox']:checked")
+  ).map(cb=>cb.value);
+
+  if(selected.length===0){ rxShowStatus("Please select at least one medication.","error"); return; }
+
+  const btn = document.getElementById("rxConfirmBtn");
+  btn.disabled=true; btn.textContent="Saving...";
+
+  const rows = selected.map(med=>({
+    doctor_id:DOCTOR_ID, patient_id:patientId, medication:med
+  }));
+
+  const {error:prescErr} = await client.from("prescriptions").insert(rows);
+  if(prescErr){
+      rxShowStatus("❌ Failed to save prescription.","error");
+      showToast("❌ Failed to save prescription","error");
+      btn.disabled=false; btn.textContent="✓ Confirm Prescription";
+      return;
+    }
+
+  const {error:recErr} = await client.from("medical_records").insert([{
+    patient_id:patientId, doctor_id:DOCTOR_ID,
+    record_type:"prescription", medications:selected,
+    notes:`Prescribed ${selected.length} medication(s)`
+  }]);
+  if(recErr){
+      rxShowStatus("⚠️ Prescription saved but medical record failed.","error");
+      showToast("⚠️ Prescription saved but record failed","warn");
+    } else {
+      rxShowStatus("✅ Prescription saved successfully!","success");
+      showToast("✅ Prescription saved successfully!","success");
+    }
+
+    btn.disabled=false; btn.textContent="✓ Confirm Prescription";
+
+    document.getElementById("rxPatientSelect").value="";
+    rxClearAll();
+
+    setTimeout(()=>{
+      const s=document.getElementById("rxStatus");
+      if(s){ s.textContent=""; s.className="rx-status"; }
+    }, 3500);
+
+}
 </script>
 </body>
 </html>

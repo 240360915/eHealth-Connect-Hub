@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Subscription Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #0b1c3d;
+            --navy2:  #1b2a4e;
+            --gold:   #c9a84c;
+            --bg:     #f0f3f8;
+            --white:  #ffffff;
+            --text:   #1a1a2e;
+            --muted:  #6b7280;
+            --border: #e4e0d8;
+            --success:#10b981;
+            --danger: #ef4444;
+            --warn:   #f59e0b;
+        }
+
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: var(--navy);
+            padding: 0 32px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(201,168,76,0.15);
+        }
+
+        .brand {
+            font-family: 'Cormorant Garamond', serif;
+            color: #fff;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--gold), #e8c96a);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .admin-badge {
+            background: rgba(201,168,76,0.15);
+            border: 1px solid rgba(201,168,76,0.3);
+            color: var(--gold);
+            font-size: 0.72em;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .page { max-width: 1100px; margin: 0 auto; padding: 36px 24px 60px; }
+
+        /* Stats */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+
+        .stat-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2em;
+            font-weight: 600;
+            color: var(--navy);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.78em;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 3px;
+        }
+
+        /* Filter bar */
+        .filter-bar {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--bg);
+            color: var(--muted);
+            font-size: 0.83em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .filter-tab.active, .filter-tab:hover {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #fff;
+        }
+
+        .filter-search {
+            margin-left: auto;
+            padding: 8px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85em;
+            color: var(--text);
+            background: var(--bg);
+            width: 220px;
+            outline: none;
+        }
+
+        .filter-search:focus { border-color: var(--navy); }
+
+        /* Section title */
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3em;
+            color: var(--navy);
+            margin-bottom: 16px;
+            margin-top: 32px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .count-badge {
+            background: var(--navy);
+            color: #fff;
+            font-size: 0.6em;
+            font-family: 'DM Sans', sans-serif;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        /* Payment cards */
+        .payments-list { display: flex; flex-direction: column; gap: 14px; }
+
+        .payment-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+
+        .payment-card:hover { box-shadow: 0 4px 16px rgba(11,28,61,0.08); }
+        .payment-card.pending  { border-left: 4px solid var(--warn); }
+        .payment-card.approved { border-left: 4px solid var(--success); }
+        .payment-card.rejected { border-left: 4px solid var(--danger); }
+
+        .card-header {
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .doctor-avatar {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: var(--navy);
+            display: flex; align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        .doctor-name { font-weight: 600; font-size: 0.95em; color: var(--navy); }
+        .doctor-sub  { font-size: 0.8em; color: var(--muted); margin-top: 2px; }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-pill.pending  { background: rgba(245,158,11,0.1);  color: #d97706; }
+        .status-pill.approved { background: rgba(16,185,129,0.1);  color: #059669; }
+        .status-pill.rejected { background: rgba(239,68,68,0.08);  color: #dc2626; }
+
+        .card-body {
+            padding: 16px 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .info-block .lbl {
+            font-size: 0.72em;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--muted);
+            margin-bottom: 3px;
+        }
+
+        .info-block .val {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .info-block .val.amount {
+            font-weight: 700;
+            color: var(--navy);
+            font-size: 1em;
+        }
+
+        .card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+        .btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.82em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-approve { background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
+        .btn-approve:hover { background: var(--success); color: #fff; }
+
+        .btn-reject  { background: rgba(239,68,68,0.08); color: #dc2626; border: 1px solid rgba(239,68,68,0.15); }
+        .btn-reject:hover { background: var(--danger); color: #fff; }
+
+        .btn-view    { background: rgba(11,28,61,0.06); color: var(--navy); border: 1px solid var(--border); }
+        .btn-view:hover { background: var(--navy); color: #fff; }
+
+        .btn-print   { background: rgba(201,168,76,0.08); color: #92740a; border: 1px solid rgba(201,168,76,0.25); }
+        .btn-print:hover { background: var(--gold); color: var(--navy); }
+
+        /* Unpaid table */
+        .unpaid-table {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .unpaid-table table { width: 100%; border-collapse: collapse; }
+
+        .unpaid-table thead { background: var(--navy); }
+
+        .unpaid-table thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.75em;
+            font-weight: 500;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .unpaid-table tbody tr { border-bottom: 1px solid var(--border); }
+        .unpaid-table tbody tr:last-child { border-bottom: none; }
+        .unpaid-table tbody tr:hover { background: var(--bg); }
+        .unpaid-table tbody td { padding: 12px 16px; font-size: 0.87em; }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: var(--muted);
+        }
+
+        @media (max-width: 800px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .card-body  { grid-template-columns: 1fr 1fr; }
+            .card-actions { grid-column: 1 / -1; }
+            .topbar { padding: 0 16px; }
+            .page { padding: 24px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="brand">
+        <div class="brand-icon">⚕</div>
+        e-Health Connect
+    </div>
+    <span class="admin-badge">Admin Panel</span>
+</div>
+
+<div class="page">
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(11,28,61,0.08);">👥</div>
+            <div>
+                <div class="stat-num" id="statTotal">—</div>
+                <div class="stat-label">Total Doctors</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(16,185,129,0.1);">✅</div>
+            <div>
+                <div class="stat-num" id="statActive">—</div>
+                <div class="stat-label">Active</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.1);">⏳</div>
+            <div>
+                <div class="stat-num" id="statPending">—</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:rgba(239,68,68,0.08);">⚠️</div>
+            <div>
+                <div class="stat-num" id="statUnpaid">—</div>
+                <div class="stat-label">Unpaid</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment submissions -->
+    <div class="section-title">
+        Payment Submissions
+        <span class="count-badge" id="submissionsCount">0</span>
+    </div>
+
+    <div class="filter-bar">
+        <button class="filter-tab active" onclick="filterPayments('all',this)">All</button>
+        <button class="filter-tab" onclick="filterPayments('pending',this)">⏳ Pending</button>
+        <button class="filter-tab" onclick="filterPayments('approved',this)">✅ Approved</button>
+        <button class="filter-tab" onclick="filterPayments('rejected',this)">❌ Rejected</button>
+        <input class="filter-search" type="text" placeholder="🔍 Search doctor..."
+            oninput="searchPayments(this.value)">
+    </div>
+
+    <div class="payments-list" id="paymentsList">
+        <div class="empty-state">Loading submissions...</div>
+    </div>
+
+    <!-- Unpaid doctors -->
+    <div class="section-title">
+        Doctors Without Active Subscription
+        <span class="count-badge" id="unpaidCount">0</span>
+    </div>
+
+    <div class="unpaid-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Discipline</th>
+                    <th>Email</th>
+                    <th>Registered</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="unpaidTable">
+                <tr><td colspan="6" style="text-align:center;padding:24px;
+                    color:var(--muted);">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    const SUPA_URL = "https://gqyhkccupbeudenvsdsf.supabase.co";
+    const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+
+    const db = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+    let allPayments = [];
+    let allDoctors  = [];
+    let currentFilter = "all";
+    let currentSearch = "";
+
+    window.addEventListener('load', () => { loadAll(); });
+
+    async function loadAll() {
+        await Promise.all([loadPayments(), loadDoctors()]);
+    }
+
+    async function loadPayments() {
+        const { data, error } = await db
+            .from("payments")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        if (error) { console.error(error); return; }
+        allPayments = data || [];
+        renderPayments();
+        updateStats();
+    }
+
+    async function loadDoctors() {
+        const { data } = await db
+            .from("doctors")
+            .select("id, name, surname, discipline, email, subscription_status, created_at")
+            .order("created_at", { ascending: false });
+
+        allDoctors = data || [];
+        renderUnpaidDoctors();
+        updateStats();
+    }
+
+    function updateStats() {
+        const total   = allDoctors.length;
+        const active  = allDoctors.filter(d => d.subscription_status === "active").length;
+        const pending = allDoctors.filter(d => d.subscription_status === "pending").length;
+        const unpaid  = allDoctors.filter(d =>
+            !d.subscription_status || d.subscription_status === "unpaid"
+        ).length;
+
+        document.getElementById("statTotal").textContent   = total;
+        document.getElementById("statActive").textContent  = active;
+        document.getElementById("statPending").textContent = pending;
+        document.getElementById("statUnpaid").textContent  = unpaid;
+    }
+
+    function renderPayments() {
+        const list = document.getElementById("paymentsList");
+        let filtered = [...allPayments];
+
+        if (currentFilter !== "all") {
+            filtered = filtered.filter(p => p.status === currentFilter);
+        }
+
+        if (currentSearch) {
+            const q = currentSearch.toLowerCase();
+            filtered = filtered.filter(p => {
+                const doc = allDoctors.find(d => d.id === p.doctor_id);
+                const name = doc ? `${doc.name} ${doc.surname}`.toLowerCase() : "";
+                return name.includes(q) ||
+                    (p.payment_ref || p.reference || "").toLowerCase().includes(q);
+            });
+        }
+
+        document.getElementById("submissionsCount").textContent = filtered.length;
+
+        if (filtered.length === 0) {
+            list.innerHTML = `<div class="empty-state">
+                <div style="font-size:2.5em;margin-bottom:12px;">📭</div>
+                <div>No submissions match this filter.</div>
+            </div>`;
+            return;
+        }
+
+        list.innerHTML = "";
+
+        filtered.forEach((payment, i) => {
+            const doc = allDoctors.find(d => d.id === payment.doctor_id);
+            const doctorName = doc ? `Dr. ${doc.name} ${doc.surname}` : "Unknown Doctor";
+            const discipline = doc ? doc.discipline || "General" : "—";
+            const initials   = doc
+                ? `${doc.name[0]}${doc.surname[0]}`.toUpperCase()
+                : "?";
+
+            const dateStr = new Date(payment.created_at).toLocaleDateString("en-ZA", {
+                day: "numeric", month: "short", year: "numeric"
+            });
+
+            const methodLabel = payment.payment_method === "card"
+                ? `💳 ${payment.card_bank || "Card"}`
+                : "🏦 EFT";
+
+            const ref = payment.payment_ref || payment.reference || "—";
+
+            const card = document.createElement("div");
+            card.className = `payment-card ${payment.status}`;
+            card.innerHTML = `
+                <div class="card-header">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div class="doctor-avatar">${initials}</div>
+                        <div>
+                            <div class="doctor-name">${doctorName}</div>
+                            <div class="doctor-sub">
+                                ${discipline} &nbsp;·&nbsp;
+                                ${methodLabel} &nbsp;·&nbsp;
+                                ${dateStr}
+                            </div>
+                        </div>
+                    </div>
+                    <span class="status-pill ${payment.status}">${payment.status}</span>
+                </div>
+                <div class="card-body">
+                    <div class="info-block">
+                        <div class="lbl">Reference</div>
+                        <div class="val" style="font-family:monospace;font-size:0.82em;">
+                            ${ref}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="lbl">Amount</div>
+                        <div class="val amount">
+                            R${parseFloat(payment.amount).toFixed(2)}</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="lbl">Method</div>
+                        <div class="val">${methodLabel}</div>
+                    </div>
+                    <div class="card-actions">
+                        ${payment.proof_url
+                            ? `<button class="btn btn-view"
+                                onclick="viewProof('${payment.proof_url}')">
+                                👁 View Proof</button>`
+                            : ""}
+                        <button class="btn btn-print"
+                            onclick="adminPrintSlip(${i}, ${JSON.stringify(filtered).indexOf(JSON.stringify(payment))})">
+                            🖨️ Print</button>
+                        ${payment.status === "pending" ? `
+                            <button class="btn btn-approve"
+                                onclick="reviewPayment('${payment.id}','${payment.doctor_id}','approved')">
+                                ✓ Approve</button>
+                            <button class="btn btn-reject"
+                                onclick="reviewPayment('${payment.id}','${payment.doctor_id}','rejected')">
+                                ✕ Reject</button>
+                        ` : ""}
+                    </div>
+                </div>
+                ${payment.notes ? `
+                <div style="padding:10px 24px 14px;border-top:1px solid var(--border);">
+                    <span style="font-size:0.78em;color:var(--muted);">Notes: </span>
+                    <span style="font-size:0.82em;color:var(--text);">${payment.notes}</span>
+                </div>` : ""}`;
+
+            list.appendChild(card);
+        });
+
+        window._filteredPayments = filtered;
+    }
+
+    function renderUnpaidDoctors() {
+        const table  = document.getElementById("unpaidTable");
+        const unpaid = allDoctors.filter(d =>
+            !d.subscription_status ||
+            d.subscription_status === "unpaid" ||
+            d.subscription_status === "pending"
+        );
+
+        document.getElementById("unpaidCount").textContent = unpaid.length;
+
+        if (unpaid.length === 0) {
+            table.innerHTML = `<tr><td colspan="6"
+                style="text-align:center;padding:28px;color:var(--muted);">
+                All doctors have active subscriptions. 🎉</td></tr>`;
+            return;
+        }
+
+        table.innerHTML = unpaid.map(d => {
+            const regDate = new Date(d.created_at).toLocaleDateString("en-ZA", {
+                day: "numeric", month: "short", year: "numeric"
+            });
+            const status = d.subscription_status || "unpaid";
+            return `<tr>
+                <td style="font-weight:600;">Dr. ${d.name} ${d.surname}</td>
+                <td style="color:var(--muted);">${d.discipline || "—"}</td>
+                <td style="color:var(--muted);font-size:0.85em;">${d.email}</td>
+                <td style="color:var(--muted);font-size:0.85em;">${regDate}</td>
+                <td><span class="status-pill ${status === "pending" ? "pending" : "rejected"}">
+                    ${status}</span></td>
+                <td>
+                    ${status === "pending"
+                        ? `<button class="btn btn-approve"
+                            onclick="activateDirectly('${d.id}')">
+                            ✓ Activate</button>`
+                        : `<button class="btn btn-view"
+                            style="font-size:0.78em;"
+                            onclick="alert('Reminder sent to ${d.email}')">
+                            📧 Remind</button>`
+                    }
+                </td>
+            </tr>`;
+        }).join("");
+    }
+
+    async function reviewPayment(paymentId, doctorId, decision) {
+        if (!confirm(decision === "approved"
+            ? "Approve this payment and activate the doctor's subscription for 30 days?"
+            : "Reject this payment?")) return;
+
+        await db.from("payments")
+            .update({ status: decision, reviewed_at: new Date().toISOString() })
+            .eq("id", paymentId);
+
+        if (decision === "approved") {
+            const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+            await db.from("doctors").update({
+                subscription_status:     "active",
+                subscription_paid_at:    new Date().toISOString(),
+                subscription_expires_at: expiresAt
+            }).eq("id", doctorId);
+            alert("✅ Subscription activated for 30 days.");
+        } else {
+            await db.from("doctors")
+                .update({ subscription_status: "unpaid" })
+                .eq("id", doctorId);
+            alert("❌ Payment rejected.");
+        }
+
+        loadAll();
+    }
+
+    async function activateDirectly(doctorId) {
+        if (!confirm("Manually activate this doctor for 30 days?")) return;
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        await db.from("doctors").update({
+            subscription_status:     "active",
+            subscription_paid_at:    new Date().toISOString(),
+            subscription_expires_at: expiresAt
+        }).eq("id", doctorId);
+        await db.from("payments").insert([{
+            doctor_id:      doctorId,
+            amount:         499.00,
+            currency:       "ZAR",
+            status:         "approved",
+            payment_method: "manual",
+            payment_ref:    `MANUAL-${Date.now()}`,
+            notes:          "Manually activated by admin"
+        }]);
+        alert("✅ Activated.");
+        loadAll();
+    }
+
+    function viewProof(url) { window.open(url, "_blank"); }
+
+    function filterPayments(filter, btn) {
+        currentFilter = filter;
+        document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+        btn.classList.add("active");
+        renderPayments();
+    }
+
+    function searchPayments(q) {
+        currentSearch = q;
+        renderPayments();
+    }
+
+    function adminPrintSlip(index) {
+        const payment = window._filteredPayments?.[index];
+        if (!payment) return;
+
+        const doc = allDoctors.find(d => d.id === payment.doctor_id);
+        const doctorName = doc ? `Dr. ${doc.name} ${doc.surname}` : "Unknown Doctor";
+        const discipline = doc ? doc.discipline || "General Practitioner" : "—";
+        const email      = doc ? doc.email : "—";
+
+        const dateStr = new Date(payment.created_at).toLocaleDateString("en-ZA", {
+            day: "numeric", month: "long", year: "numeric"
+        });
+
+        const methodLabel = payment.payment_method === "card"
+            ? `Card — ${payment.card_bank || "Card"} ••••${(payment.card_number || "").slice(-4)}`
+            : "EFT / Bank Transfer";
+
+        const ref = payment.payment_ref || payment.reference || "—";
+
+        const printWin = window.open('', '_blank', 'width=620,height=750');
+        printWin.document.write(`
+            <!DOCTYPE html><html><head>
+            <title>Payment Slip — Admin Copy</title>
+            <style>
+                body { font-family:Georgia,serif; max-width:520px;
+                    margin:40px auto; padding:0 20px; color:#1a1a2e; }
+                .header { text-align:center; border-bottom:2px solid #0b1c3d;
+                    padding-bottom:20px; margin-bottom:24px; }
+                .title { font-size:1.6em; font-weight:700; color:#0b1c3d; margin-bottom:4px; }
+                .sub   { font-size:0.85em; color:#6b7280; }
+                .copy-label { display:inline-block; background:#fef3c7; color:#92400e;
+                    padding:4px 14px; border-radius:20px; font-size:0.78em;
+                    font-weight:700; margin-top:10px; text-transform:uppercase;
+                    letter-spacing:0.06em; }
+                .section-title { font-size:0.72em; text-transform:uppercase;
+                    letter-spacing:0.1em; color:#6b7280; font-weight:600;
+                    margin:20px 0 10px; }
+                .row { display:flex; justify-content:space-between;
+                    padding:9px 0; border-bottom:1px solid #e4e0d8; font-size:0.88em; }
+                .row:last-child { border-bottom:none; }
+                .label { color:#6b7280; }
+                .value { font-weight:700; color:#0b1c3d; }
+                .status-box { padding:4px 14px; border-radius:20px; font-size:0.8em;
+                    font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+                    background:${payment.status === 'approved' ? '#d1fae5'
+                        : payment.status === 'pending' ? '#fef3c7' : '#fee2e2'};
+                    color:${payment.status === 'approved' ? '#059669'
+                        : payment.status === 'pending' ? '#d97706' : '#dc2626'}; }
+                .footer { text-align:center; margin-top:32px; font-size:0.72em;
+                    color:#9ca3af; border-top:1px solid #e4e0d8; padding-top:16px; }
+            </style></head><body>
+            <div class="header">
+                <div class="title">e-Health Connect</div>
+                <div class="sub">Admin Payment Record</div>
+                <div class="copy-label">Admin Copy</div>
+            </div>
+
+            <div class="section-title">Doctor Information</div>
+            <div class="row">
+                <span class="label">Name</span>
+                <span class="value">${doctorName}</span>
+            </div>
+            <div class="row">
+                <span class="label">Discipline</span>
+                <span class="value">${discipline}</span>
+            </div>
+            <div class="row">
+                <span class="label">Email</span>
+                <span class="value" style="font-size:0.9em;">${email}</span>
+            </div>
+
+            <div class="section-title">Payment Information</div>
+            <div class="row">
+                <span class="label">Reference</span>
+                <span class="value" style="font-family:monospace;font-size:0.85em;">
+                    ${ref}</span>
+            </div>
+            <div class="row">
+                <span class="label">Amount</span>
+                <span class="value">R ${parseFloat(payment.amount).toFixed(2)}</span>
+            </div>
+            <div class="row">
+                <span class="label">Method</span>
+                <span class="value">${methodLabel}</span>
+            </div>
+            <div class="row">
+                <span class="label">Date Submitted</span>
+                <span class="value">${dateStr}</span>
+            </div>
+            <div class="row">
+                <span class="label">Status</span>
+                <span class="status-box">${payment.status}</span>
+            </div>
+            ${payment.notes ? `
+            <div class="row">
+                <span class="label">Notes</span>
+                <span class="value" style="font-size:0.85em;text-align:right;
+                    max-width:300px;">${payment.notes}</span>
+            </div>` : ""}
+
+            <div class="footer">
+                Admin copy — e-Health Connect &nbsp;·&nbsp;
+                Printed on ${new Date().toLocaleDateString("en-ZA", {
+                    day: "numeric", month: "long", year: "numeric"
+                })} &nbsp;·&nbsp; Internal use only
+            </div>
+            </body></html>
+        `);
+        printWin.document.close();
+        printWin.focus();
+        setTimeout(() => { printWin.print(); }, 500);
+    }
+</script>
+</body>
+</html>

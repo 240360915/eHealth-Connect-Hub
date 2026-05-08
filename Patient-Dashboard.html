@@ -317,6 +317,36 @@
         }
         .sidebar.open { transform: translateX(0); }
       }
+      /* ── Video Call Overlays (like doctor dashboard) ── */
+      .call-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);align-items:center;justify-content:center;}
+      .call-overlay.show{display:flex;}
+      .outgoing-card{background:var(--white);border:1px solid var(--border);border-radius:24px;padding:36px 40px;text-align:center;max-width:360px;width:90%;box-shadow:0 32px 80px rgba(0,0,0,.3);animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
+      @keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+      .ringing-dots{display:flex;justify-content:center;gap:6px;margin:16px 0;}
+      .ringing-dots span{width:8px;height:8px;border-radius:50%;background:var(--green);animation:dot-bounce .9s ease-in-out infinite;}
+      .ringing-dots span:nth-child(2){animation-delay:.2s;}
+      .ringing-dots span:nth-child(3){animation-delay:.4s;}
+      @keyframes dot-bounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-8px);opacity:1}}
+      .call-action-btn{width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;transition:transform .15s;}
+      .call-action-btn:hover{transform:scale(1.1);}
+      .call-action-btn.reject{background:var(--red);}
+      .active-call-overlay{display:none;position:fixed;inset:0;z-index:999;background:#000;flex-direction:column;overflow:hidden;}
+      .active-call-overlay.show{display:flex;}
+      .video-wrap{position:relative;flex:1;background:#111;width:100%;height:100%;overflow:hidden;}
+      #remoteVideo{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;}
+      #localVideo{position:absolute;bottom:100px;right:20px;width:140px;height:190px;border-radius:14px;object-fit:cover;border:2px solid rgba(255,255,255,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:20;background:#000;}
+      .call-top-bar{position:absolute;top:0;left:0;right:0;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,0.75),transparent);z-index:30;}
+      .call-p-name{font-size:18px;font-weight:700;color:#fff;}
+      .call-timer{font-size:13px;color:rgba(255,255,255,.7);margin-top:2px;}
+      .call-quality{font-size:12px;color:var(--green);background:rgba(0,0,0,.4);padding:4px 10px;border-radius:20px;}
+      .call-bottom-bar{position:absolute;bottom:0;left:0;right:0;padding:28px 24px;display:flex;align-items:center;justify-content:center;gap:16px;background:linear-gradient(to top,rgba(0,0,0,0.85),transparent);z-index:30;}
+      .ctrl{width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all 0.18s;background:rgba(255,255,255,0.18);backdrop-filter:blur(8px);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.3);}
+      .ctrl:hover{background:rgba(255,255,255,0.28);transform:scale(1.07);}
+      .ctrl.active{background:var(--red);}
+      .ctrl.end-call{background:var(--red);width:64px;height:64px;font-size:24px;box-shadow:0 4px 20px rgba(239,68,68,0.5);}
+      .ctrl.end-call:hover{background:#dc2626;transform:scale(1.08);}
+      .call-icon-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border-radius:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);cursor:pointer;font-size:13px;font-weight:600;font-family:'Roboto',sans-serif;color:white;transition:all 0.18s;white-space:nowrap;}
+      .call-icon-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,0.35);}
     </style>
   </head>
   <body>
@@ -358,7 +388,7 @@
         <div class="card"><h2>📋 Records</h2><p>Access your health history.</p>
           <button class="btn" onclick="location.href='MedicalRecords.html'">View</button></div>
         <div class="card"><h2>📅 Appointments</h2><p>Book or manage appointments.</p>
-          <button class="btn" onclick="location.href='updatedbookingpage.html'">Book appointment</button></div>
+          <button class="btn" onclick="location.href='updatedpayment.html'">Book appointment</button></div>
         <div class="card"><h2>💡 Health Tips</h2><p>Personalized health advice.</p>
           <button class="btn" onclick="location.href='HealthTips.html'">View Tips</button></div>
         <div class="card"><h2>👤 Profile</h2><p>View and update your info.</p>
@@ -445,7 +475,10 @@
       <div class="section">
         <div class="section-title">💬 Messages</div>
         <div class="messages-box">
-          <div class="messages-header">💬 Chat with <span id="chatDoctorName">your doctor</span></div>
+        <div class="messages-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>💬 Chat with <span id="chatDoctorName">your doctor</span></span>
+          <button class="call-icon-btn" id="chatVideoBtn" onclick="startCall()" style="display:none;">📹 Video Call</button>
+        </div>
           <div id="messagesList"><div class="no-doctor-msg">Select a doctor above to start chatting.</div></div>
           <div class="msg-input-row">
             <textarea id="newMessage" placeholder="Type a message..." rows="1"></textarea>
@@ -456,34 +489,43 @@
       </div>
 
       <!-- Video Call -->
-      <div class="section">
-        <div class="section-title">📞 Video Call</div>
-        <div class="call-container">
-          <div class="call-header">
-            <span class="call-title" id="callDoctorLabel">Select a doctor to call</span>
-            <span class="call-pill" id="callPill">Ready</span>
-          </div>
-          <div class="video-stage">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <video id="localVideo"  autoplay playsinline muted></video>
-            <div class="video-placeholder" id="videoPlaceholder">
-              <div class="avatar-ring">👨‍⚕️</div>
-              <span>Video will appear here when connected</span>
-            </div>
-          </div>
-          <div class="call-controls">
-            <button class="ctrl-btn ctrl-mute" id="muteBtn" onclick="toggleMute()" disabled>🎤</button>
-            <button class="ctrl-btn ctrl-call" id="startCallBtn" onclick="startCall()">📞</button>
-            <button class="ctrl-btn ctrl-end"  id="endCallBtn"   onclick="endCall()">📵</button>
-            <button class="ctrl-btn ctrl-cam"  id="camBtn"  onclick="toggleCam()" disabled>📷</button>
-          </div>
-          <div class="call-info" id="callStatus">Choose a doctor and press 📞 to call</div>
-        </div>
-      </div>
+ 
 
-      <div id="logoutMessage"></div>
+      <div id="logoutMessage"></div>      
     </main>
   </div>
+  <!-- Outgoing call overlay -->
+    <div class="call-overlay" id="outgoingOverlay">
+      <div class="outgoing-card">
+        <div style="width:80px;height:80px;border-radius:50%;background:var(--navy);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:36px;border:3px solid var(--green);">👨‍⚕️</div>
+        <div style="font-size:22px;font-weight:700;color:var(--navy);margin-bottom:4px;" id="outgoingDoctorName">Doctor</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Calling...</div>
+        <div class="ringing-dots"><span></span><span></span><span></span></div>
+        <div style="display:flex;justify-content:center;margin-top:16px;">
+          <button class="call-action-btn reject" onclick="endCall()" title="Cancel">📵</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active call overlay -->
+    <div class="active-call-overlay" id="activeCallOverlay">
+      <div class="video-wrap">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay playsinline muted></video>
+        <div class="call-top-bar">
+          <div>
+            <div class="call-p-name" id="callDoctorLabel">Doctor</div>
+            <div class="call-timer" id="callTimer">00:00</div>
+          </div>
+          <div class="call-quality" id="callQuality">🟢 Connected</div>
+        </div>
+        <div class="call-bottom-bar">
+          <button class="ctrl" id="muteBtn" onclick="toggleMute()" title="Mute">🎤</button>
+          <button class="ctrl" id="camBtn" onclick="toggleCam()" title="Camera">📷</button>
+          <button class="ctrl end-call" onclick="endCall()" title="End call">📵</button>
+        </div>
+      </div>
+    </div>
 
   <script>
     const sidebarToggle  = document.getElementById('sidebarToggle');
@@ -554,31 +596,31 @@
     });
   }
 
-  function onDoctorSelected() {
-    const select = el("selectedDoctor");
-    const opt = select.options[select.selectedIndex];
-    if (!select.value) {
-      selectedDoctorId = null; selectedDoctorName = "";
-      el("selectedRate").style.display = "none";
-      safeSet("chatDoctorName","textContent","your doctor");
-      safeSet("callDoctorLabel","textContent","Select a doctor to call");
-      el("messagesList").innerHTML = `<div class="no-doctor-msg">Select a doctor above to start chatting.</div>`;
-      return;
-    }
-    selectedDoctorId = select.value;
-    selectedDoctorName = opt.dataset.name;
-    el("selectedRate").textContent = opt.dataset.rate;
-    el("selectedRate").style.display = "inline-block";
-    safeSet("chatDoctorName","textContent", selectedDoctorName);
-    safeSet("callDoctorLabel","textContent", `Call ${selectedDoctorName}`);
-    document.querySelectorAll(".doctor-card").forEach(c => c.classList.toggle("selected", c.dataset.id === selectedDoctorId));
-    document.querySelectorAll(".select-btn").forEach(b => {
-      const hit = b.dataset.id === selectedDoctorId;
-      b.textContent = hit ? "✓ Selected" : "Select Doctor";
-      b.className   = hit ? "select-btn selected-state" : "select-btn";
-    });
-    loadSelectedDoctorMessages();
+function onDoctorSelected() {
+  const select = el("selectedDoctor");
+  const opt = select.options[select.selectedIndex];
+  if (!select.value) {
+    selectedDoctorId = null; selectedDoctorName = "";
+    el("selectedRate").style.display = "none";
+    safeSet("chatDoctorName","textContent","your doctor");
+    el("messagesList").innerHTML = `<div class="no-doctor-msg">Select a doctor above to start chatting.</div>`;
+    const vb = el("chatVideoBtn"); if(vb) vb.style.display = "none"; // ← ADD
+    return;
   }
+  selectedDoctorId = select.value;
+  selectedDoctorName = opt.dataset.name;
+  el("selectedRate").textContent = opt.dataset.rate;
+  el("selectedRate").style.display = "inline-block";
+  safeSet("chatDoctorName","textContent", selectedDoctorName);
+  const vb = el("chatVideoBtn"); if(vb) vb.style.display = "flex"; // ← ADD
+  document.querySelectorAll(".doctor-card").forEach(c => c.classList.toggle("selected", c.dataset.id === selectedDoctorId));
+  document.querySelectorAll(".select-btn").forEach(b => {
+    const hit = b.dataset.id === selectedDoctorId;
+    b.textContent = hit ? "✓ Selected" : "Select Doctor";
+    b.className   = hit ? "select-btn selected-state" : "select-btn";
+  });
+  loadSelectedDoctorMessages();
+}
 
   //  Doctor cards 
   async function loadAvailableDoctors() {
@@ -600,7 +642,7 @@
     container.innerHTML = "";
     if (!doctors||doctors.length===0) { container.innerHTML=`<p style="color:var(--muted);">No results.</p>`; return; }
     doctors.forEach(doc => {
-      const rate = doc.hourly_rate ? `R ${parseFloat(doc.hourly_rate).toFixed(2)} / hr` : "Rate not set";
+      const rate = doc.hourly_rate ? `R ${parseFloat(doc.hourly_rate).toFixed(2)} /consult` : "Rate not set";
       const isSelected = selectedDoctorId === doc.id;
       const card = document.createElement("div");
       card.className = `doctor-card${isSelected?" selected":""}`;
@@ -613,8 +655,8 @@
         </div>
         ${doc.qualifications?`<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">🎓 ${doc.qualifications}</div>`:""}
         ${doc.operating_hours?`<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">🕐 ${doc.operating_hours}</div>`:""}
-        <div class="doctor-rate"><span>Consultation rate</span><span>${rate}</span></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:6px;">💳 EFT payment after consultation</div>
+        <div class="doctor-rate"><span>Consultation fee</span><span>${rate}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">💳 Payment before consultation</div>
         <button class="select-btn${isSelected?" selected-state":""}" data-id="${doc.id}"
           onclick="selectDoctorCard('${doc.id}')">
           ${isSelected?"✓ Selected":"Select Doctor"}
@@ -873,100 +915,130 @@
   }
 
 
-  async function startCall() {
-    const { data:{ user }, error:authErr } = await client.auth.getUser();
-    if (authErr || !user) { alert("Please log in."); return; }
-    if (!selectedDoctorId)  { alert("Please select a doctor first."); return; }
+ 
+let callTimerInterval = null, callSeconds = 0;
+function startCallTimer(){
+  callSeconds=0; clearInterval(callTimerInterval);
+  callTimerInterval=setInterval(()=>{
+    callSeconds++;
+    const m=Math.floor(callSeconds/60),s=callSeconds%60;
+    safeSet("callTimer","textContent",`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`);
+  },1000);
+}
+function stopCallTimer(){ clearInterval(callTimerInterval); callTimerInterval=null; safeSet("callTimer","textContent","00:00"); }
 
-    el("startCallBtn").disabled = true;
-    setCallStatus("Starting camera...", "calling");
-    showVideoPlaceholder(true, true);
+async function startCall() {
+  const { data:{user}, error:authErr } = await client.auth.getUser();
+  if (authErr || !user) { alert("Please log in."); return; }
+  if (!selectedDoctorId) { alert("Please select a doctor first."); return; }
 
-    try {
-      localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
-      el("localVideo").srcObject = localStream;
-      el("muteBtn").disabled = false;
-      el("camBtn").disabled  = false;
+  safeSet("outgoingDoctorName","textContent", selectedDoctorName);
+  safeSet("callDoctorLabel","textContent", selectedDoctorName);
+  el("outgoingOverlay").classList.add("show");
 
-      peerConnection = new RTCPeerConnection(ICE); // ✅ Fixed
-      localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+    el("localVideo").srcObject = localStream;
 
-      peerConnection.ontrack = (e) => {
-        el("remoteVideo").srcObject = e.streams[0];
-        showVideoPlaceholder(false);
-        setCallStatus("Connected", "connected");
-      };
+    peerConnection = new RTCPeerConnection(ICE);
+    localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+    peerConnection.ontrack = (e) => {
+      el("remoteVideo").srcObject = e.streams[0];
+      safeSet("callQuality","textContent","🟢 Connected");
+    };
 
-      const iceCandidates = [];
-      peerConnection.onicecandidate = (e) => {
-        if (e.candidate) iceCandidates.push(e.candidate);
-      };
+    const iceCandidates = [];
+    peerConnection.onicecandidate = (e) => { if (e.candidate) iceCandidates.push(e.candidate); };
 
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
-      setCallStatus("Ringing...", "calling");
-      await waitForIce(peerConnection);
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    await waitForIce(peerConnection);
 
-      const { data:callData, error:ie } = await client
-        .from("calls")
-        .insert([{
-          patient_id:   user.id,
-          doctor_id:    selectedDoctorId,
-          offer:        JSON.stringify(offer),
-          caller_ice:   JSON.stringify(iceCandidates),
-          status:       "calling",
-          initiated_by: "patient"
-        }])
-        .select()
-        .single();
+    const { data:callData, error:ie } = await client.from("calls").insert([{
+      patient_id: user.id, doctor_id: selectedDoctorId,
+      offer: JSON.stringify(offer), caller_ice: JSON.stringify(iceCandidates),
+      status: "calling", initiated_by: "patient"
+    }]).select().single();
 
-      if (ie) {
-        console.error("Call insert error:", ie);
-        setCallStatus("Failed to start call.");
-        resetCallUI();
-        return;
-      }
+    if (ie) { showToast("Failed to start call","error"); el("outgoingOverlay").classList.remove("show"); cleanupCall(); return; }
 
-      currentCallId = callData.id;
-      el("startCallBtn").style.display = "none";
-      el("endCallBtn").style.display   = "inline-flex";
-      subscribeCallUpdates(currentCallId);
-      showToast("📞 Calling " + selectedDoctorName + "...", "success");
+    currentCallId = callData.id;
+    subscribeCallUpdates(currentCallId);
 
-    } catch(err) {
-      console.error("startCall error:", err);
-      if (err.name === "NotAllowedError") {
-        setCallStatus("❌ Camera/mic permission denied.");
-        showToast("Please allow camera and microphone access.", "error");
-      } else if (err.name === "NotFoundError") {
-        setCallStatus("❌ No camera/mic found.");
-        showToast("No camera or microphone detected.", "error");
-      } else {
-        setCallStatus("❌ Could not start call.");
-        showToast("Call failed: " + err.message, "error");
-      }
-      showVideoPlaceholder(true, false);
-      resetCallUI();
-    }
+  } catch(err) {
+    el("outgoingOverlay").classList.remove("show");
+    showToast(err.name==="NotAllowedError" ? "Allow camera/mic access." : "Call failed: "+err.message, "error");
+    cleanupCall();
   }
+}
 
-  function subscribeCallUpdates(callId) {
-    callChannel = client.channel(`call-p-${callId}`)
-      .on("postgres_changes", {
-        event:"UPDATE", schema:"public", table:"calls", filter:`id=eq.${callId}`
-      }, (payload) => {
-        const u = payload.new;
-        if (u.status === "connected" && u.answer) {
-          applyAnswer(u);
-        } else if (u.status === "rejected") {
-          showToast("Doctor is unavailable right now.", "warn");
-          cleanupCall();
-        } else if (u.status === "ended") {
-          showToast("Call ended by doctor.", "warn");
-          cleanupCall();
-        }
-      }).subscribe();
-  }
+function subscribeCallUpdates(callId) {
+  callChannel = client.channel(`call-p-${callId}`)
+    .on("postgres_changes",{ event:"UPDATE", schema:"public", table:"calls", filter:`id=eq.${callId}` },
+    (payload) => {
+      const u = payload.new;
+      if (u.status==="connected" && u.answer) {
+        applyAnswer(u);
+        el("outgoingOverlay").classList.remove("show");
+        el("activeCallOverlay").classList.add("show");
+        startCallTimer();
+      } else if (u.status==="rejected") {
+        showToast("Doctor is unavailable right now.","warn");
+        el("outgoingOverlay").classList.remove("show");
+        cleanupCall();
+      } else if (u.status==="ended") {
+        showToast("Call ended by doctor.","warn");
+        el("activeCallOverlay").classList.remove("show");
+        stopCallTimer();
+        cleanupCall();
+      }
+    }).subscribe();
+}
+
+async function applyAnswer(cd) {
+  if (!peerConnection) return;
+  try {
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(cd.answer)));
+    if (cd.callee_ice)
+      for (const c of JSON.parse(cd.callee_ice))
+        await peerConnection.addIceCandidate(new RTCIceCandidate(c));
+  } catch(err) { showToast("Could not connect the call.","error"); }
+}
+
+async function endCall() {
+  if (currentCallId) await client.from("calls").update({ status:"ended" }).eq("id", currentCallId);
+  el("outgoingOverlay").classList.remove("show");
+  el("activeCallOverlay").classList.remove("show");
+  stopCallTimer();
+  cleanupCall();
+  showToast("Call ended.","success");
+}
+
+function cleanupCall() {
+  if (callChannel) { client.removeChannel(callChannel); callChannel = null; }
+  if (peerConnection) { peerConnection.close(); peerConnection = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  el("localVideo").srcObject = null;
+  el("remoteVideo").srcObject = null;
+  currentCallId = null; isMuted = false; isCamOff = false;
+}
+
+function toggleMute() {
+  if (!localStream) return;
+  isMuted = !isMuted;
+  localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+  el("muteBtn").textContent = isMuted ? "🔇" : "🎤";
+  el("muteBtn").classList.toggle("active", isMuted);
+}
+
+function toggleCam() {
+  if (!localStream) return;
+  isCamOff = !isCamOff;
+  localStream.getVideoTracks().forEach(t => t.enabled = !isCamOff);
+  el("camBtn").textContent = isCamOff ? "🚫" : "📷";
+  el("camBtn").classList.toggle("active", isCamOff);
+}
+
 
 
   async function applyAnswer(cd) {
@@ -989,26 +1061,10 @@
     }
   }
 
-  async function endCall() {
-    if (currentCallId) {
-      await client.from("calls").update({ status:"ended" }).eq("id", currentCallId);
-    }
-    cleanupCall();
-    setCallStatus("Call ended", "ended");
-    showToast("Call ended.", "success");
-  }
 
 
-  function cleanupCall() {
-    if (callChannel)    { client.removeChannel(callChannel); callChannel = null; }
-    if (peerConnection) { peerConnection.close(); peerConnection = null; }
-    if (localStream)    { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-    el("localVideo").srcObject  = null;
-    el("remoteVideo").srcObject = null;
-    showVideoPlaceholder(true, false);
-    currentCallId = null;
-    resetCallUI();
-  }
+
+
 
   function resetCallUI() {
     const startBtn = el("startCallBtn");
@@ -1024,21 +1080,9 @@
   }
 
 
-  function toggleMute() {
-    if (!localStream) return;
-    isMuted = !isMuted;
-    localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
-    el("muteBtn").textContent        = isMuted ? "🔇" : "🎤";
-    el("muteBtn").style.background   = isMuted ? "var(--red)" : "rgba(255,255,255,0.1)";
-  }
 
-  function toggleCam() {
-    if (!localStream) return;
-    isCamOff = !isCamOff;
-    localStream.getVideoTracks().forEach(t => t.enabled = !isCamOff);
-    el("camBtn").textContent       = isCamOff ? "🚫" : "📷";
-    el("camBtn").style.background  = isCamOff ? "var(--red)" : "rgba(255,255,255,0.1)";
-  }
+
+
 
   function waitForIce(pc) {
     return new Promise(resolve => {
