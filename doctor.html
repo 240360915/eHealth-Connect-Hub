@@ -614,7 +614,7 @@
     <div class="page-wrapper">
         <div class="container">
 
-            <form action="" onsubmit="registerDoctor(event)">
+            <form action="" onsubmit="return false;">
 
                 <!-- SECTION 1: Practice Information -->
                 <div class="section-heading">🏥 Practice Information</div>
@@ -651,7 +651,7 @@
                     </div>
 
                     <div class="input-box">
-                        <span class="details">Consultation Rate (per hour)</span>
+                        <span class="details">Consultation fee</span>
                         <input type="number" id="hourly_rate" placeholder="e.g. 350" min="0" step="0.01" required>
                     </div>
 
@@ -837,7 +837,7 @@
                 <div class="button">
                     <input type="submit" value="🩺  Register as Doctor">
                 </div>
-                <div id="registration-success" style="color: green; display: none; text-align: center; margin-top: 7px; font-size: 20px;" >
+                <div id="registration-success" style="display: none; text-align: center; margin-top: 7px; font-size: 15px; padding: 12px; border-radius: 8px;" >
                     Registration successful!
                 </div>
 
@@ -849,163 +849,177 @@
         </div>
     </div>
 
-    <script>
-        
-        const menuBtn    = document.getElementById('menuToggle');
-        const mobileMenu = document.getElementById('mobileMenu');
-        menuBtn.addEventListener('click', () => {
+<script>
+    const menuBtn    = document.getElementById('menuToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuBtn.addEventListener('click', () => {
         mobileMenu.classList.toggle('open');
         const isOpen = mobileMenu.classList.contains('open');
         menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
         menuBtn.innerHTML = isOpen ? '&#x2715;' : '&#9776;';
-        });
-        const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
-        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
-        const client = supabase.createClient(supabaseUrl, supabaseKey);
+    });
 
-        async function uploadDocument(file, userId, documentType) {
-            if (!file) return null;
-            const fileExt = file.name.split('.').pop();
-            const filePath = `${userId}/${documentType}.${fileExt}`;
-            const { data, error } = await client.storage
-                .from('doctor-documents')
-                .upload(filePath, file, { upsert: true });
-            if (error) {
-                alert(`Error uploading ${documentType}: ${error.message}`);
-                return null;
+    const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
+    const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // ── Helper: show message ──
+    function showMsg(text, type = "error") {
+        const el = document.getElementById("registration-success");
+        el.textContent = text;
+        el.style.display = "block";
+        if (type === "success") {
+            el.style.color      = "#065f46";
+            el.style.background = "#d1fae5";
+            el.style.border     = "1px solid #6ee7b7";
+        } else {
+            el.style.color      = "#991b1b";
+            el.style.background = "#fff5f5";
+            el.style.border     = "1px solid #fca5a5";
+        }
+    }
+
+    // ── Helper: reset button ──
+    function resetBtn(btn) {
+        btn.value    = "🩺  Register as Doctor";
+        btn.disabled = false;
+    }
+
+    // ── Helper: upload document ──
+    async function uploadDocument(file, userId, documentType) {
+        if (!file) return null;
+        const fileExt  = file.name.split('.').pop();
+        const filePath = `${userId}/${documentType}.${fileExt}`;
+        const { data, error } = await client.storage
+            .from('doctor-documents')
+            .upload(filePath, file, { upsert: true });
+        if (error) {
+            console.error(`Upload error (${documentType}):`, error.message);
+            return null;
+        }
+        return data.path;
+    }
+
+    // ── Main registration ──
+    function doctorRegistration() {
+        const form = document.querySelector("form");
+        if (!form) return;
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const submitBtn = form.querySelector('input[type="submit"]');
+            submitBtn.value    = "⏳ Uploading... Please wait";
+            submitBtn.disabled = true;
+
+            // ── Read fields ──
+            const practice_number = document.getElementById("practice_number").value.trim();
+            const practice_name   = document.getElementById("practice_name").value.trim();
+            const hpcsa_number    = document.getElementById("hpcsa_number").value.trim();
+            const discipline      = document.getElementById("discipline").value.trim();
+            const qualifications  = document.getElementById("qualifications").value.trim();
+            const name            = document.getElementById("name").value.trim();
+            const surname         = document.getElementById("surname").value.trim();
+            const phone           = document.getElementById("phone").value.trim();
+            const id_number       = document.getElementById("idNumber").value.trim();
+            const email           = document.getElementById("email").value.trim();
+            const password        = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+            const operating_hours = document.getElementById("operating_hours").value.trim();
+            const hourly_rate     = parseFloat(document.getElementById("hourly_rate").value) || 0;
+            const language        = document.getElementById("language").value.trim();
+            const medical_aids    = document.getElementById("medical_aids").value.trim();
+            const address_line1   = document.getElementById("address1").value.trim();
+            const address_line2   = document.getElementById("address2").value.trim();
+            const city            = document.getElementById("city").value.trim();
+            const province        = document.getElementById("province").value.trim();
+            const postal_code     = document.getElementById("postal_code").value.trim();
+            const genderInput     = document.querySelector('input[name="gender"]:checked');
+            const gender          = genderInput ? genderInput.value : null;
+
+            // ── Validation ──
+            if (password !== confirmPassword) {
+                showMsg("❌ Passwords do not match.");
+                resetBtn(submitBtn); return;
             }
-            return data.path;
-        }
+            if (id_number.length !== 13) {
+                showMsg("❌ ID Number must be exactly 13 digits.");
+                resetBtn(submitBtn); return;
+            }
+            if (phone.length !== 10) {
+                showMsg("❌ Cell phone number must be exactly 10 digits.");
+                resetBtn(submitBtn); return;
+            }
 
-        function doctorRegistration() {
-            const form = document.querySelector("form");
-            if (!form) return;
+            // ── Create auth account ──
+            const { data: authData, error: authError } = await client.auth.signUp({ email, password });
+            if (authError) {
+                showMsg("❌ Signup failed: " + authError.message);
+                resetBtn(submitBtn); return;
+            }
+            const user = authData.user;
 
-            form.addEventListener("submit", async (e) => {
-                e.preventDefault();
-
-                const practice_number    = document.getElementById("practice_number").value.trim();
-                const practice_name      = document.getElementById("practice_name").value.trim();
-                const hpcsa_number       = document.getElementById("hpcsa_number").value.trim();
-                const discipline         = document.getElementById("discipline").value.trim();
-                const qualifications     = document.getElementById("qualifications").value.trim();
-                const name               = document.getElementById("name").value.trim();
-                const surname            = document.getElementById("surname").value.trim();
-                const phone              = document.getElementById("phone").value.trim();
-                const id_number          = document.getElementById("idNumber").value.trim();
-                const email              = document.getElementById("email").value.trim();
-                const password           = document.getElementById("password").value;
-                const confirmPassword    = document.getElementById("confirmPassword").value;
-                const operating_hours    = document.getElementById("operating_hours").value.trim();
-                const hourly_rate        = parseFloat(document.getElementById("hourly_rate").value) || 0;
-                const language          = document.getElementById("language").value.trim();
-                const medical_aids       = document.getElementById("medical_aids").value.trim();
-
-                const address_line1 = document.getElementById("address1").value.trim();
-                const address_line2 = document.getElementById("address2").value.trim();
-                const city          = document.getElementById("city").value.trim();
-                const province      = document.getElementById("province").value.trim();
-                const postal_code   = document.getElementById("postal_code").value.trim();
-
-                const genderInput = document.querySelector('input[name="gender"]:checked');
-                const gender = genderInput ? genderInput.value : null;
-
-                if (password !== confirmPassword) {
-                    alert("Passwords do not match.");
-                    return;
+            // ── Upload profile image (optional) ──
+            let profile_image_url = null;
+            const profileImageFile = document.getElementById("profile_image").files[0];
+            if (profileImageFile) {
+                const { data: imgData, error: imgError } = await client.storage
+                    .from('profile-images')
+                    .upload(`doctors/${user.id}_${profileImageFile.name}`, profileImageFile, { upsert: true });
+                if (imgError) {
+                    showMsg("❌ Profile image upload failed: " + imgError.message);
+                    resetBtn(submitBtn); return;
                 }
-                if (id_number.length !== 13) {
-                    alert("ID Number must be exactly 13 digits.");
-                    return;
-                }
-                if (phone.length !== 10) {
-                    alert("Cell phone number must be exactly 10 digits.");
-                    return;
-                }
+                profile_image_url = client.storage.from('profile-images').getPublicUrl(imgData.path).data.publicUrl;
+            }
 
-                const { data: authData, error: authError } = await client.auth.signUp({ email, password });
-                if (authError) { alert("Signup error: " + authError.message); return; }
-                const user = authData.user;
+            // ── Upload documents ──
+            submitBtn.value = "⏳ Uploading documents (1/6)...";
+            const id_document_url          = await uploadDocument(document.getElementById("id_document").files[0],            user.id, "id_document");
+            submitBtn.value = "⏳ Uploading documents (2/6)...";
+            const hpcsa_certificate_url    = await uploadDocument(document.getElementById("hpcsa_certificate").files[0],      user.id, "hpcsa_certificate");
+            submitBtn.value = "⏳ Uploading documents (3/6)...";
+            const medical_degree_url       = await uploadDocument(document.getElementById("medical_degree").files[0],         user.id, "medical_degree");
+            submitBtn.value = "⏳ Uploading documents (4/6)...";
+            const specialist_cert_url      = await uploadDocument(document.getElementById("specialist_certificate").files[0],  user.id, "specialist_certificate");
+            submitBtn.value = "⏳ Uploading documents (5/6)...";
+            const practice_certificate_url = await uploadDocument(document.getElementById("practice_certificate").files[0],   user.id, "practice_certificate");
+            submitBtn.value = "⏳ Uploading documents (6/6)...";
+            const proof_of_address_url     = await uploadDocument(document.getElementById("proof_of_address").files[0],       user.id, "proof_of_address");
 
-                const profileImageFile = document.getElementById("profile_image").files[0];
-                let profile_image_url = null;
-                if (profileImageFile) {
-                    const { data: uploadData, error: uploadError } = await client.storage
-                        .from('profile-images')
-                        .upload(`doctors/${user.id}_${profileImageFile.name}`, profileImageFile, { upsert: true });
-                    if (uploadError) { alert("Profile image upload error: " + uploadError.message); return; }
-                    profile_image_url = client.storage.from('profile-images').getPublicUrl(uploadData.path).data.publicUrl;
-                }
+            if (!id_document_url || !hpcsa_certificate_url || !medical_degree_url || !practice_certificate_url || !proof_of_address_url) {
+                showMsg("❌ One or more required documents failed to upload. Please try again.");
+                resetBtn(submitBtn); return;
+            }
 
-                const id_document_url          = await uploadDocument(document.getElementById("id_document").files[0],           user.id, "id_document");
-                const hpcsa_certificate_url    = await uploadDocument(document.getElementById("hpcsa_certificate").files[0],     user.id, "hpcsa_certificate");
-                const medical_degree_url       = await uploadDocument(document.getElementById("medical_degree").files[0],        user.id, "medical_degree");
-                const specialist_cert_url      = await uploadDocument(document.getElementById("specialist_certificate").files[0], user.id, "specialist_certificate");
-                const practice_certificate_url = await uploadDocument(document.getElementById("practice_certificate").files[0],  user.id, "practice_certificate");
-                const proof_of_address_url     = await uploadDocument(document.getElementById("proof_of_address").files[0],      user.id, "proof_of_address");
+            // ── Save to database ──
+            submitBtn.value = "⏳ Saving your profile...";
+            const { error: dbError } = await client.from("doctors").insert([{
+                id: user.id,
+                practice_number, practice_name, hpcsa_number, discipline, qualifications,
+                name, surname, phone, id_number, email, gender,
+                operating_hours, hourly_rate, language, medical_aids,
+                profile_image_url,
+                address_line1, address_line2, city, province, postal_code,
+                id_document_url, hpcsa_certificate_url, medical_degree_url,
+                specialist_certificate_url: specialist_cert_url,
+                practice_certificate_url, proof_of_address_url,
+                verification_status: 'pending'
+            }]);
 
-                if (!id_document_url || !hpcsa_certificate_url || !medical_degree_url || !practice_certificate_url || !proof_of_address_url) {
-                    alert("One or more required documents failed to upload. Please try again.");
-                    return;
-                }
+            if (dbError) {
+                showMsg("❌ Registration failed: " + dbError.message);
+                resetBtn(submitBtn); return;
+            }
 
-                const { data, error } = await client.from("doctors").insert([{
-                    id: user.id,
-                    practice_number, practice_name, hpcsa_number, discipline, qualifications,
-                    name, surname, phone, id_number, email, gender,
-                    operating_hours, hourly_rate, language, medical_aids,
-                    profile_image_url,
-                    address_line1, address_line2, city, province, postal_code,
-                    id_document_url, hpcsa_certificate_url, medical_degree_url,
-                    specialist_certificate_url: specialist_cert_url,
-                    practice_certificate_url, proof_of_address_url,
-                    verification_status: 'pending'
-                }]);
+            // ── Success ──
+            showMsg("✅ Registration successful! Your account is pending verification. Redirecting to login...", "success");
+            resetBtn(submitBtn);
+            setTimeout(() => { window.location.href = "doctorLogin.html"; }, 3000);
+        });
+    }
 
-                if (error) { console.error("DB ERROR:", error); alert("Database error: " + error.message); return; }
-                const registrationSuccess = document.getElementById("registration-success");
-                registrationSuccess.textContent = "Registration successful! Your account is pending verification by an administrator. You will be notified once approved.";
-                registrationSuccess.style.display = "block";
-                window.location.href = "doctorLogin.html";
-            });
-        }
-
-        doctorRegistration();
-
-        function doctorLogin() {
-            const form = document.querySelector(".PatientForm");
-            if (!form) return;
-
-            form.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const practice_number = document.getElementById("practice_number").value.trim();
-                const password        = document.getElementById("password").value.trim();
-                if (!practice_number || !password) { alert("Please fill in all fields."); return; }
-                try {
-                    const { data, error } = await client
-                        .from("doctors")
-                        .select("email, verification_status")
-                        .or(`practice_number.eq.${practice_number},email.eq.${practice_number}`)
-                        .single();
-                    if (error || !data) { alert("Practice number not found."); return; }
-                    if (data.verification_status !== 'approved') {
-                        if (data.verification_status === 'rejected') {
-                            alert("Your registration was rejected. Please contact support.");
-                        } else {
-                            alert("Your account is still pending verification. Please wait for admin approval.");
-                        }
-                        return;
-                    }
-                    const { error: loginError } = await client.auth.signInWithPassword({ email: data.email, password });
-                    if (loginError) { alert("Incorrect password."); return; }
-                    alert("Login successful!");
-                    window.location.href = "Doctors-Dashboard.html";
-                } catch (err) {
-                    console.error(err);
-                    alert("Something went wrong. Please try again.");
-                }
-            });
-        }
-    </script>
+    doctorRegistration();
+</script>    
 </body>
 </html>

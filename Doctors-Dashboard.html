@@ -2552,8 +2552,13 @@ function showPage(name){
   if(name==="appointments") loadAllAppointments();
   if(name==="messages")     loadAllPatients();
   if(name==="slots")        initSlotDate();
-  if(name==="records")      loadAppointmentRecords();
-  if(name==="subscriptions") initSubscriptionPage();
+if(name==="records")       loadAppointmentRecords();
+if(name==="subscriptions") initSubscriptionPage();
+if(name==="location") {
+    setTimeout(() => {
+        if(locationMap) locationMap.invalidateSize();
+    }, 150);
+}
   if(name==="prescriptions") initPrescriptionPage();
   // ── Stop location sharing when leaving location page ──
   if(name!=="location" && isSharingLocation){
@@ -2590,16 +2595,32 @@ async function logout(){
 
 async function loadDashboard(){
   const today = new Date().toISOString().split("T")[0];
-  const [{data:appts},{data:msgs}] = await Promise.all([
+
+  // ── Load all 3 in parallel ──
+  const [
+    {data:appts},
+    {data:msgs},
+    {data:allA}
+  ] = await Promise.all([
     client.from("appointments").select("*").eq("doctor_id",DOCTOR_ID).eq("date",today),
-    client.from("messages").select("id").eq("doctor_id",DOCTOR_ID).eq("sender","patient")
+    client.from("messages").select("id").eq("doctor_id",DOCTOR_ID).eq("sender","patient"),
+    client.from("appointments").select("patient_id").eq("doctor_id",DOCTOR_ID)
   ]);
 
+  // ── Stats (always set, regardless of today's appointments) ──
   safeSet("statToday","textContent",(appts||[]).length);
   safeSet("statMessages","textContent",(msgs||[]).length);
 
+  const unique = new Set((allA||[]).map(a=>a.patient_id).filter(Boolean));
+  safeSet("statPatients","textContent", unique.size);
+
+  // ── Today's schedule table ──
   const table = el("todayTable");
-  if(!appts||appts.length===0){table.innerHTML=`<tr><td colspan="5" class="empty-state">No appointments today.</td></tr>`;return;}
+  if(!appts||appts.length===0){
+    table.innerHTML=`<tr><td colspan="5" class="empty-state">No appointments today.</td></tr>`;
+    return;
+  }
+
   table.innerHTML = "";
   appts.sort((a,b)=>a.time.localeCompare(b.time)).forEach(a=>{
     table.innerHTML += `<tr>
@@ -2608,17 +2629,13 @@ async function loadDashboard(){
       <td>${a.reason}</td>
       <td><span class="badge ${a.status}">${a.status}</span></td>
       <td style="display:flex;gap:6px;align-items:center;">
-       ${(a.status==="pending"||a.status==="rescheduled")?`
-      <button class="btn btn-primary btn-sm" onclick="updateApptStatus('${a.id}','confirmed')">✓ Accept & Transfer</button>
-      <button class="btn btn-danger btn-sm" onclick="updateApptStatus('${a.id}','cancelled')">✕ Reject & Refund</button>
-      `:""} 
+        ${(a.status==="pending"||a.status==="rescheduled")?`
+        <button class="btn btn-primary btn-sm" onclick="updateApptStatus('${a.id}','confirmed')">✓ Accept & Transfer</button>
+        <button class="btn btn-danger btn-sm" onclick="updateApptStatus('${a.id}','cancelled')">✕ Reject & Refund</button>
+        `:""}
       </td>
     </tr>`;
   });
-
-  const {data:allA} = await client.from("appointments").select("patient_id").eq("doctor_id",DOCTOR_ID);
-  const unique = new Set((allA||[]).map(a=>a.patient_id));
-  safeSet("statPatients","textContent",unique.size);
 }
 
 async function loadAllAppointments(){
