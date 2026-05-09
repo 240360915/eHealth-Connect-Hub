@@ -11,6 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+    emailjs.init("60GLIkTm5nRXWvlDz");
+    </script>
 
     <style>
         :root {
@@ -1220,8 +1224,8 @@
             <textarea class="notes-area" id="verificationNotes" placeholder="Add notes for this verification decision..."></textarea>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-lg btn-reject" onclick="verifyDoctor('rejected')">✗ Reject</button>
-            <button class="btn btn-lg btn-approve" onclick="verifyDoctor('approved')">✓ Approve</button>
+            <button class="btn btn-lg btn-reject" id="rejectBtn" onclick="verifyDoctor('rejected')">✗ Reject</button>
+            <button class="btn btn-lg btn-approve" id="approveBtn" onclick="verifyDoctor('approved')">✓ Approve</button>
         </div>
     </div>
 </div>
@@ -1293,6 +1297,30 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let currentDoctorId = null;
+let currentDoctorData = null;
+const EMAILJS_SERVICE_ID  = "service_ffb6o3g";
+const EMAILJS_APPROVED_ID = "template_i5x16mj";
+const EMAILJS_REJECTED_ID = "template_yxqjoa7";
+const LOGIN_URL = "doctorLogin.html";
+
+async function sendVerificationEmail(doctor, status, notes) {
+    const templateId = status === "approved" ? EMAILJS_APPROVED_ID : EMAILJS_REJECTED_ID;
+
+    const templateParams = {
+        doctor_name:  `${doctor.name} ${doctor.surname}`,
+        doctor_email: doctor.email,
+        notes:        notes || (status === "rejected" ? "No specific reason provided." : ""),
+        login_url:    LOGIN_URL,
+    };
+
+    try {
+        await emailjs.send(EMAILJS_SERVICE_ID, templateId, templateParams);
+        return true;
+    } catch (err) {
+        console.error("EmailJS error:", err);
+        return false;
+    }
+}
 
 // ── Generates a temporary signed URL from whatever format is stored ──
 async function getSignedUrl(rawUrl) {
@@ -1521,6 +1549,7 @@ async function openReviewModal(doctorId) {
         .single();
 
     if (error || !doc) { showToast("Could not load doctor data", "error"); return; }
+    currentDoctorData = doc;
 
     // Build address from your actual columns
     const addressParts = [doc.address_line1, doc.address_line2, doc.address_line3, doc.postal_code].filter(Boolean);
@@ -1594,40 +1623,71 @@ document.getElementById("modalDocs").innerHTML = `
     document.getElementById("reviewModal").classList.add("open");
 }
 
+function setModalButtons(loading) {
+    const approveBtn = document.getElementById('approveBtn');
+    const rejectBtn  = document.getElementById('rejectBtn');
+    approveBtn.disabled = loading;
+    rejectBtn.disabled  = loading;
+    approveBtn.textContent = loading ? '⏳ Processing...' : '✓ Approve';
+    rejectBtn.textContent  = loading ? '⏳ Processing...' : '✗ Reject';
+}
+
 function closeModal() {
     document.getElementById("reviewModal").classList.remove("open");
-    currentDoctorId = null;
+    currentDoctorId   = null;
+    currentDoctorData = null;
 }
 
 
 // Approves regardless of whether documents were uploaded
 async function verifyDoctor(status) {
-    if (!currentDoctorId) return;
+    if (!currentDoctorId || !currentDoctorData) return;
 
     const notes = document.getElementById("verificationNotes").value.trim();
     const { data: { user } } = await client.auth.getUser();
 
+    // Show loading state on buttons
+    setModalButtons(true);
+
+    // Step 1 — Update Supabase
     const { error } = await client
         .from("doctors")
         .update({
             verification_status: status,
-            verification_notes:  notes  || null,
+            verification_notes:  notes || null,
             verified_at:         new Date().toISOString(),
-            verified_by:         user?.id || null,  // your table has this column
+            verified_by:         user?.id || null,
         })
         .eq("id", currentDoctorId);
 
     if (error) {
         showToast("Error: " + error.message, "error");
+        setModalButtons(false);
         return;
     }
 
-    showToast(
-        status === 'approved' ? "✅ Doctor approved!" : "❌ Doctor rejected.",
-        status === 'approved' ? 'success' : 'error'
-    );
+    // Step 2 — Send email via EmailJS
+    const emailSent = await sendVerificationEmail(currentDoctorData, status, notes);
 
+    setModalButtons(false);
     closeModal();
+
+    if (emailSent) {
+        showToast(
+            status === 'approved'
+                ? "✅ Doctor approved & email sent!"
+                : "❌ Doctor rejected & email sent.",
+            status === 'approved' ? 'success' : 'error'
+        );
+    } else {
+        showToast(
+            status === 'approved'
+                ? "✅ Doctor approved — but email failed to send."
+                : "❌ Doctor rejected — but email failed to send.",
+            'error'
+        );
+    }
+
     loadStats();
     loadPendingDoctors();
     loadDoctors();
