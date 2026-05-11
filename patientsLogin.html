@@ -547,113 +547,12 @@ function setMessage(id, text, color = "green") {
 
 // PATIENT REGISTRATION
 
-function patientsRegister() {
-    const form = document.querySelector("form");
-    // FIX 7: guard — only attach if register form actually exists on this page
-    if (!form || !document.getElementById("name")) return;
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        //  Core fields 
-        const name          = document.getElementById("name").value.trim();
-        const surname       = document.getElementById("surname").value.trim();
-        const date_of_birth = document.getElementById("date_of_birth").value;
-        const id_number     = document.getElementById("id_number").value.trim();
-        const title         = document.getElementById("title").value.trim();
-        const phone         = document.getElementById("phone").value.trim();
-        const languege      = document.getElementById("languege").value.trim();
-        const email         = document.getElementById("email").value.trim();
-        const province      = document.getElementById("province").value.trim();
-        const password      = document.getElementById("password").value;
-        const confirmPassword = document.getElementById("confirmPassword").value;
-
-        const address1      = document.getElementById("address1").value.trim();
-        const address2      = document.getElementById("address2").value.trim();
-        const address3      = document.getElementById("address3").value.trim();
-        const postalCode    = document.getElementById("postalCode").value.trim();
-
-        
-        const allergies     = document.querySelector('input[name="Allergies"]')?.value.trim()    || null;
-        const medication    = document.querySelector('input[name="Medication"]')?.value.trim()   || null;
-        const conditions    = document.querySelector('input[name="Conditions"]')?.value.trim()   || null;
-        const chronic       = document.querySelector('input[name="chronic"]')?.value.trim()      || null;
-        const surgeries     = document.querySelector('input[name="Surgeries"]')?.value.trim()    || null;
-        const blood_group   = document.querySelector('input[name="BG"]')?.value.trim()           || null;
-        const disability    = document.querySelector('input[name="Disability"]')?.value.trim()   || null;
-
-        const genderInput   = document.querySelector('input[name="gender"]:checked');
-        const gender        = genderInput ? genderInput.value : null;
-
-        if (password !== confirmPassword) {
-            setMessage("showmessage", "Passwords do not match.", "red");
-            return;
-        }
-
-        setMessage("showmessage", "Creating your account...", "#555");
-
-        // Patient self-registers — no doctor login needed.
-        // doctor_id will be assigned later by the doctor from their dashboard.
-        const { data: authData, error: authError } = await client.auth.signUp({
-            email,
-            password
-        });
-
-        if (authError) {
-            console.error(authError.message);
-            setMessage("showmessage", "Error creating account: " + authError.message, "red");
-            return;
-        } 
-
-        const patientUser = authData.user;
-
-        const { error: dbError } = await client
-            .from("patients")
-            .insert([{
-                id:             patientUser.id,
-                user_id:        patientUser.id,
-                name,
-                surname,
-                date_of_birth,
-                id_number,
-                title,
-                phone,
-                languege,
-                email,
-                gender,
-                province,
-                
-                address1,
-                address2,
-                address3:       address3 || null,
-                postal_code:    postalCode,
-                
-                allergies,
-                medication,
-                conditions,
-                chronic,
-                surgeries,
-                blood_group,
-                disability
-            }]);
-
-        if (dbError) {
-            console.error(dbError.message);
-            setMessage("showmessage", "Error registering patient: " + dbError.message, "red");
-            return;
-        }
-
-        setMessage("showmessage", "Patient registered successfully!", "green");
-        setTimeout(() => window.location.href = "patientsLogin.html", 1500);
-    });
-}
 
 
 // PATIENT LOGIN
 
 function patientsLogin() {
     const form = document.querySelector(".PatientForm");
-    // FIX 7: guard — only attach if login form exists on this page
     if (!form) return;
 
     form.addEventListener("submit", async (e) => {
@@ -662,15 +561,21 @@ function patientsLogin() {
         const input    = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
 
+        // ── Disable button immediately ──
+        const loginBtn = document.querySelector(".login-btn");
+        loginBtn.disabled = true;
+        loginBtn.value = "⏳ Signing in...";
+
         if (!input || !password) {
-            setMessage("showmessage2", "Please fill in all fields.", "red");
+            setMessage("showmessage2", "❌ Please fill in all fields.", "red");
+            loginBtn.disabled = false;
+            loginBtn.value = "👤 Login to Patient Portal";
             return;
         }
 
         let emailToUse = "";
 
         try {
-            // Allow login with phone number OR email
             if (input.includes("@")) {
                 emailToUse = input;
             } else {
@@ -681,7 +586,9 @@ function patientsLogin() {
                     .maybeSingle();
 
                 if (error || !data) {
-                    setMessage("showmessage2", "User not found.", "red");
+                    setMessage("showmessage2", "❌ User not found.", "red");
+                    loginBtn.disabled = false;
+                    loginBtn.value = "👤 Login to Patient Portal";
                     return;
                 }
                 emailToUse = data.email;
@@ -693,45 +600,30 @@ function patientsLogin() {
             });
 
             if (loginError) {
-                setMessage("showmessage2", "Incorrect email or password.", "red");
+                setMessage("showmessage2", "❌ Incorrect email or password.", "red");
+                loginBtn.disabled = false;
+                loginBtn.value = "👤 Login to Patient Portal";
                 return;
             }
 
-            setMessage("showmessage2", "Login successful!", "green");
+            setMessage("showmessage2", "✅ Login successful! Redirecting...", "green");
             setTimeout(() => window.location.href = "patient-dashboard.html", 1000);
 
         } catch (err) {
             console.error(err);
-            setMessage("showmessage2", "Something went wrong. Please try again.", "red");
+            setMessage("showmessage2", "❌ Something went wrong. Please try again.", "red");
+            loginBtn.disabled = false;
+            loginBtn.value = "👤 Login to Patient Portal";
         }
     });
 }
 
 // LOAD PATIENT NAME (dashboard)
 
-async function loadPatientName() {
-    const { data: { session } } = await client.auth.getSession();
-    if (!session) return;
 
-    const { data, error } = await client
-        .from("patients")
-        .select("name, surname")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-    const nameEl = document.getElementById("patientName");
-    if (!nameEl) return;
-
-    if (error || !data) {
-        nameEl.textContent = "Patient";
-        return;
-    }
-
-    nameEl.textContent = `${data.name || "Patient"} ${data.surname || ""}`.trim();
-}
 
 // Initialize patient registration and login handlers 
-patientsRegister();
+
 patientsLogin();
 
 window.addEventListener("load", loadPatientName);

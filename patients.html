@@ -587,7 +587,7 @@
     <div class="page-wrapper">
         <div class="container">
 
-            <form action="">
+            <form action="#" onsubmit="return false;">
 
                 <!-- ── PERSONAL DETAILS ── -->
                 <div class="section-heading">👤 Personal Details</div>
@@ -801,13 +801,23 @@
 
                 const genderInput   = document.querySelector('input[name="gender"]:checked');
                 const gender        = genderInput ? genderInput.value : null;
-
                 if (password !== confirmPassword) {
-                    setMessage("showmessage", "Passwords do not match.", "red");
+                    setMessage("showmessage", "❌ Passwords do not match.", "red");
+                    return;
+                }
+                if (id_number.length !== 13) {
+                    setMessage("showmessage", "❌ ID Number must be exactly 13 digits.", "red");
+                    return;
+                }
+                if (phone.length !== 10) {
+                    setMessage("showmessage", "❌ Phone number must be exactly 10 digits.", "red");
                     return;
                 }
 
-                setMessage("showmessage", "Creating your account...", "#555");
+                setMessage("showmessage", "⏳ Creating your account...", "#555");
+                const submitBtn = document.querySelector(".btn-submit");
+                submitBtn.disabled = true;
+                submitBtn.textContent = "⏳ Please wait...";
 
                 // Patient self-registers — no doctor login needed.
                 // doctor_id will be assigned later by the doctor from their dashboard.
@@ -860,69 +870,20 @@
                     return;
                 }
 
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Register as Patient";
                 setMessage("showmessage", "Patient registered successfully!", "green");
                 setTimeout(() => window.location.href = "patientsLogin.html", 1500);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Register as Patient";
+                return;
+                
             });
         }
 
 
-        // PATIENT LOGIN
 
-        function patientsLogin() {
-            const form = document.querySelector(".PatientForm");
-            // FIX 7: guard — only attach if login form exists on this page
-            if (!form) return;
 
-            form.addEventListener("submit", async (e) => {
-                e.preventDefault();
-
-                const input    = document.getElementById("email").value.trim();
-                const password = document.getElementById("password").value.trim();
-
-                if (!input || !password) {
-                    setMessage("showmessage2", "Please fill in all fields.", "red");
-                    return;
-                }
-
-                let emailToUse = "";
-
-                try {
-                    // Allow login with phone number OR email
-                    if (input.includes("@")) {
-                        emailToUse = input;
-                    } else {
-                        const { data, error } = await client
-                            .from("patients")
-                            .select("email")
-                            .eq("phone", input)
-                            .maybeSingle();
-
-                        if (error || !data) {
-                            setMessage("showmessage2", "User not found.", "red");
-                            return;
-                        }
-                        emailToUse = data.email;
-                    }
-
-                    const { error: loginError } = await client.auth.signInWithPassword({
-                        email:    emailToUse,
-                        password: password
-                    });
-
-                    if (loginError) {
-                        setMessage("showmessage2", "Incorrect email or password.", "red");
-                        return;
-                    }
-
-                    setMessage("showmessage2", "Login successful!", "green");
-                    setTimeout(() => window.location.href = "patient-dashboard.html", 1000);
-
-                } catch (err) {
-                    console.error(err);
-                    setMessage("showmessage2", "Something went wrong. Please try again.", "red");
-                }
-            });
-        }
 
         // LOAD PATIENT NAME (dashboard)
 
@@ -949,7 +910,7 @@
 
         // Initialize patient registration and login handlers 
         patientsRegister();
-        patientsLogin();
+        
 
         window.addEventListener("load", loadPatientName);
 
