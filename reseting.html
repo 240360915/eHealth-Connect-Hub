@@ -128,7 +128,7 @@
             background: #385a9e;
         }
 
-        /* ── HERO BANNER ── */
+        
         .page-hero {
             background: linear-gradient(145deg, #0b1c3d 0%, #1b2a4e 55%, #385a9e 100%);
             padding: 56px 80px 72px;
@@ -181,14 +181,14 @@
             position: relative;
         }
 
-        /* ── PAGE WRAPPER ── */
+        
         .page-wrapper {
             max-width: 500px;
             margin: 0 auto;
             padding: 48px 20px 64px;
         }
 
-        /* ── CARD ── */
+        
         .reset-container {
             background: white;
             border-radius: 18px;
@@ -197,7 +197,7 @@
             border: 1px solid #dde3ed;
         }
 
-        /* ── SECTION HEADING ── */
+        
         .section-heading {
             font-size: 11px;
             font-weight: 700;
@@ -211,7 +211,7 @@
             border-radius: 0 8px 8px 0;
         }
 
-        /* ── STEPS indicator ── */
+        
         .steps {
             display: flex;
             align-items: center;
@@ -252,7 +252,7 @@
             flex-shrink: 0;
         }
 
-        /* ── INPUT GROUP ── */
+        
         .input-group {
             position: relative;
             margin-bottom: 1rem;
@@ -319,7 +319,7 @@
             padding: 14px;
         }
 
-        /* ── OTP SECTION (hidden by default) ── */
+        
         .otp-verify {
             display: none;
             flex-direction: column;
@@ -329,7 +329,7 @@
             border-top: 1px solid #f0f3f8;
         }
 
-        /* ── SUBMIT BUTTON ── */
+        
         .login-btn {
             width: 100%;
             height: 52px;
@@ -358,7 +358,7 @@
             transform: translateY(0);
         }
 
-        /* secondary verify button */
+       
         .verify-btn {
             width: 100%;
             height: 48px;
@@ -381,7 +381,7 @@
             border-color: #1b2a4e;
         }
 
-        /* ── STATUS MESSAGE ── */
+        
         #forgotPasswordMessage {
             text-align: center;
             font-size: 13.5px;
@@ -393,7 +393,7 @@
             transition: all 0.3s;
         }
 
-        /* ── BACK LINK ── */
+       
         .back-link {
             text-align: center;
             margin-top: 20px;
@@ -411,7 +411,7 @@
             text-decoration: underline;
         }
 
-        /* ── RESPONSIVE ── */
+        
         @media (max-width: 768px) {
             .topnav { padding: 0 20px; }
             .nav-links { display: none; }
@@ -421,7 +421,7 @@
         @media (max-width: 560px) {
             .nav-btns { display: none; }
         }
-        /* ── HAMBURGER & MOBILE MENU ── */
+        
         .hamburger {
         display: none;
         background: none; border: none; font-size: 24px;
@@ -451,7 +451,7 @@
         .nav-btns  { display: none; }
         }
 
-        /* ── HAMBURGER & MOBILE MENU ── */
+        
         .hamburger {
         display: none;
         background: none; border: none; font-size: 24px;
@@ -523,11 +523,11 @@
         <p>Enter the email address linked to your account. We'll send you a one-time code to verify your identity.</p>
     </div>
 
-    <!-- RESET CARD -->
+    
     <div class="page-wrapper">
         <div class="reset-container">
 
-            <!-- Step indicator -->
+            
             <div class="steps">
                 <div class="step-pill active" id="step1pill">1 · Enter Email</div>
                 <div class="step-arrow">›</div>
@@ -538,7 +538,7 @@
 
             <div class="section-heading">📧 Account Recovery</div>
 
-            <!-- Step 1: email + send OTP -->
+            
             <form id="forgotForm" onsubmit="sendOTP(event)">
                 <div class="input-group">
                     <input type="email" id="email" name="email" required placeholder=" ">
@@ -547,7 +547,7 @@
                 <input type="submit" class="login-btn" value="✉️  Send OTP">
             </form>
 
-            <!-- Step 2: OTP verify (shown after OTP sent) -->
+            
             <div class="otp-verify" id="otpSection">
                 <div class="section-heading" style="margin-top:0;">🔢 Enter the OTP sent to your email</div>
                 <div class="input-group">
@@ -581,12 +581,12 @@
         menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
         menuBtn.innerHTML = isOpen ? '&#x2715;' : '&#9776;';
         });
-        // ── Supabase setup ──
+        
         const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
         const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // ── Helpers ──
+       
         function el(id) { return document.getElementById(id); }
 
         function setMessage(text, color = "green") {
@@ -605,7 +605,7 @@
             });
         }
 
-        // ── Step 1: Send OTP ──
+       
         async function sendOTP(e) {
             e.preventDefault();
 

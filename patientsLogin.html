@@ -390,7 +390,7 @@
             text-decoration: underline;
         }
 
-        /* ── RESPONSIVE ── */
+        
         @media (max-width: 768px) {
             .topnav { padding: 0 20px; }
             .nav-links { display: none; }
@@ -464,7 +464,7 @@
         <a href="doctorLogin.html">Doctor Login</a>
     </div>
 
-    <!-- HERO BANNER -->
+    
     <div class="page-hero">
         <div class="hero-badge">👤 Patient Portal</div>
         <h1>Welcome <em>Back</em></h1>
@@ -475,7 +475,7 @@
     <div class="page-wrapper">
         <form class="PatientForm">
 
-            <!-- Role switcher -->
+            
             <div class="role-buttons">
                 <a href="patientsLogin.html" class="btn active">👤 Patient</a>
                 <a href="doctorLogin.html" class="btn">🩺 Doctor</a>
@@ -537,7 +537,7 @@ const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-//  Safe UI helper — avoids null crash if element doesn't exist on this page 
+
 function setMessage(id, text, color = "green") {
     const el = document.getElementById(id);
     if (!el) return;
@@ -545,11 +545,7 @@ function setMessage(id, text, color = "green") {
     el.style.color  = color;
 }
 
-// PATIENT REGISTRATION
 
-
-
-// PATIENT LOGIN
 
 function patientsLogin() {
     const form = document.querySelector(".PatientForm");
@@ -561,7 +557,7 @@ function patientsLogin() {
         const input    = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value.trim();
 
-        // ── Disable button immediately ──
+        
         const loginBtn = document.querySelector(".login-btn");
         loginBtn.disabled = true;
         loginBtn.value = "⏳ Signing in...";
@@ -618,11 +614,6 @@ function patientsLogin() {
     });
 }
 
-// LOAD PATIENT NAME (dashboard)
-
-
-
-// Initialize patient registration and login handlers 
 
 patientsLogin();
 

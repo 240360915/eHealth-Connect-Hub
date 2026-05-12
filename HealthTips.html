@@ -28,7 +28,6 @@
     * { box-sizing:border-box; margin:0; padding:0; }
     body { font-family:'Roboto',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
-    /* ── HEADER ── */
     .Heading {
       display:flex; align-items:center; justify-content:space-between;
       background:var(--white); padding:12px 28px;
@@ -176,7 +175,7 @@
       border-top:1px solid var(--border);
     }
 
-    /* ── EMERGENCY BANNER ── */
+    /* ── EMERGENCY ── */
     .emergency-banner {
       background:linear-gradient(135deg,#7f1d1d,#991b1b);
       border-radius:var(--radius); padding:20px 24px;
@@ -202,7 +201,7 @@
       .main-content { padding:20px 16px; }
       .tips-grid { grid-template-columns:1fr; }
     }
-    /* ── HAMBURGER & SIDEBAR MOBILE ── */
+  
 .hamburger {
   display: none;
   background: none; border: none; font-size: 24px;
@@ -223,7 +222,7 @@
   .hamburger { display: block; }
   .nav-links  { display: none; }
 
-  /* Override the horizontal strip — make it a proper slide-in panel */
+
   .sidebar {
     position: fixed !important;
     top: 0; left: 0;
@@ -505,7 +504,7 @@
   async function logout() {
     try {
       const { createClient } = supabase;
-      // If supabase is loaded on this page
+      
       window.location.href = "patientsLogin.html";
     } catch {
       window.location.href = "patientsLogin.html";

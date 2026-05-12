@@ -754,7 +754,7 @@
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
         const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-        //  Safe UI helper — avoids null crash if element doesn't exist on this page 
+         
         function setMessage(id, text, color = "green") {
             const el = document.getElementById(id);
             if (!el) return;
@@ -766,7 +766,7 @@
 
         function patientsRegister() {
             const form = document.querySelector("form");
-            // FIX 7: guard — only attach if register form actually exists on this page
+            
             if (!form || !document.getElementById("name")) return;
 
             form.addEventListener("submit", async (e) => {
@@ -819,8 +819,7 @@
                 submitBtn.disabled = true;
                 submitBtn.textContent = "⏳ Please wait...";
 
-                // Patient self-registers — no doctor login needed.
-                // doctor_id will be assigned later by the doctor from their dashboard.
+               
                 const { data: authData, error: authError } = await client.auth.signUp({
                     email,
                     password
@@ -885,7 +884,7 @@
 
 
 
-        // LOAD PATIENT NAME (dashboard)
+        
 
         async function loadPatientName() {
             const { data: { session } } = await client.auth.getSession();
@@ -908,7 +907,7 @@
             nameEl.textContent = `${data.name || "Patient"} ${data.surname || ""}`.trim();
         }
 
-        // Initialize patient registration and login handlers 
+         
         patientsRegister();
         
 

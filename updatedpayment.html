@@ -214,7 +214,7 @@
   <div class="fee-input-wrap">
     <span class="fee-prefix">R</span>
 
-    <!-- Doctor fee (locked) -->
+    
     <input 
       type="number"
       id="consultFee"
@@ -428,7 +428,7 @@
 
       input.value = v;
 
-      // Validation only after full MM/YY entered
+      
       if (v.length === 5) {
 
         const [mm, yy] = v.split("/");
@@ -451,7 +451,7 @@
           return;
         }
 
-        // Expired card
+        
         if (
           year < currentYear ||
           (year === currentYear && month < currentMonth)
@@ -464,7 +464,7 @@
           return;
         }
 
-        // Unrealistic future date
+        
         if (year > currentYear + 15) {
 
           showToast("Invalid expiry year", "warn");
@@ -548,7 +548,7 @@
     el("slotsGrid").innerHTML=`<div class="slots-loading"><span class="spinner"></span>Checking...</div>`;
     el("slotSection").style.display="block";
     
-    // Simulating slots for demo (normally pulled from doctor_slots table)
+    
     const baseSlots = ["08:00","09:00","10:00","11:00","13:00","14:00","15:00"];
     const {data:booked} = await client.from("appointments").select("time").eq("doctor_id",selectedDoctor.id).eq("date",date).neq("status","cancelled");
     const bookedTimes = new Set((booked||[]).map(b=>b.time.slice(0,5)));

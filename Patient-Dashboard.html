@@ -263,18 +263,13 @@
       }
       .rx-print-btn:hover { background:var(--green); color:white; border-color:var(--green); }
 
-      /* ══════════════════════════════════════
-        PRINT STYLES  ← NEW
-        When window.print() is called, only
-        #printArea is visible.
-      ══════════════════════════════════════ */
       #printArea { display:none; }
 
       @media print {
-        /* Hide everything on the page */
+        
         body > * { display:none !important; }
 
-        /* Show ONLY the print area */
+        
         #printArea {
           display:block !important;
           position:fixed;
@@ -286,7 +281,7 @@
       }
 
       #logoutMessage { text-align:center; color:var(--green); padding:8px; font-size:14px; }
-      /* ── HAMBURGER & SIDEBAR MOBILE ── */
+      
       .hamburger {
         display: none;
         background: none; border: none; font-size: 24px;
@@ -317,7 +312,7 @@
         }
         .sidebar.open { transform: translateX(0); }
       }
-      /* ── Video Call Overlays (like doctor dashboard) ── */
+      
       .call-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.65);backdrop-filter:blur(8px);align-items:center;justify-content:center;}
       .call-overlay.show{display:flex;}
       .outgoing-card{background:var(--white);border:1px solid var(--border);border-radius:24px;padding:36px 40px;text-align:center;max-width:360px;width:90%;box-shadow:0 32px 80px rgba(0,0,0,.3);animation:popIn .3s cubic-bezier(.34,1.56,.64,1);}
@@ -383,7 +378,7 @@
         <p>Select a doctor below — all features will be linked to them automatically.</p>
       </div>
 
-      <!-- Quick actions -->
+      
       <div class="dashboard-grid">
         <div class="card"><h2>📋 Records</h2><p>Access your health history.</p>
           <button class="btn" onclick="location.href='MedicalRecords.html'">View</button></div>
@@ -467,7 +462,7 @@
             📋 Load Prescriptions
           </button>
         </div>
-        <!--  proper container for prescription cards -->
+        
         <div id="prescriptionCards"></div>
       </div>
 
@@ -488,7 +483,7 @@
         </div>
       </div>
 
-      <!-- Video Call -->
+    
  
 
       <div id="logoutMessage"></div>      
@@ -715,20 +710,20 @@ function onDoctorSelected() {
     if (error) { console.error(error); return; }
     renderMessages(data);
 
-    // ── Unsubscribe old channel first ──
+    
     if (messageChannel) {
       await client.removeChannel(messageChannel);
       messageChannel = null;
     }
 
-    // ── Listen for ANY new message in this conversation ──
+    
     messageChannel = client
       .channel(`chat-${user.id}-${selectedDoctorId}`)
       .on("postgres_changes", {
         event:  "INSERT",
         schema: "public",
         table:  "messages",
-        filter: `doctor_id=eq.${selectedDoctorId}`  // catches both sides
+        filter: `doctor_id=eq.${selectedDoctorId}`  
       }, () => loadSelectedDoctorMessages())
       .subscribe();
   }
@@ -758,7 +753,7 @@ function onDoctorSelected() {
       const placeholder = container.querySelector(".no-doctor-msg");
       if (placeholder) placeholder.remove();
 
-      // Append the new message immediately
+      
       const div = document.createElement("div");
       div.style.cssText = `display:flex;justify-content:flex-end;margin-bottom:8px;`;
       div.innerHTML = `
@@ -777,7 +772,7 @@ function onDoctorSelected() {
       container.scrollTop = container.scrollHeight;
     }
 
-    // ── Clear input immediately so patient can type next message ──
+    
     safeSet("newMessage", "value", "");
 
 
@@ -790,7 +785,7 @@ function onDoctorSelected() {
 
     if (error) {
       console.error("Failed to send:", error.message);
-      // Show error but don't remove the optimistic message
+      
       el("showmessages").textContent = "⚠️ Message may not have saved. Check connection.";
       setTimeout(() => { el("showmessages").textContent = ""; }, 4000);
     }
@@ -799,14 +794,14 @@ function onDoctorSelected() {
   async function cancelAppointmentById(apptId) {
       if (!confirm("Are you sure you want to cancel this appointment?")) return;
 
-      // ── Get logged in patient ──
+      
       const { data:{ user }, error: authError } = await client.auth.getUser();
       if (authError || !user) { 
           alert("Please log in first."); 
           return; 
       }
 
-      // ── First check current status from DB (not just UI) ──
+      
       const { data: appt, error: fetchError } = await client
           .from("appointments")
           .select("status, patient_id")
@@ -818,31 +813,31 @@ function onDoctorSelected() {
           return; 
       }
 
-      // ── Block cancel if already confirmed by doctor ──
+      
       if (appt.status === "confirmed") {
           alert("❌ This appointment has already been confirmed by the doctor and cannot be cancelled.");
           return;
       }
 
-      // ── Block cancel if already cancelled ──
+      
       if (appt.status === "cancelled") {
           alert("This appointment is already cancelled.");
           loadAppointments();
           return;
       }
 
-      // ── Allow cancel if pending OR rescheduled (still awaiting doctor) ──
+      
       if (appt.status !== "pending" && appt.status !== "rescheduled") {
           alert("This appointment cannot be cancelled.");
           return;
       }
 
-      // ── Cancel it — include patient_id for RLS ──
+      
       const { error } = await client
           .from("appointments")
           .update({ status: "cancelled" })
           .eq("id", apptId)
-          .eq("patient_id", user.id); // ✅ satisfies RLS policy
+          .eq("patient_id", user.id); 
 
       if (error) { 
           console.error("Cancel error:", error);
@@ -859,7 +854,7 @@ function onDoctorSelected() {
   
   document.addEventListener("click",(e)=>{const m=el("rescheduleModal");if(m&&e.target===m)closeReschedule();});
   
-  // Video call — collapsible 
+  
 
   
 
@@ -1109,7 +1104,7 @@ function toggleCam() {
   });
   client.auth.onAuthStateChange((event,session)=>{ if(session) loadPatientName(); });
 
-  let currentRescheduleId = null; // tracks which appointment is being rescheduled
+  let currentRescheduleId = null; 
   
   //  Load and render all patient appointments 
   async function loadAppointments() {
@@ -1150,7 +1145,7 @@ function toggleCam() {
     data.forEach(appt => {
         const card = document.createElement("div");
 
-        // ── PAYMENT: financial status labels ──
+        // ── PAYMENT: financial status ──
         let financialStatus = appt.status;
         if (appt.status === 'cancelled') financialStatus = 'Rejected & Refunded';
         if (appt.status === 'confirmed') financialStatus = 'Accepted & Paid';
@@ -1301,7 +1296,7 @@ function toggleCam() {
           .eq("id", currentRescheduleId);
   
       btn.disabled    = false;
-      btn.textContent = "✅ Confirm Reschedule";
+      btn.textContent = "Confirm Reschedule";
   
       if (error) {
           console.error("reschedule:", error);
@@ -1310,7 +1305,7 @@ function toggleCam() {
           return;
       }
   
-      el("rescheduleStatus").textContent = "✅ Appointment rescheduled successfully!";
+      el("rescheduleStatus").textContent = "Appointment rescheduled successfully!";
       el("rescheduleStatus").style.color = "#10b981";
   
       // Reload appointments and close modal after a short delay
@@ -1332,13 +1327,13 @@ function toggleCam() {
       loadAppointments();
   }
   
-  //  Close modal when clicking outside 
+  
   document.addEventListener("click", (e) => {
       const modal = el("rescheduleModal");
       if (modal && e.target === modal) closeReschedule();
   });
 
-  // ─── Get patient record ───────────────────────────────────────────────────────
+  // ─── Get patient record ───
   async function getPatientRecord() {
     const { data:{user} } = await client.auth.getUser();
     if (!user) return null;
@@ -1348,8 +1343,8 @@ function toggleCam() {
     return data||null;
   }
 
-  // ─── PRESCRIPTIONS ────────────────────────────────────────────────────────────
-  // FIX: Rewrote to use proper card styling & fixed printArea reference
+  // ─── PRESCRIPTIONS ───
+  
   async function loadPrescriptions() {
     const container = el("prescriptionCards");
     if (!container) return;
@@ -1418,8 +1413,8 @@ function toggleCam() {
     });
   }
 
-  // ─── Print prescription ───────────────────────────────────────────────────────
-  // FIX: printArea now exists in HTML and @media print hides everything else
+  // ─── Print prescription ────
+ 
   function printPrescriptionGroup(index) {
     const group = window._prescriptionGroups?.[index];
     if (!group) return;
@@ -1502,10 +1497,10 @@ function toggleCam() {
         </div>
       </div>`;
 
-    // Trigger print — @media print CSS will hide everything except #printArea
+    
     window.print();
 
-    // Clean up after print dialog closes
+    
     setTimeout(() => { printArea.innerHTML = ""; }, 1500);
   }
 

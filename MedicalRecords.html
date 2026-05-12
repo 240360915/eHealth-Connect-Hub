@@ -292,7 +292,7 @@
 
         const user = session.user;
 
-        // Strategy 1: user_id column
+        n
         let { data } = await client
             .from("patients")
             .select("id")
@@ -300,7 +300,7 @@
             .maybeSingle();
         if (data) return data.id;
 
-        // Strategy 2: id column directly
+        
         const { data: d2 } = await client
             .from("patients")
             .select("id")
@@ -308,7 +308,7 @@
             .maybeSingle();
         if (d2) return d2.id;
 
-        // Strategy 3: email match
+        
         if (user.email) {
             const { data: d3 } = await client
                 .from("patients")
@@ -357,7 +357,7 @@
             return;
         }
 
-        // Fetch doctor names separately
+        
         const doctorIds = [...new Set(records.map(r => r.doctor_id).filter(Boolean))];
         const doctorMap = {};
 
@@ -462,7 +462,7 @@
         return [];
     }
 
-    // Wait for auth then load
+    
     client.auth.onAuthStateChange((event, session) => {
         if (session) loadMedicalRecords();
     });

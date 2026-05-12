@@ -453,7 +453,7 @@
     el("slotsGrid").innerHTML=`<div class="slots-loading"><span class="spinner"></span>Checking...</div>`;
     el("slotSection").style.display="block";
     
-    // Simulating slots for demo (normally pulled from doctor_slots table)
+    
     const baseSlots = ["08:00","09:00","10:00","11:00","13:00","14:00","15:00"];
     const {data:booked} = await client.from("appointments").select("time").eq("doctor_id",selectedDoctor.id).eq("date",date).neq("status","cancelled");
     const bookedTimes = new Set((booked||[]).map(b=>b.time.slice(0,5)));
@@ -512,7 +512,7 @@
 
     if(error) { showToast(error.message, "error"); btn.disabled=false; return; }
 
-    // Update receipt
+   
     el("rcptPaidBy").textContent = el("cardName").value;
     el("rcptCard").textContent = paymentRef;
     el("rcptAmount").textContent = formatRand(fee);

@@ -21,7 +21,11 @@
             --warn:   #f59e0b;
         }
 
-        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        *, *::before, *::after { 
+            margin:0; 
+            padding:0; 
+            box-sizing:border-box; 
+        }
 
         body {
             font-family: 'DM Sans', sans-serif;
@@ -185,7 +189,11 @@
         }
 
         /* Payment cards */
-        .payments-list { display: flex; flex-direction: column; gap: 14px; }
+        .payments-list { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 14px; 
+        }
 
         .payment-card {
             background: var(--white);
@@ -195,10 +203,18 @@
             transition: box-shadow 0.2s;
         }
 
-        .payment-card:hover { box-shadow: 0 4px 16px rgba(11,28,61,0.08); }
-        .payment-card.pending  { border-left: 4px solid var(--warn); }
-        .payment-card.approved { border-left: 4px solid var(--success); }
-        .payment-card.rejected { border-left: 4px solid var(--danger); }
+        .payment-card:hover { 
+            box-shadow: 0 4px 16px rgba(11,28,61,0.08); 
+        }
+        .payment-card.pending  { 
+            border-left: 4px solid var(--warn); 
+        }
+        .payment-card.approved { 
+            border-left: 4px solid var(--success); 
+        }
+        .payment-card.rejected { 
+            border-left: 4px solid var(--danger); 
+        }
 
         .card-header {
             padding: 16px 24px;
@@ -222,8 +238,16 @@
             flex-shrink: 0;
         }
 
-        .doctor-name { font-weight: 600; font-size: 0.95em; color: var(--navy); }
-        .doctor-sub  { font-size: 0.8em; color: var(--muted); margin-top: 2px; }
+        .doctor-name { 
+            font-weight: 600; 
+            font-size: 0.95em; 
+            color: var(--navy); 
+        }
+        .doctor-sub  { 
+            font-size: 0.8em; 
+            color: var(--muted); 
+            margin-top: 2px; 
+        }
 
         .status-pill {
             padding: 4px 12px;
@@ -234,9 +258,17 @@
             letter-spacing: 0.05em;
         }
 
-        .status-pill.pending  { background: rgba(245,158,11,0.1);  color: #d97706; }
-        .status-pill.approved { background: rgba(16,185,129,0.1);  color: #059669; }
-        .status-pill.rejected { background: rgba(239,68,68,0.08);  color: #dc2626; }
+        .status-pill.pending  { 
+            background: rgba(245,158,11,0.1);  
+            color: #d97706; 
+        }
+        .status-pill.approved { 
+            background: rgba(16,185,129,0.1);  
+            color: #059669; }
+        .status-pill.rejected { 
+            background: rgba(239,68,68,0.08);  
+            color: #dc2626; 
+        }
 
         .card-body {
             padding: 16px 24px;
@@ -266,7 +298,12 @@
             font-size: 1em;
         }
 
-        .card-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .card-actions { 
+            display: flex; 
+            gap: 8px; 
+            align-items: center; 
+            flex-wrap: wrap; 
+        }
 
         .btn {
             padding: 8px 14px;
@@ -280,17 +317,45 @@
             white-space: nowrap;
         }
 
-        .btn-approve { background: rgba(16,185,129,0.1); color: #059669; border: 1px solid rgba(16,185,129,0.2); }
-        .btn-approve:hover { background: var(--success); color: #fff; }
+        .btn-approve { 
+            background: rgba(16,185,129,0.1); 
+            color: #059669; 
+            border: 1px solid rgba(16,185,129,0.2); 
+        }
+        .btn-approve:hover { 
+            background: var(--success); 
+            color: #fff; 
+        }
 
-        .btn-reject  { background: rgba(239,68,68,0.08); color: #dc2626; border: 1px solid rgba(239,68,68,0.15); }
-        .btn-reject:hover { background: var(--danger); color: #fff; }
+        .btn-reject  { 
+            background: rgba(239,68,68,0.08); 
+            color: #dc2626; 
+            border: 1px solid rgba(239,68,68,0.15); 
+        }
+        .btn-reject:hover { 
+            background: var(--danger); 
+            color: #fff;
+         }
 
-        .btn-view    { background: rgba(11,28,61,0.06); color: var(--navy); border: 1px solid var(--border); }
-        .btn-view:hover { background: var(--navy); color: #fff; }
+        .btn-view    { 
+            background: rgba(11,28,61,0.06); 
+            color: var(--navy); 
+            border: 1px solid var(--border); 
+        }
+        .btn-view:hover { 
+            background: var(--navy); 
+            color: #fff; 
+        }
 
-        .btn-print   { background: rgba(201,168,76,0.08); color: #92740a; border: 1px solid rgba(201,168,76,0.25); }
-        .btn-print:hover { background: var(--gold); color: var(--navy); }
+        .btn-print   { 
+            background: rgba(201,168,76,0.08); 
+            color: #92740a; 
+            border: 1px solid rgba(201,168,76,0.25); 
+        }
+        .btn-print:hover { 
+            background: var(--gold); 
+            color: var(--navy); 
+        }
 
         /* Unpaid table */
         .unpaid-table {
@@ -300,9 +365,14 @@
             overflow: hidden;
         }
 
-        .unpaid-table table { width: 100%; border-collapse: collapse; }
+        .unpaid-table table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
 
-        .unpaid-table thead { background: var(--navy); }
+        .unpaid-table thead { 
+            background: var(--navy); 
+        }
 
         .unpaid-table thead th {
             padding: 12px 16px;
@@ -314,10 +384,19 @@
             letter-spacing: 0.06em;
         }
 
-        .unpaid-table tbody tr { border-bottom: 1px solid var(--border); }
-        .unpaid-table tbody tr:last-child { border-bottom: none; }
-        .unpaid-table tbody tr:hover { background: var(--bg); }
-        .unpaid-table tbody td { padding: 12px 16px; font-size: 0.87em; }
+        .unpaid-table tbody tr { 
+            border-bottom: 1px solid var(--border); 
+        }
+        .unpaid-table tbody tr:last-child { 
+            border-bottom: none; 
+        }
+        .unpaid-table tbody tr:hover { 
+            background: var(--bg); 
+        }
+        .unpaid-table tbody td { 
+            padding: 12px 16px; 
+            font-size: 0.87em; 
+        }
 
         .empty-state {
             text-align: center;
@@ -326,11 +405,21 @@
         }
 
         @media (max-width: 800px) {
-            .stats-row { grid-template-columns: 1fr 1fr; }
-            .card-body  { grid-template-columns: 1fr 1fr; }
-            .card-actions { grid-column: 1 / -1; }
-            .topbar { padding: 0 16px; }
-            .page { padding: 24px 16px; }
+            .stats-row { 
+                grid-template-columns: 1fr 1fr; 
+            }
+            .card-body  { 
+                grid-template-columns: 1fr 1fr; 
+            }
+            .card-actions { 
+                grid-column: 1 / -1; 
+            }
+            .topbar { 
+                padding: 0 16px; 
+            }
+            .page { 
+                padding: 24px 16px; 
+            }
         }
     </style>
 </head>
@@ -356,7 +445,7 @@
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon" style="background:rgba(16,185,129,0.1);">✅</div>
+            <div class="stat-icon" style="background:rgba(16,185,129,0.1);"></div>
             <div>
                 <div class="stat-num" id="statActive">—</div>
                 <div class="stat-label">Active</div>
@@ -649,7 +738,7 @@
                 subscription_paid_at:    new Date().toISOString(),
                 subscription_expires_at: expiresAt
             }).eq("id", doctorId);
-            alert("✅ Subscription activated for 30 days.");
+            alert("Subscription activated for 30 days.");
         } else {
             await db.from("doctors")
                 .update({ subscription_status: "unpaid" })
@@ -677,7 +766,7 @@
             payment_ref:    `MANUAL-${Date.now()}`,
             notes:          "Manually activated by admin"
         }]);
-        alert("✅ Activated.");
+        alert("Subscription activated for 30 days.");
         loadAll();
     }
 

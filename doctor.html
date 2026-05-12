@@ -863,7 +863,7 @@
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
     const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // ── Helper: show message ──
+    // ── show message ──
     function showMsg(text, type = "error") {
         const el = document.getElementById("registration-success");
         el.textContent = text;
@@ -879,13 +879,13 @@
         }
     }
 
-    // ── Helper: reset button ──
+    // ── reset button ──
     function resetBtn(btn) {
         btn.value    = "🩺  Register as Doctor";
         btn.disabled = false;
     }
 
-    // ── Helper: upload document ──
+    // ──  upload document ──
     async function uploadDocument(file, userId, documentType) {
         if (!file) return null;
         const fileExt  = file.name.split('.').pop();

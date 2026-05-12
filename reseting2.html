@@ -185,14 +185,14 @@
             position: relative;
         }
 
-        /* ── PAGE WRAPPER ── */
+        
         .page-wrapper {
             max-width: 500px;
             margin: 0 auto;
             padding: 48px 20px 64px;
         }
 
-        /* ── CARD ── */
+        
         .reset-container {
             background: white;
             border-radius: 18px;
@@ -201,7 +201,7 @@
             border: 1px solid #dde3ed;
         }
 
-        /* ── STEP INDICATOR ── */
+        
         .steps {
             display: flex;
             align-items: center;
@@ -239,7 +239,7 @@
             flex-shrink: 0;
         }
 
-        /* ── SECTION HEADING ── */
+       
         .section-heading {
             font-size: 11px;
             font-weight: 700;
@@ -253,7 +253,7 @@
             border-radius: 0 8px 8px 0;
         }
 
-        /* ── PASSWORD STRENGTH BAR ── */
+       
         .strength-wrap {
             margin: -0.4rem 0 1rem;
         }
@@ -279,7 +279,7 @@
             color: #8a9ab0;
         }
 
-        /* ── INPUT GROUP ── */
+      
         .input-group {
             position: relative;
             margin-bottom: 1rem;
@@ -337,7 +337,7 @@
             border-color: #26a060;
         }
 
-        /* ── SUBMIT BUTTON ── */
+        
         .login-btn {
             width: 100%;
             height: 52px;
@@ -366,7 +366,7 @@
             transform: translateY(0);
         }
 
-        /* ── STATUS MESSAGE ── */
+        
         #showmessage {
             text-align: center;
             font-size: 13.5px;
@@ -377,7 +377,7 @@
             padding: 8px 0;
         }
 
-        /* ── BACK LINK ── */
+        
         .back-link {
             text-align: center;
             margin-top: 20px;
@@ -395,7 +395,7 @@
             text-decoration: underline;
         }
 
-        /* ── RESPONSIVE ── */
+        
         @media (max-width: 768px) {
             .topnav { padding: 0 20px; }
             .nav-links { display: none; }
@@ -406,7 +406,7 @@
             .nav-btns { display: none; }
         }
 
-        /* ── HAMBURGER & MOBILE MENU ── */
+        
         .hamburger {
         display: none;
         background: none; border: none; font-size: 24px;
@@ -471,18 +471,18 @@
         <a href="patientsLogin.html">Patient Login</a>
     </div>
 
-    <!-- HERO BANNER -->
+    
     <div class="page-hero">
         <div class="hero-badge">🔒 Account Recovery</div>
         <h1>Set a New <em>Password</em></h1>
         <p>Almost done! Choose a strong new password for your e-Health Connect account.</p>
     </div>
 
-    <!-- CARD -->
+    
     <div class="page-wrapper">
         <div class="reset-container">
 
-            <!-- Step indicator — steps 1 & 2 are done, step 3 active -->
+            
             <div class="steps">
                 <div class="step-pill done">1 · Email ✓</div>
                 <div class="step-arrow">›</div>
@@ -535,12 +535,12 @@
         menuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
         menuBtn.innerHTML = isOpen ? '&#x2715;' : '&#9776;';
         });
-        // ── Supabase setup ──
+        
         const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
         const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // ── Helpers ──
+        
         function setMessage(text, color = "#26a060") {
             const el = document.getElementById("showmessage");
             if (!el) return;
@@ -548,7 +548,7 @@
             el.style.color = color;
         }
 
-        // ── Password strength meter ──
+        
         document.getElementById("newPassword").addEventListener("input", function () {
             const val = this.value;
             const fill = document.getElementById("strengthFill");
@@ -577,7 +577,7 @@
             label.style.color = lvl.color;
         });
 
-        // ── Reset password on submit ──
+        
         document.addEventListener("DOMContentLoaded", () => {
             const form = document.getElementById("resetForm");
             if (!form) return;

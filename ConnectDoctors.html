@@ -665,7 +665,7 @@
             </div>
 
             <button class="confirm-btn" id="confirmBtn" onclick="bookAppointment()">
-              ✅ Confirm &amp; Pay Appointment
+               Confirm &amp; Pay Appointment
             </button>
             <div id="bookStatus" style="text-align:center;font-size:13.5px;margin-top:12px;min-height:20px;"></div>
           </div>
@@ -681,7 +681,7 @@
 <div class="modal-backdrop" id="receiptModal">
   <div class="receipt">
     <div class="receipt-head">
-      <div class="receipt-check">✅</div>
+      <div class="receipt-check"></div>
       <h2>Booking Confirmed!</h2>
       <p>Payment processed. Awaiting doctor approval.</p>
       <div class="receipt-ref" id="rcptRef">Ref: —</div>
@@ -711,18 +711,18 @@
 <div id="toast"></div>
 
 <script>
-  // ─── Supabase ────────────────────────────────────────────────────────────
+  // ─── Supabase 
   const supabaseUrl = "https://gqyhkccupbeudenvsdsf.supabase.co";
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxeWhrY2N1cGJldWRlbnZzZHNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgyMjgsImV4cCI6MjA5MTA4NDIyOH0.C6dtGH1277KKiMBpXtWSxRY9JQrfbbo7eYKIgomoap8";
   const sb = supabase.createClient(supabaseUrl, supabaseKey);
 
-  // ─── State ────────────────────────────────────────────────────────────────
+  // ─── State ───
   let allDoctors = [], filteredDoctors = [], selectedDoctor = null, selectedTime = null;
   let map = null, marker = null, locationInterval = null, userMarker = null;
 
   function el(id) { return document.getElementById(id); }
 
-  // ─── Sidebar ─────────────────────────────────────────────────────────────
+  // ─── Sidebar ──────
   el('sidebarToggle').addEventListener('click', () => {
     document.getElementById('sidebar').classList.add('open');
     document.getElementById('sidebarOverlay').classList.add('open');
@@ -735,13 +735,13 @@
   }
   document.querySelectorAll('.sidebar-link,.sidebar-btn').forEach(l => l.addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); }));
 
-  // ─── Toast ────────────────────────────────────────────────────────────────
+  // ─── Toast ──────
   function showToast(msg, type='success') {
     const t = el('toast'); t.textContent = msg; t.className = 'show ' + type;
     setTimeout(() => t.className = '', 3200);
   }
 
-  // ─── Map init ─────────────────────────────────────────────────────────────
+  // ─── Map init ───
   function initMap() {
     map = L.map('map').setView([-25.4745, 30.9703], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -749,7 +749,7 @@
     }).addTo(map);
   }
 
-  // ─── Load doctors ─────────────────────────────────────────────────────────
+  // ─── Load doctors ────
   async function loadDoctors() {
     const { data, error } = await sb.from('doctors')
       .select('id,name,surname,discipline,email,phone,hourly_rate,lat,lng,location,profile_image_url,operating_hours')
@@ -773,7 +773,7 @@
     el('docCount').textContent = `${data.length} doctors`;
   }
 
-  // ─── Render doctor cards ──────────────────────────────────────────────────
+  // ─── Render doctor cards ────
   function renderDoctors(doctors) {
     const grid = el('doctorGrid');
     grid.innerHTML = '';
@@ -826,7 +826,7 @@
     });
   }
 
-  // ─── Filter ───────────────────────────────────────────────────────────────
+  // ─── Filter ────
   function filterDoctors(query) {
     const q = query.toLowerCase().trim();
     const disc = el('disciplineFilter').value;
@@ -840,7 +840,7 @@
     renderDoctors(filteredDoctors);
   }
 
-  // ─── Show on map ──────────────────────────────────────────────────────────
+  // ─── Show on map ─────
   function showOnMap(docId) {
     const doc = allDoctors.find(d => d.id === docId);
     if (!doc || !doc.lat || !doc.lng) return;
@@ -867,7 +867,7 @@
     }, 5000);
   }
 
-  // ─── Locate user ──────────────────────────────────────────────────────────
+  // ─── Locate user ────
   function locateUser() {
     if (!navigator.geolocation) { showToast('Geolocation not supported', 'warn'); return; }
     showToast('Finding your location…');
@@ -934,7 +934,7 @@
   }
 }
 
-  // ─── Select doctor → open booking ────────────────────────────────────────
+  // ─── Select doctor → open booking ───
   function selectDoctor(docId) {
     const doc = allDoctors.find(d => d.id === docId);
     if (!doc) return;
@@ -990,7 +990,7 @@
     document.querySelectorAll('[id^="selbtn-"]').forEach(b => { b.textContent = 'Book Now'; b.className = 'btn-select'; });
   }
 
-  // ─── Load slots ───────────────────────────────────────────────────────────
+  // ─── Load slots ─────
   async function loadSlots() {
     const date = el('apptDate').value;
     if (!date || !selectedDoctor) return;
@@ -1044,7 +1044,7 @@
       el('slotsHint').textContent = '⚠️ No slots available on this date. Try another day.';
       el('slotsHint').className = 'slots-hint';
     } else {
-      el('slotsHint').textContent = `✅ ${freeSlots.length} slot${freeSlots.length !== 1 ? 's' : ''} available`;
+      el('slotsHint').textContent = ` ${freeSlots.length} slot${freeSlots.length !== 1 ? 's' : ''} available`;
       el('slotsHint').className = 'slots-hint ok';
     }
   }
@@ -1064,7 +1064,7 @@
     return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`;
   }
 
-  // ─── Card preview ─────────────────────────────────────────────────────────
+  // ─── Card preview ──
   function formatCardNum() {
     const inp = el('cardNumber');
     const v = inp.value.replace(/\D/g,'').match(/.{1,4}/g);
@@ -1088,7 +1088,7 @@
     updateSummary();
   }
 
-  // ─── Update total ─────────────────────────────────────────────────────────
+  // ─── Update total ───
   function updateTotal() { updateSummary(); }
 
   function getTotal() {
@@ -1113,7 +1113,7 @@
     el('sumTotal').textContent = formatRand(getTotal());
   }
 
-  // ─── Book appointment ─────────────────────────────────────────────────────
+  // ─── Book appointment ──
   async function bookAppointment() {
     if (!selectedDoctor) { showToast('Please select a doctor', 'warn'); return; }
     const name   = el('apptName').value.trim();
@@ -1140,7 +1140,7 @@
     const { data:{ user } } = await sb.auth.getUser();
     if (!user) {
       showToast('Please log in to book', 'warn');
-      btn.disabled = false; btn.textContent = '✅ Confirm & Pay Appointment';
+      btn.disabled = false; btn.textContent = 'Confirm & Pay Appointment';
       return;
     }
 
@@ -1164,7 +1164,7 @@
       amount_paid:    total
     }]);
 
-    btn.disabled = false; btn.textContent = '✅ Confirm & Pay Appointment';
+    btn.disabled = false; btn.textContent = 'Confirm & Pay Appointment';
 
     if (error) {
       console.error(error);
@@ -1189,7 +1189,7 @@
 
   function closeReceipt() { window.location.href = 'Patient-Dashboard.html'; }
 
-  // ─── Init ─────────────────────────────────────────────────────────────────
+  // ─── Init ───
   document.addEventListener('DOMContentLoaded', () => {
     initMap();
     loadDoctors();

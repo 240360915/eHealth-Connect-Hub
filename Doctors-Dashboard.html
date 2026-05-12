@@ -667,7 +667,7 @@ tbody tr:hover{
     opacity:.3;
 }
 
-/* ngi
+/* 
    TIME SLOTS
  */
 .slots-controls{
@@ -1214,7 +1214,7 @@ tbody tr:hover{
     color:var(--accent);
 }
 
-/* Call me section in appointments */
+
 .call-mini-btn{
   width:30px;
   height:30px;
@@ -1234,9 +1234,7 @@ tbody tr:hover{
     color:#fff;
     }
 
-/* ══════════════════════════════════════
-   RESPONSIVE — MOBILE & TABLET
-══════════════════════════════════════ */
+
 
 /* Tablet (max 1024px) */
 @media(max-width:1024px){
@@ -1256,7 +1254,7 @@ tbody tr:hover{
   /* ── Body layout ── */
   body{ flex-direction:column; overflow:auto; }
 
-  /* ── Sidebar becomes top nav bar ── */
+
   .sidebar{
     width:100%;
     height:auto;
@@ -1285,7 +1283,7 @@ tbody tr:hover{
   }
   .doc-info .doc-disc{ display:none; }
 
-  /* ── Nav items become horizontal scrollable row ── */
+
   nav{
     display:flex;
     flex-direction:row;
@@ -2152,16 +2150,16 @@ tbody tr:hover{
           <button onclick="showPage('dashboard')" class="sub-submit-btn">Go to Dashboard →</button>
         </div>
       </div>
-      <!-- end card -->
+    
 
     </div>
-    <!-- end payment box -->
+   
 </div>
-  <!-- end sub-page -->
-  </div><!-- end section-body -->
-</div><!-- end section-block -->
+  
+  </div>
 </div>
-<!-- end page-subscriptions -->
+</div>
+
 <!-- PRESCRIPTIONS PAGE -->
 <div class="page" id="page-prescriptions">
   <style>
@@ -2426,10 +2424,8 @@ tbody tr:hover{
           </div>
 
         </div>
-        <!-- end rx-main -->
+        
       </div>
-      <!-- end rx-wrap -->
-
     </div>
   </div>
 </div>
@@ -2931,7 +2927,7 @@ async function saveSlots(){
     const {error} = await client.from("time_slots").insert(toInsert);
     if(error){showToast("Error saving slots: "+error.message,"error");return;}
   }
-  showToast(`✅ Saved ${toInsert.length} open slots for ${fmtDate(date)}`,"success");
+  showToast(`Saved ${toInsert.length} open slots for ${fmtDate(date)}`,"success");
   loadSlotsForDate();
 }
 
@@ -3151,7 +3147,7 @@ async function shareLocation(){
         safeSet("locationStatus","textContent","❌ Failed to update location: "+error.message);
       } else {
         safeSet("locationStatus","textContent",
-          `✅ Location updated at ${new Date().toLocaleTimeString("en-ZA")} — patients can now find you.`);
+          `Location updated at ${new Date().toLocaleTimeString("en-ZA")} — patients can now find you.`);
           // ── Update map preview ──
           initLocationMap(lat, lng);
       }
@@ -3268,7 +3264,7 @@ async function checkExistingLocation(){
   }
 }
 
-// ── SUBSCRIPTION GATE ─────────────────────────────────────────────────
+// ── SUBSCRIPTION GATE ────
 async function checkSubscription() {
     const { data: doc } = await client
         .from("doctors")
@@ -3369,9 +3365,9 @@ function showSubscriptionBanner(daysSince, status) {
 
 document.addEventListener("DOMContentLoaded", initPage);
 
-// ══════════════════════════════════════
+
 //  SUBSCRIPTION PAGE LOGIC
-// ══════════════════════════════════════
+
 let subSelectedFile = null;
 let subSelectedCardBank = "";
 let subPaymentRefValue = "";
@@ -3612,9 +3608,9 @@ function subPrintHistorySlip(index){
     <div class="s-footer">Issued by e-Health Connect · Printed on ${printed} · Official subscription receipt.</div>`;
   window.print();
 }
-// ══════════════════════════════════════
+
 //  PRESCRIPTION PAGE LOGIC
-// ══════════════════════════════════════
+
 
 async function initPrescriptionPage(){
   if(!DOCTOR_ID) return;

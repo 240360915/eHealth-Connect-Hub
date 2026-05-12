@@ -656,7 +656,7 @@
     </div>
 </div>
 
-<!-- Toast -->
+
 <div id="toast"></div>
 
 <script>
@@ -667,7 +667,7 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 let currentAuthMode = 'login';
 
 
-// TOAST
+
 
 function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
@@ -677,7 +677,7 @@ function showToast(msg, type = 'success') {
 }
 
 
-// AUTH TAB SWITCH
+
 
 function switchAuthTab(mode) {
     currentAuthMode = mode;
@@ -687,7 +687,7 @@ function switchAuthTab(mode) {
     document.getElementById('authFeedback').textContent = '';
 }
 
-// AUTH FORM SUBMIT (login + signup)
+
 
 document.getElementById("authForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -727,7 +727,7 @@ document.getElementById("authForm").addEventListener("submit", async (e) => {
 });
 
 
-// LOAD PROFILE
+
 
 async function loadProfile() {
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -772,7 +772,7 @@ async function loadProfile() {
         set("emergency_contact_phone",     data.emergency_contact_phone);
         set("emergency_contact_relationship", data.emergency_contact_relationship);
 
-        // Update header
+        
         const fullName = `${data.name || ''} ${data.surname || ''}`.trim() || 'My Profile';
         document.getElementById("headerName").textContent    = fullName;
         document.getElementById("headerEmail").textContent   = data.email || user.email;
@@ -781,7 +781,7 @@ async function loadProfile() {
 }
 
 
-// SAVE PROFILE
+
 
 document.getElementById("profileForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -791,7 +791,7 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
 
     const idNumber = document.getElementById("id_number").value.trim();
 
-    // Check duplicate ID number
+    
     if (idNumber) {
         const { data: existing } = await supabaseClient
             .from("patients")
@@ -860,7 +860,7 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
 });
 
 
-// LOGOUT
+
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {
     await supabaseClient.auth.signOut();

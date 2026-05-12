@@ -34,7 +34,11 @@
             --sidebar-w:  240px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+             margin: 0; 
+             padding: 0; 
+             box-sizing: border-box;
+             }
 
         body {
             font-family: 'Roboto', sans-serif;
@@ -44,7 +48,7 @@
             min-height: 100vh;
         }
 
-        /* SIDEBAR */
+        
         .sidebar {
             width: var(--sidebar-w);
             background: var(--navy);
@@ -165,9 +169,6 @@
         }
         .logout-btn:hover { color: var(--danger); }
 
-        /* 
-           MAIN CONTENT
-        */
         .main {
             margin-left: var(--sidebar-w);
             flex: 1;
@@ -207,9 +208,7 @@
             50% { opacity: 0.7; }
         }
 
-        /* 
-           STAT CARDS
-         */
+    
         .cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -280,9 +279,7 @@
             margin-top: 6px;
         }
 
-        /* 
-           TABS
-        */
+
         .tabs {
             display: flex;
             gap: 4px;
@@ -329,7 +326,7 @@
         .tab-content.active { 
             display: block; 
         }
-        /* SECTION / TABLE */
+        
         .section {
             background: var(--card);
             border-radius: 12px;
@@ -419,7 +416,7 @@
             color: var(--muted); 
             font-size: 13px; }
 
-        /* Status badges */
+        
         .badge {
             display: inline-flex;
             align-items: center;
@@ -445,7 +442,7 @@
             color: #991b1b; 
         }
 
-        /* Action buttons */
+        
         .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
 
         .btn {
@@ -502,9 +499,7 @@
             font-size: 14px;
         }
 
-        /* 
-           CHARTS
-        */
+
         .charts {
             display: grid;
             grid-template-columns: 2fr 1fr;
@@ -527,7 +522,7 @@
             margin-bottom: 16px;
         }
 
-        /*MODAL*/
+        
         .modal-overlay {
             display: none;
             position: fixed;
@@ -725,9 +720,7 @@
             border-left: 4px solid var(--danger);  
         }
 
-        /* 
-           RESPONSIVE
-         */
+
         @media (max-width: 1024px) {
             .cards { grid-template-columns: repeat(2, 1fr); }
             .charts { grid-template-columns: 1fr; }
@@ -746,15 +739,23 @@
                 grid-template-columns: 1fr 1fr; 
             }
         }
-        /* ── HAMBURGER & SIDEBAR MOBILE ── */
+        
     .hamburger{
     display:none;
-    background:none;border:none;font-size:22px;
-    cursor:pointer;color:var(--navy);padding:6px 8px;
-    border-radius:8px;line-height:1;margin-bottom:16px;
+    background:none;
+    border:none;
+    font-size:22px;
+    cursor:pointer;
+    color:var(--navy);
+    padding:6px 8px;
+    border-radius:8px;
+    line-height:1;
+    margin-bottom:16px;
     align-self:flex-start;
     }
-    .hamburger:hover{background:rgba(27,42,78,.07);}
+    .hamburger:hover{
+        background:rgba(27,42,78,.07);
+    }
 
     .sidebar-overlay{
     display:none;
@@ -762,56 +763,188 @@
     background:rgba(0,0,0,0.45);
     z-index:99;
     }
-    .sidebar-overlay.open{display:block;}
-    .sidebar.open{transform:translateX(0) !important;}
+    .sidebar-overlay.open{
+        display:block;
+    }
+    .sidebar.open{
+        transform:translateX(0) !important;
+    }
 
     @media(max-width:768px){
-    .hamburger{display:block;}
+    .hamburger{
+        display:block;
+    }
     }
     
-    /* ── Chart Menu Dropdown ── */
-    .chart-menu-wrapper { position: relative; }
+    
+    .chart-menu-wrapper { 
+        position: relative; 
+    }
     .chart-menu-btn {
-        background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-        width: 38px; height: 38px; display: flex; flex-direction: column;
-        align-items: center; justify-content: center; gap: 4px; cursor: pointer;
-        transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        background: var(--card); 
+        border: 1px solid var(--border); 
+        border-radius: 8px;
+        width: 38px; 
+        height: 38px; 
+        display: flex; 
+        flex-direction: column;
+        align-items: center; 
+        justify-content: center; 
+        gap: 4px; 
+        cursor: pointer;
+        transition: all 0.2s; 
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
-    .chart-menu-btn:hover, .chart-menu-btn.open { background: var(--navy); border-color: var(--navy); }
-    .chart-menu-btn:hover .hline, .chart-menu-btn.open .hline { background: #fff; }
-    .hline { display: block; width: 16px; height: 2px; background: var(--navy); border-radius: 2px; }
+    .chart-menu-btn:hover, .chart-menu-btn.open { 
+        background: var(--navy); 
+        border-color: var(--navy); 
+    }
+    .chart-menu-btn:hover .hline, .chart-menu-btn.open .hline { 
+        background: #fff; 
+    
+    }
+    .hline { 
+        display: block; 
+        width: 16px;
+         height: 2px; 
+         background: var(--navy); 
+         border-radius: 2px; 
+        }
     .chart-dropdown {
-        display: none; position: absolute; top: calc(100% + 8px); right: 0;
-        width: 280px; background: var(--card); border: 1px solid var(--border);
-        border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); z-index: 500;
-        overflow: hidden; animation: dropDown 0.2s ease;
+        display: none; 
+        position: absolute; 
+        top: calc(100% + 8px); 
+        right: 0;
+        width: 280px; 
+        background: var(--card); 
+        border: 1px solid var(--border);
+        border-radius: 12px; 
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12); z-index: 500;
+        overflow: hidden; 
+        animation: dropDown 0.2s ease;
     }
-    @keyframes dropDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-    .chart-dropdown.open { display: block; }
-    .cd-header { padding: 14px 16px 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .cd-header strong { font-size: 13px; font-weight: 700; color: var(--navy); }
-    .cd-reset { font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 600; background: none; border: none; }
-    .cd-section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
-    .cd-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; display: block; }
-    .cd-options { display: flex; gap: 6px; flex-wrap: wrap; }
-    .cd-opt { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 11px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.18s; background: var(--bg); }
-    .cd-opt:hover { border-color: var(--navy); color: var(--navy); }
-    .cd-opt.selected { background: var(--navy); border-color: var(--navy); color: #fff; }
-    .cd-week-select { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .month-select { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; font-size: 12px; outline: none; }
-    .cd-toggles { display: flex; flex-direction: column; gap: 8px; }
-    .cd-toggle { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--text); cursor: pointer; }
-    .toggle-switch { width: 34px; height: 18px; background: var(--border); border-radius: 10px; position: relative; transition: background 0.2s; flex-shrink: 0; }
-    .toggle-switch.on { background: var(--navy); }
-    .toggle-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
-    .toggle-switch.on::after { transform: translateX(16px); }
+    @keyframes dropDown { 
+        from {
+             opacity: 0; 
+            transform: translateY(-6px); 
+        } to { 
+            opacity: 1; 
+            transform: translateY(0); 
+        } 
+    }
+    .chart-dropdown.open { 
+        display: block; 
+    }
+    .cd-header { 
+        padding: 14px 16px 10px; 
+        border-bottom: 1px solid var(--border); 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+    }
+    .cd-header strong { 
+        font-size: 13px; 
+        font-weight: 700; 
+        color: var(--navy); 
+    }
+    .cd-reset { 
+        font-size: 11px; 
+        color: var(--accent);
+         cursor: pointer; 
+         font-weight: 600; 
+         background: none; 
+         border: none; 
+        }
+    .cd-section { 
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border); 
+    }
+    .cd-label { 
+        font-size: 10px; 
+        font-weight: 600; 
+        text-transform: uppercase; 
+        letter-spacing: 0.8px; 
+        color: var(--muted); 
+        margin-bottom: 8px; 
+        display: block; 
+    }
+    .cd-options { 
+        display: flex; 
+        gap: 6px; 
+        flex-wrap: wrap; 
+    }
+    .cd-opt { 
+        padding: 5px 12px; 
+        border-radius: 20px; 
+        border: 1px solid var(--border); 
+        font-size: 11px; 
+        font-weight: 600; 
+        color: var(--muted); 
+        cursor: pointer; 
+        transition: all 0.18s; 
+        background: var(--bg); 
+    }
+    .cd-opt:hover { 
+        border-color: var(--navy); 
+        color: var(--navy); 
+    }
+    .cd-opt.selected { 
+        background: var(--navy); 
+        border-color: var(--navy); 
+        color: #fff; 
+    }
+    .cd-week-select { 
+        margin-top: 10px; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 8px; 
+    }
+    .month-select { 
+        width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; font-size: 12px; outline: none; }
+    .cd-toggles { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 8px; 
+    }
+    .cd-toggle { 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        font-size: 13px; 
+        color: var(--text); 
+        cursor: pointer; 
+    }
+    .toggle-switch { 
+        width: 34px; 
+        height: 18px; 
+        background: var(--border); 
+        border-radius: 10px; 
+        position: relative; 
+        transition: background 0.2s; 
+        flex-shrink: 0; 
+    }
+    .toggle-switch.on { 
+        background: var(--navy); 
+    }
+    .toggle-switch::after { 
+        content: ''; 
+        position: absolute; 
+        top: 2px; 
+        left: 2px; 
+        width: 14px; 
+        height: 14px; 
+        background: #fff; 
+        border-radius: 50%; 
+        transition: transform 0.2s;
+     }
+    .toggle-switch.on::after { 
+        transform: translateX(16px); 
+    }
     </style>
 </head>
 <body>
 
-<!-- 
-     SIDEBAR
--->
+
 <div class="sidebar">
     <div class="sidebar-brand">
         <h2>e-Health Connect</h2>
@@ -865,9 +998,6 @@
 </div>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- 
-     MAIN
- -->
 <div class="main">
     <button class="hamburger" id="sidebarToggle" aria-label="Open menu">&#9776;</button>
     <div class="topbar">
@@ -955,7 +1085,7 @@
         </div>
     </div>
 
-    <!-- CHARTS (Dashboard tab) -->
+
     <div class="tab-content active" id="tab-dashboard">
         <div class="charts">
             <div class="chart-card">
@@ -973,7 +1103,7 @@
         </div>
     </div>
 
-    <!--  PENDING VERIFICATION  -->
+    
     <div class="tab-content" id="tab-pending">
         <div class="section">
             <div class="section-header">
@@ -1073,10 +1203,10 @@
         </div>
     </div>
 
-    <!--  SUBSCRIPTIONS  -->
+   
 <div class="tab-content" id="tab-subscriptions">
 
-    <!-- Stats row -->
+    
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
         <div class="card">
             <div class="card-icon">⏳</div>
@@ -1110,7 +1240,7 @@
             style="margin-left:auto;">
     </div>
 
-    <!-- Payments table -->
+    
     <div class="section">
         <div class="section-header">
             <div>
@@ -1165,7 +1295,7 @@
             </div>
         </div>
 
-        <!-- Filter + Search bar -->
+        
         <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
             <button class="tab-btn active" onclick="filterMsgs('all', this)">All</button>
             <button class="tab-btn" onclick="filterMsgs('new', this)">🔴 New</button>
@@ -1204,9 +1334,7 @@
 
 </div>
 
-<!-- 
-     DOCTOR REVIEW MODAL
- -->
+
 <div class="modal-overlay" id="reviewModal">
     <div class="modal">
         <div class="modal-header">
@@ -1230,7 +1358,7 @@
     </div>
 </div>
 
-    <!-- REPLY MODAL -->
+    
     <div class="modal-overlay" id="replyModal">
         <div class="modal">
             <div class="modal-header">
@@ -1286,7 +1414,7 @@
     sidebarToggle.innerHTML = '&#9776;';
     }
 
-    // Close sidebar when a menu item is tapped on mobile
+   
     document.querySelectorAll('.sidebar a').forEach(a => {
     a.addEventListener('click', () => {
         if (window.innerWidth <= 768) closeSidebar();
@@ -1322,13 +1450,13 @@ async function sendVerificationEmail(doctor, status, notes) {
     }
 }
 
-// ── Generates a temporary signed URL from whatever format is stored ──
+
 async function getSignedUrl(rawUrl) {
     if (!rawUrl) return null;
 
     let filePath = rawUrl;
 
-    // If it's a full Supabase storage URL, extract just the file path
+    
     if (rawUrl.includes('/storage/v1/object/')) {
         const bucketName = 'doctor-documents';
         const markers = [
@@ -1344,7 +1472,7 @@ async function getSignedUrl(rawUrl) {
         }
     }
 
-    // Generate a signed URL valid for 1 hour (3600 seconds)
+    
     const { data, error } = await client.storage
         .from('doctor-documents')
         .createSignedUrl(filePath, 3600);
@@ -1357,7 +1485,7 @@ async function getSignedUrl(rawUrl) {
     return data.signedUrl;
 }
 
-//  Toast 
+
 
 function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
@@ -1366,12 +1494,12 @@ function showToast(msg, type = 'success') {
     setTimeout(() => { t.className = ''; }, 3500);
 }
 
-//  Tab navigation 
+ 
 function showTab(name, el) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
 
-    // ── Close chart dropdown when switching tabs ──
+    
     document.getElementById('chartDropdown')?.classList.remove('open');
     document.getElementById('chartMenuBtn')?.classList.remove('open');
     document.getElementById('chartMenuWrapper').style.display = name === 'dashboard' ? 'block' : 'none';
@@ -1393,7 +1521,7 @@ function showTab(name, el) {
         document.getElementById('pageSubtitle').textContent = titles[name][1];
     }
 
-    // ── Load data when tab is switched ──
+    
     if (name === 'doctors')      loadDoctors();
     if (name === 'pending')      loadPendingDoctors();
     if (name === 'patients')     loadPatients();
@@ -1404,7 +1532,7 @@ function showTab(name, el) {
     
 }
 
-//  Stats 
+
 async function loadStats() {
     const [
         { count: doctors },
@@ -1429,7 +1557,7 @@ async function loadStats() {
     document.getElementById("pendingAlert").style.display    = p > 0 ? 'inline-flex' : 'none';
 }
 
-//  Pending doctors 
+
 async function loadPendingDoctors() {
     const { data, error } = await client
         .from("doctors")
@@ -1468,7 +1596,7 @@ async function loadPendingDoctors() {
     });
 }
 
-//  All doctors  
+ 
 async function loadDoctors() {
     const { data, error } = await client
         .from("doctors")
@@ -1506,7 +1634,7 @@ async function loadDoctors() {
     });
 }
 
-//  Patients  
+ 
 async function loadPatients() {
     const { data, error } = await client
         .from("patients")
@@ -1538,7 +1666,7 @@ async function loadPatients() {
 
 
 
-//  Review modal 
+
 async function openReviewModal(doctorId) {
     currentDoctorId = doctorId;
 
@@ -1551,7 +1679,7 @@ async function openReviewModal(doctorId) {
     if (error || !doc) { showToast("Could not load doctor data", "error"); return; }
     currentDoctorData = doc;
 
-    // Build address from your actual columns
+    
     const addressParts = [doc.address_line1, doc.address_line2, doc.address_line3, doc.postal_code].filter(Boolean);
     const address = addressParts.length > 0 ? addressParts.join(", ") : "—";
 
@@ -1577,8 +1705,7 @@ async function openReviewModal(doctorId) {
             <span>${val}</span>
         </div>`).join('');
 
-    // Documents —
-// Documents — generate signed URLs so private files are viewable
+
 document.getElementById("modalDocs").innerHTML = `
     <div style="grid-column:1/-1;text-align:center;padding:16px;color:var(--muted);font-size:13px;">
         🔄 Loading documents...
@@ -1593,7 +1720,7 @@ document.getElementById("modalDocs").innerHTML = `
         ['📍', 'Proof of Address',        doc.proof_of_address_url],
     ];
 
-    // Generate all signed URLs in parallel
+    
     const docsWithUrls = await Promise.all(
         docDefs.map(async ([icon, label, rawUrl]) => {
             const signedUrl = rawUrl ? await getSignedUrl(rawUrl) : null;
@@ -1639,17 +1766,16 @@ function closeModal() {
 }
 
 
-// Approves regardless of whether documents were uploaded
 async function verifyDoctor(status) {
     if (!currentDoctorId || !currentDoctorData) return;
 
     const notes = document.getElementById("verificationNotes").value.trim();
     const { data: { user } } = await client.auth.getUser();
 
-    // Show loading state on buttons
+    
     setModalButtons(true);
 
-    // Step 1 — Update Supabase
+    
     const { error } = await client
         .from("doctors")
         .update({
@@ -1666,7 +1792,7 @@ async function verifyDoctor(status) {
         return;
     }
 
-    // Step 2 — Send email via EmailJS
+    
     const emailSent = await sendVerificationEmail(currentDoctorData, status, notes);
 
     setModalButtons(false);
@@ -1693,7 +1819,7 @@ async function verifyDoctor(status) {
     loadDoctors();
 }
 
-//  Delete 
+
 async function deleteDoctor(id) {
     if (!confirm("Delete this doctor? This cannot be undone.")) return;
     const { error } = await client.from("doctors").delete().eq("id", id);
@@ -1712,7 +1838,7 @@ async function deletePatient(id) {
     loadStats();
 }
 
-// Search filter 
+
 function filterTable(tableId, query) {
     const rows = document.getElementById(tableId).querySelectorAll("tr");
     const q = query.toLowerCase();
@@ -1721,7 +1847,7 @@ function filterTable(tableId, query) {
     });
 }
 
-// Charts 
+
 let barChartInstance = null;
 let pieChartInstance = null;
 let chartData = { doctors: [], patients: [] };
@@ -1882,10 +2008,9 @@ async function adminLogout() {
     window.location.href = "adminLogin.html";
 }
 
-//  Initialization 
 document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('monthPicker').value = chartPrefs.selectedMonth;
-    // Auth guard — redirect if not logged in as admin
+    
     const { data: { user } } = await client.auth.getUser();
     if (!user) { window.location.href = "adminLogin.html"; return; }
 
@@ -1901,7 +2026,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // Show admin name and initial in sidebar
+    
     document.getElementById("adminName").textContent    = adminRecord.name;
     document.getElementById("adminInitial").textContent = adminRecord.name.charAt(0).toUpperCase();
 
@@ -1913,8 +2038,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadMessages();
 });
 
-// messages and groups them by conversation (patient ↔ doctor)
-// ── Contact Messages ──────
+
 let allContactMsgs     = [];
 let currentMsgFilter   = "all";
 let currentMsgSearch   = "";
@@ -1941,7 +2065,7 @@ async function loadContactMessages() {
 
     allContactMsgs = data || [];
 
-    // Update stats
+    
     const total   = allContactMsgs.length;
     const newMsgs = allContactMsgs.filter(m => !m.status || m.status === "new").length;
     const replied = allContactMsgs.filter(m => m.status === "replied").length;
@@ -1950,7 +2074,7 @@ async function loadContactMessages() {
     document.getElementById("msgNew").textContent     = newMsgs;
     document.getElementById("msgReplied").textContent = replied;
 
-    // Update sidebar badge (reuse tab-badge next to Messages link)
+    
     const msgBadge = document.getElementById("msgBadge");
     if (msgBadge) {
         msgBadge.textContent      = newMsgs > 0 ? newMsgs : "";
@@ -2079,7 +2203,7 @@ async function sendReply() {
     const replyText = document.getElementById("replyText").value.trim();
     if (!replyText) { showToast("Please write a reply first.", "error"); return; }
 
-    // Open email client with pre-filled reply
+    
     const subject  = encodeURIComponent("Re: " + currentReplySubject);
     const body     = encodeURIComponent(
         replyText +
@@ -2087,7 +2211,7 @@ async function sendReply() {
     );
     window.location.href = `mailto:${currentReplyEmail}?subject=${subject}&body=${body}`;
 
-    // Mark as replied in Supabase
+    
     const { error } = await client
         .from("contact_messages")
         .update({ status: "replied" })
@@ -2112,14 +2236,14 @@ async function deleteContactMsg(id) {
 }
 
 
-// ── Subscriptions ───────
+
 let allSubs      = [];
 let allSubDoctors = {};
 let currentSubFilter = "all";
 let currentSubSearch = "";
 
 async function loadSubscriptions() {
-    // Load all subscription payments
+    
     const { data: payments, error } = await client
         .from("payments")
         .select("*")
@@ -2129,7 +2253,7 @@ async function loadSubscriptions() {
     if (error) { console.error("Subs error:", error); return; }
     allSubs = payments || [];
 
-    // Load all doctors to match names
+    
     const { data: doctors } = await client
         .from("doctors")
         .select("id, name, surname, email, subscription_status");
@@ -2138,7 +2262,7 @@ async function loadSubscriptions() {
         allSubDoctors[d.id] = d;
     });
 
-    // Update stats
+    
     const pending  = allSubs.filter(p => p.status === "pending").length;
     const approved = allSubs.filter(p => p.status === "approved").length;
     const revenue  = allSubs
@@ -2153,7 +2277,7 @@ async function loadSubscriptions() {
     ? "R" + revenue.toFixed(2)
     : "R0.00";
 
-    // Update sidebar badge
+    
     document.getElementById("subPendingCount").textContent = pending;
     document.getElementById("subPendingCount").style.display = pending > 0 ? "inline" : "none";
 
@@ -2164,12 +2288,12 @@ function renderSubs() {
     const table = document.getElementById("subsTable");
     let list = [...allSubs];
 
-    // Apply filter
+    
     if (currentSubFilter !== "all") {
         list = list.filter(p => p.status === currentSubFilter);
     }
 
-    // Apply search
+   
     if (currentSubSearch) {
         const q = currentSubSearch.toLowerCase();
         list = list.filter(p => {
@@ -2267,7 +2391,7 @@ async function approvePayment(paymentId, doctorId) {
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     const now       = new Date().toISOString();
 
-    // Update payment status
+  
     const { error: payError } = await client
         .from("payments")
         .update({ status: "approved", paid_at: now })
@@ -2275,7 +2399,7 @@ async function approvePayment(paymentId, doctorId) {
 
     if (payError) { showToast("Failed: " + payError.message, "error"); return; }
 
-    // Activate doctor subscription
+    
     const { error: docError } = await client
         .from("doctors")
         .update({
