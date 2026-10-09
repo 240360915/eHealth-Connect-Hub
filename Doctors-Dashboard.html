@@ -1469,6 +1469,94 @@ tbody tr:hover{
   /* Main fills full width */
   .main { margin-left: 0 !important; }
 }    
+
+/* =========================================================
+   PATIENT HEALTH PROFILE MODAL
+   ========================================================= */
+.health-profile-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:2200;
+  background:rgba(15,31,61,.72);
+  backdrop-filter:blur(7px);
+  padding:24px;
+  align-items:center;
+  justify-content:center;
+}
+.health-profile-overlay.show{display:flex;}
+.health-profile-modal{
+  width:min(920px,96vw);
+  max-height:92vh;
+  overflow:hidden;
+  background:var(--white);
+  border-radius:20px;
+  border:1px solid var(--border);
+  box-shadow:0 28px 80px rgba(0,0,0,.28);
+  display:flex;
+  flex-direction:column;
+}
+.health-profile-head{
+  padding:18px 22px;
+  background:var(--navy);
+  color:#fff;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+}
+.health-profile-head h2{font-size:17px;margin:0 0 4px;}
+.health-profile-sub{font-size:12px;color:rgba(255,255,255,.62);line-height:1.45;}
+.health-profile-close{
+  width:34px;height:34px;border:none;border-radius:9px;
+  background:rgba(255,255,255,.1);color:#fff;font-size:18px;
+  cursor:pointer;flex-shrink:0;
+}
+.health-profile-close:hover{background:rgba(255,255,255,.2);}
+.health-profile-body{overflow-y:auto;padding:20px;background:#f8fafc;}
+.health-summary{
+  background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;
+  border-radius:12px;padding:12px 14px;font-size:12.5px;
+  line-height:1.55;margin-bottom:16px;
+}
+.health-section{
+  background:#fff;border:1px solid var(--border);
+  border-radius:14px;margin-bottom:14px;overflow:hidden;
+}
+.health-section-title{
+  padding:11px 14px;font-size:12px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.045em;color:var(--navy);
+  background:#f8faff;border-bottom:1px solid var(--border);
+}
+.health-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;}
+.health-item{padding:12px 14px;min-height:64px;border-bottom:1px solid var(--border);}
+.health-item:nth-child(odd){border-right:1px solid var(--border);}
+.health-item.full{grid-column:1/-1;border-right:none!important;}
+.health-label{
+  font-size:10px;text-transform:uppercase;letter-spacing:.05em;
+  font-weight:700;color:var(--muted);margin-bottom:5px;
+}
+.health-value{
+  font-size:13px;color:var(--text);line-height:1.55;
+  white-space:pre-wrap;word-break:break-word;
+}
+.health-empty{color:#94a3b8;font-style:italic;}
+.health-loading{padding:42px 20px;text-align:center;color:var(--muted);}
+.health-error{
+  padding:14px 16px;border-radius:12px;background:#fee2e2;
+  border:1px solid #fecaca;color:#b91c1c;line-height:1.55;font-size:13px;
+}
+.health-btn{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+@media(max-width:680px){
+  .health-profile-overlay{padding:10px;}
+  .health-profile-modal{width:100%;max-height:96vh;border-radius:16px;}
+  .health-profile-head{padding:15px 16px;}
+  .health-profile-body{padding:12px;}
+  .health-grid{grid-template-columns:1fr;}
+  .health-item:nth-child(odd){border-right:none;}
+  .health-item.full{grid-column:auto;}
+}
+
 </style>
 </head>
 <body>
@@ -1498,6 +1586,10 @@ tbody tr:hover{
       <span class="nav-icon">📅</span> Appointments
       <span class="nav-badge" id="apptBadge">0</span>
     </div>
+    <div class="nav-item" data-page="physicalRequests" onclick="showPage('physicalRequests')">
+      <span class="nav-icon">🩺</span> Physical Requests
+      <span class="nav-badge" id="physicalBadge">0</span>
+    </div>
     <div class="nav-item" data-page="prescriptions" onclick="showPage('prescriptions')">
       <span class="nav-icon">💊</span> Prescriptions
     </div>
@@ -1512,7 +1604,7 @@ tbody tr:hover{
       <span class="nav-icon">💰</span> Financial Records
     </div>
     <div class="nav-item" data-page="location" onclick="showPage('location')">
-      <span class="nav-icon">📍</span> Location
+      <span class="nav-icon">📍</span> Practice Location
     </div>
 
     <div class="nav-item" data-page="subscriptions" onclick="showPage('subscriptions')">
@@ -1602,6 +1694,52 @@ tbody tr:hover{
     </div>
   </div>
 
+
+  <!-- PHYSICAL VISIT REQUESTS PAGE -->
+  <div class="page" id="page-physicalRequests">
+
+    <div class="section-block">
+      <div class="section-head">
+        <h2>🩺 Physical Visit Requests</h2>
+        <button class="btn btn-outline btn-sm" onclick="loadPhysicalVisitRequests()" style="background:#fff;">Refresh</button>
+      </div>
+
+      <div class="section-body" style="padding:0;overflow-x:auto;">
+        <table style="min-width:900px;">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Request Reason</th>
+              <th>Request Status</th>
+              <th>Invoice / Arrangement</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="physicalRequestsTable">
+            <tr>
+              <td colspan="5" class="empty-state">Open this page to load physical visit requests.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="
+      padding:14px 16px;
+      border-radius:10px;
+      background:#eff6ff;
+      border:1px solid #bfdbfe;
+      color:#1e40af;
+      font-size:12.5px;
+      line-height:1.6;
+    ">
+      ℹ️ Physical visits can only be requested after a completed online consultation.
+      Accepting a request does not finalise the visit. You must send an invoice with
+      the proposed date, time and location, and the patient must accept it.
+    </div>
+
+  </div>
+
   <!-- MESSAGES PAGE  -->
   <div class="page" id="page-messages">
     <div class="msg-layout">
@@ -1622,6 +1760,7 @@ tbody tr:hover{
             </div>
           </div>
         <div class="chat-call-btns">
+          <button class="call-icon-btn" title="View patient health profile" onclick="openCurrentPatientHealthProfile()" id="chatHealthBtn" style="display:none;">🩺 Health Profile</button>
           <button class="call-icon-btn" title="Video call" onclick="initiateCall()" id="chatVideoBtn" style="display:none;">📹 Video Call</button>
         </div>
         </div>
@@ -1636,87 +1775,324 @@ tbody tr:hover{
     </div>
   </div>
 
-  <!--  TIME SLOTS PAGE -->
-  <div class="page" id="page-slots">
-    <div class="section-block">
-      <div class="section-head"><h2>🕐 Manage Available Slots</h2></div>
-      <div class="section-body">
-        <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">Set the time slots you are available for on a specific date. Patients will only be able to book from these slots.</p>
+  <!--  TIME SLOTS / WEEKLY AVAILABILITY PAGE -->
+<div class="page" id="page-slots">
 
-        <div class="slots-controls">
-          <div class="time-input-group">
-            <label>Date</label>
-            <input type="date" id="slotDate" onchange="loadSlotsForDate()"/>
-          </div>
-          <div class="time-input-group">
-            <label>From</label>
-            <input type="time" id="slotFrom" value="08:00"/>
-          </div>
-          <div class="time-input-group">
-            <label>To</label>
-            <input type="time" id="slotTo" value="17:00"/>
-          </div>
-          <div class="slot-interval">
-            <label>Interval</label>
-            <select id="slotInterval">
-              <option value="30">30 min</option>
-              <option value="60">60 min</option>
-              <option value="20">20 min</option>
-              <option value="45">45 min</option>
-            </select>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700;">&nbsp;</label>
-            <button class="btn btn-primary" onclick="generateSlots()">Generate Slots</button>
-          </div>
-        </div>
-
-        <div class="slots-legend">
-          <div class="legend-item"><div class="legend-dot open"></div>Open (patients can book)</div>
-          <div class="legend-item"><div class="legend-dot booked"></div>Already booked</div>
-          <div class="legend-item"><div class="legend-dot closed"></div>Closed (click to open)</div>
-        </div>
-
-        <div class="slots-grid-display" id="slotsDisplay"><div class="empty-state">Select a date and generate slots to manage your availability.</div></div>
-
-        <div style="margin-top:16px;display:none;gap:10px;" id="slotSaveRow">
-          <button class="btn btn-primary" onclick="saveSlots()">💾 Save Availability</button>
-          <button class="btn btn-outline" onclick="closeAllSlots()">Close All</button>
-          <button class="btn btn-outline" onclick="openAllSlots()">Open All</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!--  LOCATION PAGE  -->
-  <div class="page" id="page-location">
+  <!-- WEEKLY SCHEDULE -->
   <div class="section-block">
-    <div class="section-head"><h2>📍 Location Sharing</h2></div>
+
+    <div class="section-head">
+      <h2>🗓️ Weekly Availability</h2>
+    </div>
+
     <div class="section-body">
-      <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">
-        Share your location so patients can find your practice on the map.
-        Your location updates every 10 seconds while sharing is active.
+
+      <p style="
+        color:var(--muted);
+        font-size:13.5px;
+        margin-bottom:20px;
+        line-height:1.6;
+      ">
+        Choose the days you normally work and the hours patients may book.
+        Your future appointment slots will be generated automatically.
       </p>
-      <div class="location-section" style="margin-bottom:20px;">
-        <button class="loc-btn" id="locBtn" onclick="toggleShareLocation()">
-          📍 Share My Location
-        </button>
-        <span id="locationStatus"></span>
+
+      <div style="
+        overflow-x:auto;
+        border:1px solid var(--border);
+        border-radius:10px;
+      ">
+
+        <table style="min-width:720px;">
+
+          <thead>
+            <tr>
+              <th>Available</th>
+              <th>Day</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Appointment Length</th>
+            </tr>
+          </thead>
+
+          <tbody id="weeklyAvailabilityBody">
+
+            <tr>
+              <td colspan="5" class="empty-state">
+                Loading weekly availability...
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
       </div>
 
-      <!-- ── Map preview ── -->
+
       <div style="
-        height:340px;border-radius:10px;overflow:hidden;
-        box-shadow:var(--shadow);border:1px solid var(--border);
+        margin-top:18px;
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        align-items:center;
       ">
-        <div id="locationMap" style="height:100%;width:100%;"></div>
+
+        <button
+          class="btn btn-primary"
+          id="saveWeeklyScheduleBtn"
+          onclick="saveWeeklySchedule()"
+        >
+          💾 Save Weekly Schedule
+        </button>
+
+        <span
+          id="weeklyScheduleStatus"
+          style="
+            color:var(--muted);
+            font-size:12px;
+          "
+        ></span>
+
       </div>
-      <p style="font-size:12px;color:var(--muted);margin-top:8px;">
-        📌 The pin shows your current saved location as patients see it.
-      </p>
+
+      <div style="
+        margin-top:16px;
+        padding:14px 16px;
+        border-radius:10px;
+        background:#eff6ff;
+        border:1px solid #bfdbfe;
+        color:#1e40af;
+        font-size:12.5px;
+        line-height:1.6;
+      ">
+        ℹ️ Saving your schedule automatically creates bookable appointment
+        slots for the next 60 days. Existing patient bookings are never deleted.
+      </div>
+
     </div>
   </div>
+
+
+  <!-- DATE EXCEPTIONS -->
+  <div class="section-block">
+
+    <div class="section-head">
+      <h2>🚫 Close a Specific Date</h2>
+    </div>
+
+    <div class="section-body">
+
+      <p style="
+        color:var(--muted);
+        font-size:13.5px;
+        margin-bottom:18px;
+        line-height:1.6;
+      ">
+        Use this when you are normally available on that weekday but will not
+        work on a particular date, for example annual leave, training or an
+        emergency.
+      </p>
+
+
+      <div class="slots-controls">
+
+        <div class="time-input-group">
+
+          <label>Date</label>
+
+          <input
+            type="date"
+            id="exceptionDate"
+          />
+
+        </div>
+
+
+        <div class="time-input-group" style="min-width:240px;flex:1;">
+
+          <label>Reason (optional)</label>
+
+          <input
+            type="text"
+            id="exceptionReason"
+            class="input-field"
+            placeholder="e.g. Annual leave"
+          />
+
+        </div>
+
+
+        <div style="
+          display:flex;
+          flex-direction:column;
+          gap:4px;
+        ">
+
+          <label style="
+            font-size:11px;
+            color:var(--muted);
+            text-transform:uppercase;
+            letter-spacing:.04em;
+            font-weight:700;
+          ">
+            &nbsp;
+          </label>
+
+          <button
+            class="btn btn-danger"
+            onclick="markDateUnavailable()"
+          >
+            Close this date
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div style="
+        margin-top:14px;
+        padding:12px 14px;
+        background:#fff7ed;
+        border:1px solid #fed7aa;
+        color:#9a3412;
+        border-radius:9px;
+        font-size:12px;
+        line-height:1.6;
+      ">
+        Existing booked appointments on a closed date will remain protected.
+        Only unbooked appointment slots will be removed.
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- UPCOMING CLOSED DATES -->
+  <div class="section-block">
+
+    <div class="section-head">
+      <h2>📋 Upcoming Closed Dates</h2>
+    </div>
+
+    <div class="section-body" style="padding:0;overflow-x:auto;">
+
+      <table style="min-width:520px;">
+
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Reason</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody id="availabilityExceptionsBody">
+
+          <tr>
+            <td colspan="3" class="empty-state">
+              Loading...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+  </div>
+
 </div>
+
+  <!--  PRACTICE LOCATION PAGE  -->
+  <div class="page" id="page-location">
+    <div class="section-block">
+      <div class="section-head">
+        <h2>📍 Practice Location</h2>
+      </div>
+
+      <div class="section-body">
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:18px;line-height:1.6;">
+          Save the clinic or practice location patients should use for physical visits.
+          This is a stable meeting location — not live tracking. The exact pin is copied
+          into each physical-visit invoice so patients can see a map and get directions.
+        </p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div class="sub-field">
+            <label>Practice / location name *</label>
+            <input
+              type="text"
+              id="practiceLocationName"
+              placeholder="e.g. Shabangu Medical Practice"
+            />
+          </div>
+
+          <div class="sub-field">
+            <label>Address *</label>
+            <input
+              type="text"
+              id="practiceAddress"
+              placeholder="Street, suburb, city"
+            />
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+          <div class="sub-field">
+            <label>Latitude *</label>
+            <input
+              type="number"
+              step="0.000001"
+              id="practiceLatitude"
+              placeholder="-25.000000"
+            />
+          </div>
+
+          <div class="sub-field">
+            <label>Longitude *</label>
+            <input
+              type="number"
+              step="0.000001"
+              id="practiceLongitude"
+              placeholder="31.000000"
+            />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+          <button
+            class="btn btn-outline"
+            onclick="useCurrentPracticeLocation()"
+          >
+            🎯 Use My Current Position
+          </button>
+
+          <button
+            class="btn btn-primary"
+            onclick="savePracticeLocation()"
+          >
+            💾 Save Practice Location
+          </button>
+
+          <span id="locationStatus" style="align-self:center;"></span>
+        </div>
+
+        <div style="
+          height:360px;border-radius:12px;overflow:hidden;
+          box-shadow:var(--shadow);border:1px solid var(--border);
+        ">
+          <div id="locationMap" style="height:100%;width:100%;"></div>
+        </div>
+
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.55;">
+          📌 Click anywhere on the map to move the exact practice pin. Patients will
+          receive this saved pin with their invoice and can open directions from the app.
+        </p>
+      </div>
+    </div>
+  </div>
 
 <!-- SUBSCRIPTIONS PAGE -->
 <div class="page" id="page-subscriptions">
@@ -2166,7 +2542,7 @@ tbody tr:hover{
     .rx-wrap { display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; }
 
     .rx-sidebar {
-      width:260px; flex-shrink:0;
+      width:390px; flex-shrink:0;
       background:var(--navy); border-radius:var(--radius);
       padding:24px; color:#fff;
       position:sticky; top:24px;
@@ -2277,6 +2653,133 @@ tbody tr:hover{
     .rx-cat-group { }
     .rx-cat-group.hidden { display:none; }
 
+    .rx-credential-card{
+      margin-bottom:18px;
+      padding:16px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#f8fafc;
+    }
+    .rx-credential-card h3{
+      font-size:13px;
+      margin-bottom:5px;
+      color:var(--navy);
+    }
+    .rx-credential-card p{
+      font-size:11.5px;
+      color:var(--muted);
+      line-height:1.5;
+      margin-bottom:12px;
+    }
+    .rx-credential-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .rx-credential-upload{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:10px;
+      padding:12px;
+    }
+    .rx-credential-upload label{
+      display:block;
+      font-size:11px;
+      font-weight:700;
+      margin-bottom:7px;
+      color:var(--text);
+    }
+    .rx-credential-upload input[type=file]{
+      width:100%;
+      font-size:11px;
+    }
+    .rx-credential-preview{
+      width:100%;
+      height:88px;
+      margin-top:9px;
+      border-radius:8px;
+      border:1px dashed #cbd5e1;
+      object-fit:contain;
+      background:#fff;
+      display:none;
+    }
+    .rx-selected-detail{
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.13);
+      border-radius:9px;
+      padding:10px;
+      margin-bottom:9px;
+    }
+    .rx-selected-detail-head{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:flex-start;
+      margin-bottom:8px;
+      color:#fff;
+      font-size:12px;
+      font-weight:700;
+    }
+    .rx-selected-detail-head button{
+      border:none;
+      background:none;
+      color:#93c5fd;
+      cursor:pointer;
+      font-size:16px;
+      line-height:1;
+    }
+    .rx-detail-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:6px;
+    }
+    .rx-mini-input,
+    .rx-mini-textarea{
+      width:100%;
+      padding:7px 8px;
+      border-radius:6px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      font-size:11px;
+      outline:none;
+    }
+    .rx-mini-input::placeholder,
+    .rx-mini-textarea::placeholder{
+      color:rgba(255,255,255,.35);
+    }
+    .rx-mini-textarea{
+      min-height:56px;
+      resize:vertical;
+      grid-column:1/-1;
+      font-family:'Roboto',sans-serif;
+    }
+    .rx-general{
+      margin-top:12px;
+    }
+    .rx-general label{
+      display:block;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      color:rgba(255,255,255,.45);
+      margin-bottom:6px;
+      font-weight:700;
+    }
+    .rx-general textarea{
+      width:100%;
+      min-height:72px;
+      padding:9px;
+      border-radius:7px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      font-family:'Roboto',sans-serif;
+      resize:vertical;
+      outline:none;
+    }
+    .rx-general textarea::placeholder{color:rgba(255,255,255,.35);}
+
     @media(max-width:768px){
       .rx-wrap { flex-direction:column; }
       .rx-sidebar { width:100%; position:static; }
@@ -2287,6 +2790,50 @@ tbody tr:hover{
   <div class="section-block">
     <div class="section-head"><h2>💊 Prescribe Medication</h2></div>
     <div class="section-body">
+
+      <div class="rx-credential-card">
+        <h3>✍️ Official Prescription Signature & Stamp</h3>
+        <p>
+          Upload your real signature and practice stamp once. EHealthy stores the
+          resized images on your doctor profile and snapshots them into every official
+          prescription you issue from this web portal.
+        </p>
+
+        <div class="rx-credential-grid">
+          <div class="rx-credential-upload">
+            <label>Doctor signature *</label>
+            <input
+              type="file"
+              id="rxSignatureFile"
+              accept="image/png,image/jpeg,image/webp"
+              onchange="rxHandleCredentialFile(event,'signature')"
+            />
+            <img id="rxSignaturePreview" class="rx-credential-preview" alt="Signature preview"/>
+          </div>
+
+          <div class="rx-credential-upload">
+            <label>Practice stamp *</label>
+            <input
+              type="file"
+              id="rxStampFile"
+              accept="image/png,image/jpeg,image/webp"
+              onchange="rxHandleCredentialFile(event,'stamp')"
+            />
+            <img id="rxStampPreview" class="rx-credential-preview" alt="Stamp preview"/>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px;">
+          <button
+            class="btn btn-primary btn-sm"
+            id="rxSaveCredentialsBtn"
+            onclick="rxSaveCredentials()"
+          >
+            Save signature & stamp
+          </button>
+          <span id="rxCredentialsStatus" style="font-size:11.5px;color:var(--muted);"></span>
+        </div>
+      </div>
 
       <div class="rx-wrap">
 
@@ -2302,6 +2849,14 @@ tbody tr:hover{
             <div class="rx-selected-list" id="rxSelectedList">
               <span style="font-size:12px;color:rgba(255,255,255,0.3);">None selected</span>
             </div>
+          </div>
+
+          <div class="rx-general">
+            <label>General instructions</label>
+            <textarea
+              id="rxGeneralInstructions"
+              placeholder="Optional overall instructions for this prescription"
+            ></textarea>
           </div>
 
           <button class="rx-confirm-btn" id="rxConfirmBtn" onclick="rxSubmit()">
@@ -2483,6 +3038,85 @@ tbody tr:hover{
   </div>
 </div>
 
+
+
+<!-- PHYSICAL VISIT INVOICE MODAL -->
+<div class="health-profile-overlay" id="physicalInvoiceOverlay" onclick="physicalInvoiceOverlayClick(event)">
+  <div class="health-profile-modal" style="max-width:650px;" onclick="event.stopPropagation()">
+    <div class="health-profile-head">
+      <div>
+        <h2>Create physical visit invoice</h2>
+        <div class="health-profile-sub" id="physicalInvoicePatient">Patient</div>
+      </div>
+      <button class="health-profile-close" onclick="closePhysicalInvoiceModal()">✕</button>
+    </div>
+
+    <div class="health-profile-body">
+      <input type="hidden" id="physicalInvoiceRequestId"/>
+
+      <div class="sub-field">
+        <label>Service description *</label>
+        <input type="text" id="physicalInvoiceService" placeholder="e.g. In-person follow-up consultation"/>
+      </div>
+
+      <div class="sub-field">
+        <label>Visit fee (ZAR) *</label>
+        <input type="number" id="physicalInvoiceAmount" min="1" step="0.01" placeholder="e.g. 350.00"/>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="sub-field">
+          <label>Proposed date *</label>
+          <input type="date" id="physicalInvoiceDate"/>
+        </div>
+
+        <div class="sub-field">
+          <label>Proposed time *</label>
+          <input type="time" id="physicalInvoiceTime"/>
+        </div>
+      </div>
+
+      <div class="sub-field">
+        <label>Practice location *</label>
+        <input
+          type="text"
+          id="physicalInvoiceLocation"
+          placeholder="Save your practice location first"
+          readonly
+        />
+        <div style="font-size:11px;color:var(--muted);margin-top:5px;">
+          The exact saved map pin will be attached to this invoice.
+        </div>
+      </div>
+
+      <div class="sub-field">
+        <label>Notes</label>
+        <textarea id="physicalInvoiceNotes" placeholder="Preparation instructions or additional information"></textarea>
+      </div>
+
+      <button class="sub-submit-btn" id="physicalInvoiceSubmitBtn" onclick="submitPhysicalVisitInvoice()">
+        Send invoice to patient
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT HEALTH PROFILE MODAL -->
+<div class="health-profile-overlay" id="healthProfileOverlay" onclick="healthOverlayClick(event)">
+  <div class="health-profile-modal" role="dialog" aria-modal="true" aria-labelledby="healthProfileTitle" onclick="event.stopPropagation()">
+    <div class="health-profile-head">
+      <div>
+        <h2 id="healthProfileTitle">Patient health profile</h2>
+        <div class="health-profile-sub" id="healthProfileSubtitle">Loading patient information...</div>
+      </div>
+      <button class="health-profile-close" onclick="closePatientHealthProfile()" aria-label="Close patient health profile">✕</button>
+    </div>
+    <div class="health-profile-body" id="healthProfileBody">
+      <div class="health-loading"><span class="spinner"></span>Loading health profile...</div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <div id="printSlipArea" style="display:none;"></div>
 
@@ -2515,14 +3149,20 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 const ICE_SERVERS = {iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]};
 
 let DOCTOR_ID = null, DOCTOR_NAME = "";
-let allPatients = [], allAppointments = [], currentPatientId = null;
+let allPatients = [], allAppointments = [], currentPatientId = null, currentPatientProfileId = null;
 let messageChannel = null, incomingChannel = null, activeChannel = null;
 let localStream = null, peerConnection = null;
 let currentCallId = null, isOutgoing = false;
 let isMuted = false, isCamOff = false;
 let callTimerInterval = null, callSeconds = 0;
-let locationInterval = null, isSharingLocation = false;
 let generatedSlots = [], existingSlots = {};
+let doctorPracticeLocation = {
+  name:"",
+  address:"",
+  lat:null,
+  lng:null
+};
+let physicalVisitRequests = [], physicalVisitInvoices = [];
 
 const el = id => document.getElementById(id);
 function safeSet(id,p,v){const n=el(id);if(n)n[p]=v;}
@@ -2530,6 +3170,23 @@ function showToast(msg,type=""){
   const t=el("toast");t.textContent=msg;t.className="show "+(type||"");
   setTimeout(()=>{t.className="";},3000);
 }
+
+document.addEventListener("keydown",event=>{
+  if(
+    event.key==="Escape" &&
+    el("healthProfileOverlay")?.classList.contains("show")
+  ){
+    closePatientHealthProfile();
+  }
+
+  if(
+    event.key==="Escape" &&
+    el("physicalInvoiceOverlay")?.classList.contains("show")
+  ){
+    closePhysicalInvoiceModal();
+  }
+});
+
 function fmt12(hhmm){
   const [h,m]=hhmm.split(":").map(Number);
   const ap=h>=12?"PM":"AM";const hh=h%12||12;
@@ -2537,7 +3194,7 @@ function fmt12(hhmm){
 }
 function fmtDate(d){return new Date(d+"T00:00").toLocaleDateString("en-ZA",{weekday:"short",day:"numeric",month:"short",year:"numeric"});}
 
-const pageTitles = {dashboard:"Dashboard",appointments:"Appointments",prescriptions:"Prescriptions",messages:"Messages",slots:"My Time Slots",location:"Location Sharing",subscriptions:"Subscription"};
+const pageTitles = {dashboard:"Dashboard",appointments:"Appointments",physicalRequests:"Physical Visit Requests",prescriptions:"Prescriptions",messages:"Messages",slots:"My Time Slots",records:"Financial Records",location:"Location Sharing",subscriptions:"Subscription"};
 
 function showPage(name){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -2546,41 +3203,126 @@ function showPage(name){
   document.querySelector(`[data-page="${name}"]`).classList.add("active");
   safeSet("pageTitle","textContent",pageTitles[name]||name);
   if(name==="appointments") loadAllAppointments();
+  if(name==="physicalRequests") loadPhysicalVisitRequests();
   if(name==="messages")     loadAllPatients();
   if(name==="slots")        initSlotDate();
 if(name==="records")       loadAppointmentRecords();
 if(name==="subscriptions") initSubscriptionPage();
 if(name==="location") {
+    loadPracticeLocation();
     setTimeout(() => {
         if(locationMap) locationMap.invalidateSize();
     }, 150);
 }
   if(name==="prescriptions") initPrescriptionPage();
-  // ── Stop location sharing when leaving location page ──
-  if(name!=="location" && isSharingLocation){
-    clearInterval(locationInterval);
-    locationInterval = null;
-    isSharingLocation = false;
-    const btn = el("locBtn");
-    if(btn){ btn.textContent="📍 Share My Location"; btn.classList.remove("active"); }
-    safeSet("locationStatus","textContent","Location sharing paused — go to Location page to resume.");
-  }
 }
 
 async function loadProfile(){
-  const {data:{session}} = await client.auth.getSession();
-  if(!session){window.location.href="doctorLogin.html";return;}
-  const {data:{user}} = await client.auth.getUser();
-  if(!user){window.location.href="doctorLogin.html";return;}
-  DOCTOR_ID = user.id;
-  const {data} = await client.from("doctors").select("*").eq("id",user.id).single();
-  if(!data) return;
-  DOCTOR_NAME = `Dr. ${data.name} ${data.surname}`;
-  safeSet("sidebarName","textContent",DOCTOR_NAME);
-  safeSet("sidebarDisc","textContent",data.discipline||"General Practitioner");
+
+  const {
+    data: { session }
+  } = await client.auth.getSession();
+
+  if(!session){
+    window.location.href = "doctorLogin.html";
+    return;
+  }
+
+
+  const {
+    data: { user }
+  } = await client.auth.getUser();
+
+  if(!user){
+    window.location.href = "doctorLogin.html";
+    return;
+  }
+
+
+  /*
+   * IMPORTANT:
+   *
+   * user.id = Supabase authentication ID
+   *
+   * data.id = doctors table profile ID
+   *
+   * time_slots.doctor_id must use doctors.id
+   */
+  const {
+    data,
+    error
+  } = await client
+    .from("doctors")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+
+  if(error){
+
+    console.error(
+      "Could not load doctor profile:",
+      error
+    );
+
+    showToast(
+      "Could not load your doctor profile.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  if(!data){
+
+    showToast(
+      "Doctor profile not found.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  /*
+   * This is now the correct doctor profile ID.
+   */
+  DOCTOR_ID = data.id;
+
+
+  DOCTOR_NAME =
+    `Dr. ${data.name} ${data.surname}`;
+
+
+  safeSet(
+    "sidebarName",
+    "textContent",
+    DOCTOR_NAME
+  );
+
+
+  safeSet(
+    "sidebarDisc",
+    "textContent",
+    data.discipline ||
+      "General Practitioner"
+  );
+
+
   if(data.profile_image_url){
-    const a = el("sidebarAvatar");
-    a.innerHTML=`<img src="${data.profile_image_url}" class="doc-avatar" style="width:40px;height:40px;">`;
+
+    const avatar =
+      el("sidebarAvatar");
+
+    avatar.innerHTML =
+      `
+      <img
+        src="${data.profile_image_url}"
+        class="doc-avatar"
+        style="width:40px;height:40px;"
+      >
+      `;
   }
 }
 
@@ -2629,6 +3371,9 @@ async function loadDashboard(){
         <button class="btn btn-primary btn-sm" onclick="updateApptStatus('${a.id}','confirmed')">✓ Accept & Transfer</button>
         <button class="btn btn-danger btn-sm" onclick="updateApptStatus('${a.id}','cancelled')">✕ Reject & Refund</button>
         `:""}
+        ${!["cancelled","canceled"].includes(String(a.status||"").toLowerCase())?`
+        <button class="btn btn-outline btn-sm health-btn" onclick="viewPatientHealthProfile('${a.patient_id}')" title="View patient health profile">🩺 Health</button>
+        `:""}
       </td>
     </tr>`;
   });
@@ -2663,6 +3408,9 @@ function renderAppointments(list){
         <button class="btn btn-primary btn-sm" onclick="updateApptStatus('${a.id}','confirmed')">✓ Confirm</button>
         <button class="btn btn-danger btn-sm" onclick="updateApptStatus('${a.id}','cancelled')">✕ Reject</button>
       `:""}
+      ${!["cancelled","canceled"].includes(String(a.status||"").toLowerCase())?`
+      <button class="btn btn-outline btn-sm health-btn" onclick="viewPatientHealthProfile('${a.patient_id}')" title="View patient health profile">🩺 Health</button>
+      `:""}
       <button class="call-mini-btn" onclick="callPatientById('${a.patient_id}','${a.patient_name}')" title="Video call patient">📹</button>  
       </td>
     </tr>`;
@@ -2675,41 +3423,716 @@ function filterAppts(status,btn){
   renderAppointments(status==="all"?allAppointments:allAppointments.filter(a=>a.status===status));
 }
 
-async function updateApptStatus(id,status){
-  await client.from("appointments").update({status}).eq("id",id);
-  const msg = status === 'confirmed' ? "✅ Accepted — funds transferred to your account." : "❌ Rejected — funds refunded to patient.";
-  showToast(msg, status==="confirmed"?"success":"warn");
+async function updateApptStatus(id, status) {
 
-  loadAllAppointments();
-  loadDashboard();
+  try {
+
+    const { data, error } = await client.rpc(
+      "doctor_update_appointment_status",
+      {
+        p_appointment_id: id,
+        p_status: status
+      }
+    );
+
+    if (error) {
+
+      console.error(
+        "Appointment status update failed:",
+        error
+      );
+
+      showToast(
+        "Could not update appointment: " + error.message,
+        "error"
+      );
+
+      return;
+    }
+
+    console.log(
+      "Appointment update successful:",
+      data
+    );
+
+    if (status === "confirmed") {
+
+      showToast(
+        "✅ Appointment confirmed.",
+        "success"
+      );
+
+    } else {
+
+      showToast(
+        "❌ Appointment rejected.",
+        "warn"
+      );
+    }
+
+    await loadAllAppointments();
+    await loadDashboard();
+
+  } catch (err) {
+
+    console.error(
+      "Unexpected appointment update error:",
+      err
+    );
+
+    showToast(
+      "Something went wrong while updating the appointment.",
+      "error"
+    );
+  }
 }
 
+
+function physicalStatusBadge(status){
+
+  const value =
+    String(status||"pending")
+      .toLowerCase();
+
+  const className =
+    value==="declined" ||
+    value==="patient_declined"
+      ? "cancelled"
+      : value==="pending"
+        ? "pending"
+        : "confirmed";
+
+  return `
+    <span class="badge ${className}">
+      ${healthEscape(
+        value
+          .replaceAll("_"," ")
+          .replace(/\b\w/g,c=>c.toUpperCase())
+      )}
+    </span>
+  `;
+}
+
+
+function physicalInvoiceSummary(invoice){
+
+  if(!invoice){
+    return `<span style="color:var(--muted);font-size:12px;">No invoice yet</span>`;
+  }
+
+  const amount =
+    `R ${(Number(invoice.amount_minor||0)/100).toFixed(2)}`;
+
+  const time =
+    invoice.proposed_time
+      ? fmt12(
+          invoice.proposed_time
+            .slice(0,5)
+        )
+      : "—";
+
+  return `
+    <div style="font-size:12px;line-height:1.6;">
+      <strong>${healthEscape(invoice.service_description||"Physical visit")}</strong><br>
+      ${healthEscape(amount)} · ${healthEscape(invoice.proposed_date||"—")} · ${healthEscape(time)}<br>
+      <span style="color:var(--muted);">${healthEscape(invoice.location||"")}</span><br>
+      ${physicalStatusBadge(invoice.status)}
+    </div>
+  `;
+}
+
+
+async function loadPhysicalVisitRequests(){
+
+  const table =
+    el("physicalRequestsTable");
+
+  if(!table || !DOCTOR_ID){
+    return;
+  }
+
+  table.innerHTML =
+    `<tr><td colspan="5" class="empty-state"><span class="spinner"></span>Loading physical visit requests...</td></tr>`;
+
+  const [requestResult,invoiceResult] =
+    await Promise.all([
+
+      client
+        .from("physical_visit_requests")
+        .select("*")
+        .eq("doctor_id",DOCTOR_ID)
+        .order("requested_at",{ascending:false}),
+
+      client
+        .from("in_person_invoices")
+        .select("*")
+        .eq("doctor_id",DOCTOR_ID)
+        .order("issued_at",{ascending:false})
+    ]);
+
+
+  if(requestResult.error){
+
+    console.error(
+      "Physical request load error:",
+      requestResult.error
+    );
+
+    table.innerHTML =
+      `<tr><td colspan="5" class="empty-state">Could not load physical visit requests.</td></tr>`;
+
+    return;
+  }
+
+
+  if(invoiceResult.error){
+    console.error(
+      "Physical invoice load error:",
+      invoiceResult.error
+    );
+  }
+
+
+  physicalVisitRequests =
+    requestResult.data || [];
+
+  physicalVisitInvoices =
+    invoiceResult.data || [];
+
+
+  const pendingCount =
+    physicalVisitRequests
+      .filter(r=>r.status==="pending")
+      .length;
+
+  const badge =
+    el("physicalBadge");
+
+  if(badge){
+
+    badge.textContent =
+      pendingCount;
+
+    badge.className =
+      pendingCount>0
+        ? "nav-badge show"
+        : "nav-badge";
+  }
+
+
+  if(physicalVisitRequests.length===0){
+
+    table.innerHTML =
+      `<tr><td colspan="5" class="empty-state">No physical visit requests yet.</td></tr>`;
+
+    return;
+  }
+
+
+  table.innerHTML =
+    physicalVisitRequests
+      .map(request=>{
+
+        const invoice =
+          physicalVisitInvoices
+            .find(i=>
+              i.request_id===request.id
+            );
+
+        let actions = "";
+
+
+        if(request.status==="pending"){
+
+          actions = `
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button
+                class="btn btn-primary btn-sm"
+                onclick="doctorRespondPhysicalRequest('${request.id}','accepted')"
+              >
+                ✓ Accept
+              </button>
+
+              <button
+                class="btn btn-danger btn-sm"
+                onclick="doctorRespondPhysicalRequest('${request.id}','declined')"
+              >
+                ✕ Decline
+              </button>
+            </div>
+          `;
+
+        }else if(
+          request.status==="accepted" &&
+          !invoice
+        ){
+
+          actions = `
+            <button
+              class="btn btn-primary btn-sm"
+              onclick='openPhysicalInvoiceModal(${JSON.stringify(request.id)},${JSON.stringify(request.patient_name||"Patient")})'
+            >
+              🧾 Create invoice
+            </button>
+          `;
+
+        }else if(
+          request.status==="invoiced"
+        ){
+
+          actions =
+            `<span style="font-size:12px;color:var(--muted);">Waiting for patient decision</span>`;
+
+        }else if(
+          request.status==="patient_accepted"
+        ){
+
+          actions =
+            `<span style="font-size:12px;color:var(--green);font-weight:700;">✓ Physical visit approved</span>`;
+
+        }else if(
+          request.status==="patient_declined"
+        ){
+
+          actions =
+            `<span style="font-size:12px;color:var(--red);font-weight:700;">Patient declined invoice</span>`;
+
+        }else if(
+          request.status==="declined"
+        ){
+
+          actions =
+            `<span style="font-size:12px;color:var(--muted);">Request closed</span>`;
+        }
+
+
+        return `
+          <tr>
+            <td>
+              <strong>${healthEscape(request.patient_name||"Patient")}</strong>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">
+                ${
+                  request.requested_at
+                    ? new Date(request.requested_at).toLocaleString("en-ZA")
+                    : ""
+                }
+              </div>
+            </td>
+
+            <td style="max-width:260px;">
+              ${healthEscape(request.reason||"—")}
+              ${
+                request.doctor_response_note
+                  ? `<div style="font-size:11px;color:var(--muted);margin-top:6px;">Doctor note: ${healthEscape(request.doctor_response_note)}</div>`
+                  : ""
+              }
+            </td>
+
+            <td>
+              ${physicalStatusBadge(request.status)}
+            </td>
+
+            <td>
+              ${physicalInvoiceSummary(invoice)}
+            </td>
+
+            <td>
+              ${actions}
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+}
+
+
+async function doctorRespondPhysicalRequest(
+  requestId,
+  decision
+){
+
+  let note =
+    null;
+
+  if(decision==="declined"){
+
+    note =
+      window.prompt(
+        "Optional reason for declining this physical visit request:"
+      );
+
+    if(note===null){
+      return;
+    }
+  }
+
+
+  const {error} =
+    await client.rpc(
+      "doctor_update_physical_visit_request",
+      {
+        p_request_id:
+          requestId,
+        p_status:
+          decision,
+        p_note:
+          note || null
+      }
+    );
+
+
+  if(error){
+
+    console.error(
+      "Physical request decision error:",
+      error
+    );
+
+    showToast(
+      error.message ||
+      "Could not update the physical visit request.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  showToast(
+    decision==="accepted"
+      ? "Physical visit request accepted. Create the invoice next."
+      : "Physical visit request declined.",
+    decision==="accepted"
+      ? "success"
+      : "warn"
+  );
+
+
+  await loadPhysicalVisitRequests();
+}
+
+
+function openPhysicalInvoiceModal(
+  requestId,
+  patientName
+){
+
+  if(
+    doctorPracticeLocation.lat == null ||
+    doctorPracticeLocation.lng == null ||
+    !doctorPracticeLocation.address
+  ){
+
+    showToast(
+      "Save your Practice Location before creating an invoice.",
+      "warn"
+    );
+
+    showPage(
+      "location"
+    );
+
+    return;
+  }
+
+
+  safeSet(
+    "physicalInvoiceRequestId",
+    "value",
+    requestId
+  );
+
+  safeSet(
+    "physicalInvoicePatient",
+    "textContent",
+    patientName ||
+    "Patient"
+  );
+
+  safeSet(
+    "physicalInvoiceService",
+    "value",
+    "In-person follow-up consultation"
+  );
+
+  safeSet(
+    "physicalInvoiceAmount",
+    "value",
+    ""
+  );
+
+  safeSet(
+    "physicalInvoiceTime",
+    "value",
+    "09:00"
+  );
+
+  safeSet(
+    "physicalInvoiceLocation",
+    "value",
+    [
+      doctorPracticeLocation.name,
+      doctorPracticeLocation.address
+    ]
+      .filter(Boolean)
+      .join(
+        " — "
+      )
+  );
+
+  safeSet(
+    "physicalInvoiceNotes",
+    "value",
+    ""
+  );
+
+
+  const tomorrow =
+    new Date();
+
+  tomorrow.setDate(
+    tomorrow.getDate()+1
+  );
+
+  safeSet(
+    "physicalInvoiceDate",
+    "value",
+    localDateString(
+      tomorrow
+    )
+  );
+
+  el("physicalInvoiceDate").min =
+    localDateString(
+      new Date()
+    );
+
+
+  el("physicalInvoiceOverlay")
+    .classList
+    .add(
+      "show"
+    );
+}
+
+function closePhysicalInvoiceModal(){
+
+  el("physicalInvoiceOverlay")
+    ?.classList
+    .remove(
+      "show"
+    );
+}
+
+
+function physicalInvoiceOverlayClick(event){
+
+  if(
+    event.target?.id ===
+    "physicalInvoiceOverlay"
+  ){
+    closePhysicalInvoiceModal();
+  }
+}
+
+
+async function submitPhysicalVisitInvoice(){
+
+  const requestId =
+    el("physicalInvoiceRequestId")
+      ?.value
+      ?.trim();
+
+  const service =
+    el("physicalInvoiceService")
+      ?.value
+      ?.trim();
+
+  const amount =
+    Number(
+      el("physicalInvoiceAmount")
+        ?.value
+    );
+
+  const date =
+    el("physicalInvoiceDate")
+      ?.value;
+
+  const time =
+    el("physicalInvoiceTime")
+      ?.value;
+
+  const location =
+    el("physicalInvoiceLocation")
+      ?.value
+      ?.trim();
+
+  const notes =
+    el("physicalInvoiceNotes")
+      ?.value
+      ?.trim();
+
+
+  if(
+    !requestId ||
+    !service ||
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    !date ||
+    !time ||
+    !location ||
+    doctorPracticeLocation.lat == null ||
+    doctorPracticeLocation.lng == null
+  ){
+
+    showToast(
+      "Complete the invoice and make sure your Practice Location is saved.",
+      "warn"
+    );
+
+    return;
+  }
+
+
+  const button =
+    el("physicalInvoiceSubmitBtn");
+
+  button.disabled =
+    true;
+
+  button.textContent =
+    "Sending invoice...";
+
+
+  const {error} =
+    await client.rpc(
+      "doctor_create_physical_visit_invoice",
+      {
+        p_request_id:
+          requestId,
+        p_service_description:
+          service,
+        p_amount_minor:
+          Math.round(
+            amount * 100
+          ),
+        p_proposed_date:
+          date,
+        p_proposed_time:
+          time,
+        p_location:
+          location,
+        p_notes:
+          notes || null
+      }
+    );
+
+
+  button.disabled =
+    false;
+
+  button.textContent =
+    "Send invoice to patient";
+
+
+  if(error){
+
+    console.error(
+      "Physical invoice error:",
+      error
+    );
+
+    showToast(
+      error.message ||
+      "Could not create the invoice.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  closePhysicalInvoiceModal();
+
+  showToast(
+    "Invoice sent to the patient.",
+    "success"
+  );
+
+  await loadPhysicalVisitRequests();
+}
+
+
 async function loadAllPatients(){
-  const [{data:apptPats},{data:msgPats}] = await Promise.all([
+
+  const [
+    {data:apptPats,error:apptError},
+    {data:msgPats,error:msgError}
+  ] = await Promise.all([
     client.from("appointments").select("patient_id,patient_name").eq("doctor_id",DOCTOR_ID),
     client.from("messages").select("patient_id").eq("doctor_id",DOCTOR_ID)
   ]);
 
-  const idSet = new Set();
-  const combined = [];
-  [...(apptPats||[]),...(msgPats||[])].forEach(r=>{
-    if(!r.patient_id||idSet.has(r.patient_id)) return;
-    idSet.add(r.patient_id);
-    combined.push(r);
-  });
+  if(apptError) console.error("Could not load appointment patients:",apptError);
+  if(msgError) console.error("Could not load message patients:",msgError);
 
-  if(idSet.size===0){
-    el("patientListEl").innerHTML=`<div class="empty-state" style="padding:20px;">No patients yet.</div>`;
+  const appointmentProfileIds = [
+    ...new Set((apptPats||[]).map(row=>row.patient_id).filter(Boolean))
+  ];
+
+  const messagePatientIds = [
+    ...new Set((msgPats||[]).map(row=>row.patient_id).filter(Boolean))
+  ];
+
+  if(appointmentProfileIds.length===0 && messagePatientIds.length===0){
+    allPatients = [];
+    el("patientListEl").innerHTML =
+      `<div class="empty-state" style="padding:20px;">No patients yet.</div>`;
     return;
   }
 
-  const {data:pats} = await client.from("patients").select("id,name,surname,user_id").in("user_id",[...idSet]);
-  allPatients = pats||[];
-  combined.forEach(r=>{
-    if(!allPatients.find(p=>p.user_id===r.patient_id) && r.patient_name){
-      allPatients.push({id:r.patient_id,user_id:r.patient_id,name:r.patient_name,surname:""});
-    }
+  const profilePromise = appointmentProfileIds.length
+    ? client.from("patients").select("id,name,surname,user_id").in("id",appointmentProfileIds)
+    : Promise.resolve({data:[],error:null});
+
+  const userPromise = messagePatientIds.length
+    ? client.from("patients").select("id,name,surname,user_id").in("user_id",messagePatientIds)
+    : Promise.resolve({data:[],error:null});
+
+  const [profileResult,userResult] = await Promise.all([profilePromise,userPromise]);
+
+  if(profileResult.error){
+    console.error("Could not resolve appointment patient profiles:",profileResult.error);
+  }
+  if(userResult.error){
+    console.error("Could not resolve message patient profiles:",userResult.error);
+  }
+
+  const patientMap = new Map();
+
+  [
+    ...(profileResult.data||[]),
+    ...(userResult.data||[])
+  ].forEach(patient=>{
+    patientMap.set(patient.id,patient);
   });
+
+  (apptPats||[]).forEach(row=>{
+    if(!row.patient_id || patientMap.has(row.patient_id)) return;
+
+    const parts = String(row.patient_name||"Patient").trim().split(/\s+/);
+
+    patientMap.set(row.patient_id,{
+      id:row.patient_id,
+      user_id:null,
+      name:parts.shift()||"Patient",
+      surname:parts.join(" ")
+    });
+  });
+
+  allPatients = [...patientMap.values()].sort((a,b)=>
+    `${a.name||""} ${a.surname||""}`.localeCompare(`${b.name||""} ${b.surname||""}`)
+  );
 
   renderPatientList(allPatients);
 }
@@ -2748,9 +4171,11 @@ function filterPatients(q){
 
 async function selectPatient(patient){
   currentPatientId = patient.user_id||patient.id;
-  const fullName = `${patient.name} ${patient.surname}`.trim();
+  currentPatientProfileId = patient.id||null;
+  const fullName = `${patient.name||""} ${patient.surname||""}`.trim()||"Patient";
   safeSet("chatPatientName","textContent",fullName);
   safeSet("chatPatientStatus","textContent","");
+  el("chatHealthBtn").style.display=currentPatientProfileId?"flex":"none";
   el("chatVideoBtn").style.display="flex";
   safeSet("callPatientNameLabel","textContent",fullName);
   renderPatientList(allPatients);
@@ -2759,6 +4184,207 @@ async function selectPatient(patient){
   const unread = await countUnread();
   const b = el("msgBadge");
   if(b){b.textContent=unread;b.className=unread>0?"nav-badge show":"nav-badge";}
+}
+
+
+function healthEscape(value){
+  return String(value??"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function healthValue(value,suffix=""){
+  if(value===null || value===undefined || String(value).trim()===""){
+    return `<span class="health-empty">Not provided</span>`;
+  }
+  return `${healthEscape(value)}${suffix}`;
+}
+
+function healthItem(label,value,{full=false,suffix=""}={}){
+  return `
+    <div class="health-item${full?" full":""}">
+      <div class="health-label">${healthEscape(label)}</div>
+      <div class="health-value">${healthValue(value,suffix)}</div>
+    </div>
+  `;
+}
+
+function healthSection(title,items){
+  return `
+    <div class="health-section">
+      <div class="health-section-title">${healthEscape(title)}</div>
+      <div class="health-grid">${items.join("")}</div>
+    </div>
+  `;
+}
+
+function closePatientHealthProfile(){
+  el("healthProfileOverlay")?.classList.remove("show");
+}
+
+function healthOverlayClick(event){
+  if(event.target?.id==="healthProfileOverlay"){
+    closePatientHealthProfile();
+  }
+}
+
+async function openCurrentPatientHealthProfile(){
+  if(!currentPatientProfileId){
+    showToast("Select a patient with an appointment first.","warn");
+    return;
+  }
+  await viewPatientHealthProfile(currentPatientProfileId);
+}
+
+async function viewPatientHealthProfile(patientProfileId){
+
+  if(!patientProfileId){
+    showToast("Patient profile is unavailable.","warn");
+    return;
+  }
+
+  const overlay = el("healthProfileOverlay");
+  const body = el("healthProfileBody");
+
+  safeSet("healthProfileTitle","textContent","Patient health profile");
+  safeSet("healthProfileSubtitle","textContent","Loading authorised patient information...");
+
+  body.innerHTML = `
+    <div class="health-loading">
+      <span class="spinner"></span>
+      Loading health profile...
+    </div>
+  `;
+
+  overlay.classList.add("show");
+
+  try{
+    const {data,error} = await client.rpc(
+      "get_patient_health_profile_for_doctor",
+      {p_patient_id:patientProfileId}
+    );
+
+    if(error){
+      console.error("Health profile RPC error:",error);
+      body.innerHTML = `
+        <div class="health-error">
+          ${healthEscape(error.message || "You are not authorised to view this patient's health profile.")}
+        </div>
+      `;
+      safeSet("healthProfileSubtitle","textContent","Access unavailable");
+      return;
+    }
+
+    const profile = Array.isArray(data) ? data[0] : data;
+
+    if(!profile){
+      body.innerHTML = `
+        <div class="health-error">
+          No health profile information was returned for this patient.
+        </div>
+      `;
+      return;
+    }
+
+    safeSet(
+      "healthProfileTitle",
+      "textContent",
+      profile.patient_name || "Patient health profile"
+    );
+
+    const updated = profile.health_profile_updated_at
+      ? new Date(profile.health_profile_updated_at).toLocaleString(
+          "en-ZA",
+          {dateStyle:"medium",timeStyle:"short"}
+        )
+      : "Not updated yet";
+
+    safeSet(
+      "healthProfileSubtitle",
+      "textContent",
+      `Medical background and pre-consultation questionnaire · Updated ${updated}`
+    );
+
+    const bmi =
+      profile.height_cm &&
+      profile.weight_kg &&
+      Number(profile.height_cm)>0
+        ? (
+            Number(profile.weight_kg) /
+            Math.pow(Number(profile.height_cm)/100,2)
+          ).toFixed(1)
+        : null;
+
+    body.innerHTML = `
+      <div class="health-summary">
+        🛡️ This information is shown through EHealthy's protected doctor-access
+        function and is intended to support the consultation. Verify important
+        clinical information directly with the patient.
+      </div>
+
+      ${healthSection("Basic information",[
+        healthItem("Gender",profile.gender),
+        healthItem(
+          "Date of birth",
+          profile.date_of_birth
+            ? new Date(profile.date_of_birth+"T00:00:00").toLocaleDateString("en-ZA")
+            : null
+        ),
+        healthItem("Blood group",profile.blood_group),
+        healthItem("Preferred language",profile.preferred_language),
+        healthItem("Height",profile.height_cm,{suffix:profile.height_cm?" cm":""}),
+        healthItem("Weight",profile.weight_kg,{suffix:profile.weight_kg?" kg":""}),
+        healthItem("BMI",bmi)
+      ])}
+
+      ${healthSection("Current health questionnaire",[
+        healthItem("Current symptoms",profile.current_symptoms,{full:true}),
+        healthItem("Symptom duration",profile.symptom_duration),
+        healthItem(
+          "Severity",
+          profile.symptom_severity,
+          {
+            suffix:
+              profile.symptom_severity!==null &&
+              profile.symptom_severity!==undefined
+                ? " / 10"
+                : ""
+          }
+        )
+      ])}
+
+      ${healthSection("Medical background",[
+        healthItem("Allergies",profile.allergies,{full:true}),
+        healthItem("Chronic conditions",profile.chronic_conditions,{full:true}),
+        healthItem("Current medication",profile.current_medication,{full:true}),
+        healthItem("Previous surgeries",profile.previous_surgeries,{full:true}),
+        healthItem("Disability / accessibility",profile.disability,{full:true}),
+        healthItem("Family medical history",profile.family_medical_history,{full:true})
+      ])}
+
+      ${healthSection("Lifestyle",[
+        healthItem("Smoking status",profile.smoking_status),
+        healthItem("Alcohol use",profile.alcohol_use)
+      ])}
+
+      ${healthSection("Emergency contact",[
+        healthItem("Contact name",profile.emergency_contact_name),
+        healthItem("Relationship",profile.emergency_contact_relationship),
+        healthItem("Phone",profile.emergency_contact_phone,{full:true})
+      ])}
+    `;
+
+  }catch(err){
+    console.error("Unexpected health profile error:",err);
+    body.innerHTML = `
+      <div class="health-error">
+        Something went wrong while loading the patient health profile.
+      </div>
+    `;
+  }
 }
 
 async function loadMessages(){
@@ -2841,81 +4467,1310 @@ async function countUnread(){
   return (data||[]).length;
 }
 
-function initSlotDate(){
-  const today = new Date().toISOString().split("T")[0];
-  el("slotDate").min = today;
-  if(!el("slotDate").value) el("slotDate").value = today;
-  loadSlotsForDate();
+const WEEK_DAYS = [
+  { id: 1, name: "Monday" },
+  { id: 2, name: "Tuesday" },
+  { id: 3, name: "Wednesday" },
+  { id: 4, name: "Thursday" },
+  { id: 5, name: "Friday" },
+  { id: 6, name: "Saturday" },
+  { id: 7, name: "Sunday" }
+];
+
+
+let weeklyAvailability = {};
+
+
+function localDateString(date){
+
+  const year = date.getFullYear();
+
+  const month =
+    String(date.getMonth() + 1)
+      .padStart(2, "0");
+
+  const day =
+    String(date.getDate())
+      .padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
-async function loadSlotsForDate(){
-  const date = el("slotDate").value;
-  if(!date||!DOCTOR_ID) return;
-  const {data} = await client.from("time_slots").select("*").eq("doctor_id",DOCTOR_ID).eq("date",date);
-  existingSlots = {};
-  (data||[]).forEach(s=>{
-    const t = s.time.slice(0,5);
-    existingSlots[t] = {id:s.id, is_booked:s.is_booked, open:true};
-  });
-  if(Object.keys(existingSlots).length>0){
-    generatedSlots = Object.keys(existingSlots).sort();
-    renderSlotPills();
-    el("slotSaveRow").style.display="flex";
-  } else {
-    el("slotsDisplay").innerHTML=`<div class="empty-state">No slots set for this date. Generate slots below.</div>`;
-    el("slotSaveRow").style.display="none";
-    generatedSlots=[];
+
+function isoWeekDay(date){
+
+  const day =
+    date.getDay();
+
+  return day === 0
+    ? 7
+    : day;
+}
+
+
+function buildTimes(
+  start,
+  end,
+  interval
+){
+
+  const result = [];
+
+  if(
+    !start ||
+    !end
+  ){
+    return result;
   }
-}
 
-function generateSlots(){
-  const from = el("slotFrom").value;
-  const to   = el("slotTo").value;
-  const interval = parseInt(el("slotInterval").value)||30;
-  if(!from||!to){showToast("Set from/to times","warn");return;}
-  if(!el("slotDate").value){showToast("Pick a date first","warn");return;}
-  const [fh,fm] = from.split(":").map(Number);
-  const [th,tm] = to.split(":").map(Number);
-  let h=fh,m=fm;
-  generatedSlots=[];
-  while(h<th||(h===th&&m<tm)){
-    const slot = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
-    generatedSlots.push(slot);
-    m+=interval;
-    if(m>=60){m-=60;h++;}
+
+  const [startHour, startMinute] =
+    start
+      .slice(0, 5)
+      .split(":")
+      .map(Number);
+
+
+  const [endHour, endMinute] =
+    end
+      .slice(0, 5)
+      .split(":")
+      .map(Number);
+
+
+  let current =
+    startHour * 60 +
+    startMinute;
+
+
+  const finish =
+    endHour * 60 +
+    endMinute;
+
+
+  while(current < finish){
+
+    const hour =
+      Math.floor(current / 60);
+
+    const minute =
+      current % 60;
+
+
+    result.push(
+      `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+    );
+
+
+    current += interval;
   }
-  if(generatedSlots.length===0){showToast("No slots generated — check your times","warn");return;}
-  generatedSlots.forEach(s=>{
-    if(!existingSlots[s]) existingSlots[s]={id:null,is_booked:false,open:true};
-  });
-  renderSlotPills();
-  el("slotSaveRow").style.display="flex";
+
+
+  return result;
 }
 
-function renderSlotPills(){
-  const grid = el("slotsDisplay");
-  grid.innerHTML="";
-  generatedSlots.forEach(slot=>{
-    const info = existingSlots[slot]||{open:false,is_booked:false};
-    const pill = document.createElement("div");
-    pill.className = `slot-pill ${info.is_booked?"booked":info.open?"open":""}`;
-    pill.textContent = fmt12(slot);
-    pill.dataset.slot = slot;
-    pill.title = info.is_booked?"Patient booked":info.open?"Click to close":"Click to open";
-    if(!info.is_booked){
-      pill.onclick=()=>{
-        const cur = existingSlots[slot]||{open:false};
-        existingSlots[slot]={...cur,open:!cur.open};
-        renderSlotPills();
-      };
+
+async function initSlotDate(){
+
+  if(!DOCTOR_ID){
+    return;
+  }
+
+
+  const exceptionDate =
+    el("exceptionDate");
+
+
+  if(exceptionDate){
+
+    const today =
+      localDateString(
+        new Date()
+      );
+
+    exceptionDate.min =
+      today;
+
+    if(
+      !exceptionDate.value
+    ){
+      exceptionDate.value =
+        today;
     }
-    grid.appendChild(pill);
+  }
+
+
+  await loadWeeklyAvailability();
+
+  await loadAvailabilityExceptions();
+}
+
+
+async function loadWeeklyAvailability(){
+
+  if(!DOCTOR_ID){
+    return;
+  }
+
+
+  const body =
+    el("weeklyAvailabilityBody");
+
+
+  body.innerHTML =
+    `
+    <tr>
+      <td colspan="5" class="empty-state">
+        <span class="spinner"></span>
+        Loading weekly availability...
+      </td>
+    </tr>
+    `;
+
+
+  const {
+    data,
+    error
+  } =
+    await client
+      .from(
+        "doctor_weekly_availability"
+      )
+      .select("*")
+      .eq(
+        "doctor_id",
+        DOCTOR_ID
+      )
+      .order(
+        "day_of_week"
+      );
+
+
+  if(error){
+
+    console.error(
+      "Weekly availability load error:",
+      error
+    );
+
+
+    body.innerHTML =
+      `
+      <tr>
+        <td colspan="5" class="empty-state">
+          Could not load weekly availability.
+        </td>
+      </tr>
+      `;
+
+    return;
+  }
+
+
+  weeklyAvailability = {};
+
+
+  (data || [])
+    .forEach(row => {
+
+      weeklyAvailability[
+        row.day_of_week
+      ] = row;
+
+    });
+
+
+  renderWeeklyAvailability();
+}
+
+
+function renderWeeklyAvailability(){
+
+  const body =
+    el("weeklyAvailabilityBody");
+
+
+  body.innerHTML = "";
+
+
+  WEEK_DAYS.forEach(day => {
+
+    const stored =
+      weeklyAvailability[
+        day.id
+      ];
+
+
+    const available =
+      stored
+        ? stored.is_available
+        : false;
+
+
+    const start =
+      stored?.start_time
+        ? stored.start_time.slice(0,5)
+        : "08:00";
+
+
+    const end =
+      stored?.end_time
+        ? stored.end_time.slice(0,5)
+        : "17:00";
+
+
+    const interval =
+      stored?.interval_minutes
+        || 30;
+
+
+    const row =
+      document.createElement(
+        "tr"
+      );
+
+
+    row.innerHTML =
+      `
+      <td>
+        <input
+          type="checkbox"
+          id="weekEnabled-${day.id}"
+          ${available ? "checked" : ""}
+          onchange="toggleWeeklyDay(${day.id})"
+          style="
+            width:18px;
+            height:18px;
+            cursor:pointer;
+            accent-color:var(--green);
+          "
+        >
+      </td>
+
+
+      <td style="font-weight:700;">
+        ${day.name}
+      </td>
+
+
+      <td>
+
+        <input
+          type="time"
+          id="weekStart-${day.id}"
+          value="${start}"
+          ${available ? "" : "disabled"}
+          style="
+            padding:8px 10px;
+            border:1.5px solid var(--border);
+            border-radius:7px;
+            background:var(--bg);
+          "
+        >
+
+      </td>
+
+
+      <td>
+
+        <input
+          type="time"
+          id="weekEnd-${day.id}"
+          value="${end}"
+          ${available ? "" : "disabled"}
+          style="
+            padding:8px 10px;
+            border:1.5px solid var(--border);
+            border-radius:7px;
+            background:var(--bg);
+          "
+        >
+
+      </td>
+
+
+      <td>
+
+        <select
+          id="weekInterval-${day.id}"
+          ${available ? "" : "disabled"}
+          style="
+            padding:8px 10px;
+            border:1.5px solid var(--border);
+            border-radius:7px;
+            background:var(--bg);
+          "
+        >
+
+          <option value="15" ${interval === 15 ? "selected" : ""}>
+            15 minutes
+          </option>
+
+          <option value="20" ${interval === 20 ? "selected" : ""}>
+            20 minutes
+          </option>
+
+          <option value="30" ${interval === 30 ? "selected" : ""}>
+            30 minutes
+          </option>
+
+          <option value="45" ${interval === 45 ? "selected" : ""}>
+            45 minutes
+          </option>
+
+          <option value="60" ${interval === 60 ? "selected" : ""}>
+            60 minutes
+          </option>
+
+        </select>
+
+      </td>
+      `;
+
+
+    body.appendChild(
+      row
+    );
   });
 }
 
-function openAllSlots(){generatedSlots.forEach(s=>{if(!existingSlots[s]?.is_booked) existingSlots[s]={...existingSlots[s],open:true};});renderSlotPills();}
-function closeAllSlots(){generatedSlots.forEach(s=>{if(!existingSlots[s]?.is_booked) existingSlots[s]={...existingSlots[s],open:false};});renderSlotPills();}
 
+function toggleWeeklyDay(
+  day
+){
+
+  const enabled =
+    el(
+      `weekEnabled-${day}`
+    ).checked;
+
+
+  el(
+    `weekStart-${day}`
+  ).disabled =
+    !enabled;
+
+
+  el(
+    `weekEnd-${day}`
+  ).disabled =
+    !enabled;
+
+
+  el(
+    `weekInterval-${day}`
+  ).disabled =
+    !enabled;
+}
+
+
+async function saveWeeklySchedule(){
+
+  if(!DOCTOR_ID){
+
+    showToast(
+      "Doctor profile is not loaded.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  const button =
+    el(
+      "saveWeeklyScheduleBtn"
+    );
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "Saving...";
+
+
+  const rows = [];
+
+
+  for(
+    const day of WEEK_DAYS
+  ){
+
+    const enabled =
+      el(
+        `weekEnabled-${day.id}`
+      ).checked;
+
+
+    const start =
+      el(
+        `weekStart-${day.id}`
+      ).value;
+
+
+    const end =
+      el(
+        `weekEnd-${day.id}`
+      ).value;
+
+
+    const interval =
+      parseInt(
+        el(
+          `weekInterval-${day.id}`
+        ).value
+      );
+
+
+    if(
+      enabled &&
+      (
+        !start ||
+        !end ||
+        start >= end
+      )
+    ){
+
+      showToast(
+        `Check the working hours for ${day.name}.`,
+        "warn"
+      );
+
+
+      button.disabled =
+        false;
+
+
+      button.textContent =
+        "💾 Save Weekly Schedule";
+
+
+      return;
+    }
+
+
+    rows.push({
+
+      doctor_id:
+        DOCTOR_ID,
+
+      day_of_week:
+        day.id,
+
+      start_time:
+        enabled
+          ? start
+          : null,
+
+      end_time:
+        enabled
+          ? end
+          : null,
+
+      interval_minutes:
+        interval,
+
+      is_available:
+        enabled,
+
+      updated_at:
+        new Date()
+          .toISOString()
+
+    });
+  }
+
+
+  const {
+    error
+  } =
+    await client
+      .from(
+        "doctor_weekly_availability"
+      )
+      .upsert(
+        rows,
+        {
+          onConflict:
+            "doctor_id,day_of_week"
+        }
+      );
+
+
+  if(error){
+
+    console.error(
+      "Weekly schedule save error:",
+      error
+    );
+
+
+    showToast(
+      "Could not save weekly schedule: " +
+        error.message,
+      "error"
+    );
+
+
+    button.disabled =
+      false;
+
+
+    button.textContent =
+      "💾 Save Weekly Schedule";
+
+
+    return;
+  }
+
+
+  safeSet(
+    "weeklyScheduleStatus",
+    "textContent",
+    "Generating future appointment slots..."
+  );
+
+
+  const generated =
+    await generateFutureSlots(
+      60
+    );
+
+
+  button.disabled =
+    false;
+
+
+  button.textContent =
+    "💾 Save Weekly Schedule";
+
+
+  if(!generated){
+    return;
+  }
+
+
+  safeSet(
+    "weeklyScheduleStatus",
+    "textContent",
+    "Schedule saved and appointment slots updated."
+  );
+
+
+  showToast(
+    "Weekly availability saved successfully.",
+    "success"
+  );
+
+
+  await loadWeeklyAvailability();
+}
+
+
+async function generateFutureSlots(
+  daysAhead = 60
+){
+
+  if(!DOCTOR_ID){
+    return false;
+  }
+
+
+  const todayDate =
+    new Date();
+
+
+  todayDate.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const endDate =
+    new Date(
+      todayDate
+    );
+
+
+  endDate.setDate(
+    endDate.getDate() +
+    daysAhead
+  );
+
+
+  const startString =
+    localDateString(
+      todayDate
+    );
+
+
+  const endString =
+    localDateString(
+      endDate
+    );
+
+
+  const [
+    scheduleResult,
+    exceptionResult,
+    bookedResult
+  ] =
+    await Promise.all([
+
+      client
+        .from(
+          "doctor_weekly_availability"
+        )
+        .select("*")
+        .eq(
+          "doctor_id",
+          DOCTOR_ID
+        ),
+
+
+      client
+        .from(
+          "doctor_availability_exceptions"
+        )
+        .select(
+          "date,is_closed"
+        )
+        .eq(
+          "doctor_id",
+          DOCTOR_ID
+        )
+        .gte(
+          "date",
+          startString
+        )
+        .lte(
+          "date",
+          endString
+        ),
+
+
+      client
+        .from(
+          "time_slots"
+        )
+        .select(
+          "date,time,is_booked"
+        )
+        .eq(
+          "doctor_id",
+          DOCTOR_ID
+        )
+        .eq(
+          "is_booked",
+          true
+        )
+        .gte(
+          "date",
+          startString
+        )
+        .lte(
+          "date",
+          endString
+        )
+
+    ]);
+
+
+  if(
+    scheduleResult.error ||
+    exceptionResult.error ||
+    bookedResult.error
+  ){
+
+    console.error(
+      "Could not prepare future slots",
+      scheduleResult.error,
+      exceptionResult.error,
+      bookedResult.error
+    );
+
+
+    showToast(
+      "Could not generate future appointment slots.",
+      "error"
+    );
+
+
+    return false;
+  }
+
+
+  const scheduleMap = {};
+
+
+  (
+    scheduleResult.data ||
+    []
+  ).forEach(row => {
+
+    scheduleMap[
+      row.day_of_week
+    ] = row;
+
+  });
+
+
+  const closedDates =
+    new Set(
+      (
+        exceptionResult.data ||
+        []
+      )
+        .filter(
+          item =>
+            item.is_closed
+        )
+        .map(
+          item =>
+            item.date
+        )
+    );
+
+
+  const bookedSlots =
+    new Set(
+      (
+        bookedResult.data ||
+        []
+      )
+        .map(
+          slot =>
+            `${slot.date}|${slot.time.slice(0,5)}`
+        )
+    );
+
+
+  /*
+   * Remove only UNBOOKED generated availability.
+   *
+   * Booked patient appointments remain untouched.
+   */
+  const {
+    error: deleteError
+  } =
+    await client
+      .from(
+        "time_slots"
+      )
+      .delete()
+      .eq(
+        "doctor_id",
+        DOCTOR_ID
+      )
+      .eq(
+        "is_booked",
+        false
+      )
+      .gte(
+        "date",
+        startString
+      )
+      .lte(
+        "date",
+        endString
+      );
+
+
+  if(deleteError){
+
+    console.error(
+      "Could not refresh time slots:",
+      deleteError
+    );
+
+
+    showToast(
+      "Could not update appointment availability.",
+      "error"
+    );
+
+
+    return false;
+  }
+
+
+  const newSlots = [];
+
+
+  for(
+    let i = 0;
+    i <= daysAhead;
+    i++
+  ){
+
+    const date =
+      new Date(
+        todayDate
+      );
+
+
+    date.setDate(
+      todayDate.getDate() +
+      i
+    );
+
+
+    const dateString =
+      localDateString(
+        date
+      );
+
+
+    if(
+      closedDates.has(
+        dateString
+      )
+    ){
+      continue;
+    }
+
+
+    const dayNumber =
+      isoWeekDay(
+        date
+      );
+
+
+    const schedule =
+      scheduleMap[
+        dayNumber
+      ];
+
+
+    if(
+      !schedule ||
+      !schedule.is_available
+    ){
+      continue;
+    }
+
+
+    const times =
+      buildTimes(
+        schedule.start_time,
+        schedule.end_time,
+        schedule.interval_minutes
+      );
+
+
+    times.forEach(time => {
+
+      const key =
+        `${dateString}|${time}`;
+
+
+      /*
+       * Do not recreate a time that already has
+       * a patient's booked appointment.
+       */
+      if(
+        bookedSlots.has(
+          key
+        )
+      ){
+        return;
+      }
+
+
+      newSlots.push({
+
+        doctor_id:
+          DOCTOR_ID,
+
+        date:
+          dateString,
+
+        time:
+          time,
+
+        is_booked:
+          false
+
+      });
+    });
+  }
+
+
+  /*
+   * Insert in batches so a large schedule does not
+   * create one huge request.
+   */
+  const batchSize =
+    500;
+
+
+  for(
+    let i = 0;
+    i < newSlots.length;
+    i += batchSize
+  ){
+
+    const batch =
+      newSlots.slice(
+        i,
+        i + batchSize
+      );
+
+
+    const {
+      error
+    } =
+      await client
+        .from(
+          "time_slots"
+        )
+        .insert(
+          batch
+        );
+
+
+    if(error){
+
+      console.error(
+        "Slot generation error:",
+        error
+      );
+
+
+      showToast(
+        "Schedule saved, but some future slots could not be generated.",
+        "error"
+      );
+
+
+      return false;
+    }
+  }
+
+
+  return true;
+}
+
+
+async function markDateUnavailable(){
+
+  const date =
+    el(
+      "exceptionDate"
+    ).value;
+
+
+  const reason =
+    el(
+      "exceptionReason"
+    ).value
+      .trim();
+
+
+  if(!date){
+
+    showToast(
+      "Choose the date you will be unavailable.",
+      "warn"
+    );
+
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await client
+      .from(
+        "doctor_availability_exceptions"
+      )
+      .upsert(
+        {
+
+          doctor_id:
+            DOCTOR_ID,
+
+          date:
+            date,
+
+          is_closed:
+            true,
+
+          reason:
+            reason ||
+            null
+
+        },
+        {
+          onConflict:
+            "doctor_id,date"
+        }
+      );
+
+
+  if(error){
+
+    console.error(
+      "Exception save error:",
+      error
+    );
+
+
+    showToast(
+      "Could not close this date: " +
+        error.message,
+      "error"
+    );
+
+    return;
+  }
+
+
+  /*
+   * Immediately remove open appointment slots.
+   * Booked slots are protected.
+   */
+  const {
+    error: slotError
+  } =
+    await client
+      .from(
+        "time_slots"
+      )
+      .delete()
+      .eq(
+        "doctor_id",
+        DOCTOR_ID
+      )
+      .eq(
+        "date",
+        date
+      )
+      .eq(
+        "is_booked",
+        false
+      );
+
+
+  if(slotError){
+
+    console.error(
+      "Could not remove slots:",
+      slotError
+    );
+
+
+    showToast(
+      "Date was closed, but its open slots could not be removed.",
+      "warn"
+    );
+
+  } else {
+
+    showToast(
+      `${fmtDate(date)} is now unavailable.`,
+      "success"
+    );
+  }
+
+
+  el(
+    "exceptionReason"
+  ).value = "";
+
+
+  await loadAvailabilityExceptions();
+}
+
+
+async function loadAvailabilityExceptions(){
+
+  if(!DOCTOR_ID){
+    return;
+  }
+
+
+  const body =
+    el(
+      "availabilityExceptionsBody"
+    );
+
+
+  const today =
+    localDateString(
+      new Date()
+    );
+
+
+  const {
+    data,
+    error
+  } =
+    await client
+      .from(
+        "doctor_availability_exceptions"
+      )
+      .select(
+        "date,reason,is_closed"
+      )
+      .eq(
+        "doctor_id",
+        DOCTOR_ID
+      )
+      .eq(
+        "is_closed",
+        true
+      )
+      .gte(
+        "date",
+        today
+      )
+      .order(
+        "date"
+      );
+
+
+  if(error){
+
+    console.error(
+      "Exception load error:",
+      error
+    );
+
+
+    body.innerHTML =
+      `
+      <tr>
+        <td colspan="3" class="empty-state">
+          Could not load closed dates.
+        </td>
+      </tr>
+      `;
+
+    return;
+  }
+
+
+  if(
+    !data ||
+    data.length === 0
+  ){
+
+    body.innerHTML =
+      `
+      <tr>
+        <td colspan="3" class="empty-state">
+          No upcoming closed dates.
+        </td>
+      </tr>
+      `;
+
+    return;
+  }
+
+
+  body.innerHTML =
+    data.map(item => {
+
+      const escapedDate =
+        item.date;
+
+
+      return `
+        <tr>
+
+          <td>
+            <strong>
+              ${fmtDate(item.date)}
+            </strong>
+          </td>
+
+          <td>
+            ${item.reason || "No reason provided"}
+          </td>
+
+          <td>
+
+            <button
+              class="btn btn-outline btn-sm"
+              onclick="reopenDate('${escapedDate}')"
+            >
+              Re-open date
+            </button>
+
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+}
+
+
+async function reopenDate(
+  date
+){
+
+  const {
+    error
+  } =
+    await client
+      .from(
+        "doctor_availability_exceptions"
+      )
+      .delete()
+      .eq(
+        "doctor_id",
+        DOCTOR_ID
+      )
+      .eq(
+        "date",
+        date
+      );
+
+
+  if(error){
+
+    console.error(
+      "Could not reopen date:",
+      error
+    );
+
+
+    showToast(
+      "Could not reopen this date.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  /*
+   * Regenerate availability from the weekly schedule.
+   */
+  const success =
+    await generateFutureSlots(
+      60
+    );
+
+
+  if(success){
+
+    showToast(
+      `${fmtDate(date)} follows your weekly schedule again.`,
+      "success"
+    );
+  }
+
+
+  await loadAvailabilityExceptions();
+}
 async function saveSlots(){
   const date = el("slotDate").value;
   if(!date){showToast("No date selected","warn");return;}
@@ -3130,84 +5985,388 @@ function playRingtone(play){
   }catch(e){console.log("No audio ctx");}
 }
 
-async function shareLocation(){
-  if(!navigator.geolocation){
-    safeSet("locationStatus","textContent","❌ Geolocation not supported by your browser.");
+// ── Stable practice location used for physical visit invoices ──
+let locationMap = null;
+let locationMarker = null;
+
+function setPracticeLocationPin(lat, lng, openPopup=false){
+
+  if(
+    !Number.isFinite(Number(lat)) ||
+    !Number.isFinite(Number(lng))
+  ){
     return;
   }
-  navigator.geolocation.getCurrentPosition(
-    async pos=>{
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const {error} = await client
-        .from("doctors")
-        .update({lat, lng})
-        .eq("id", DOCTOR_ID);
-      if(error){
-        safeSet("locationStatus","textContent","❌ Failed to update location: "+error.message);
-      } else {
-        safeSet("locationStatus","textContent",
-          `Location updated at ${new Date().toLocaleTimeString("en-ZA")} — patients can now find you.`);
-          // ── Update map preview ──
-          initLocationMap(lat, lng);
+
+  const latitude = Number(lat);
+  const longitude = Number(lng);
+
+  safeSet(
+    "practiceLatitude",
+    "value",
+    latitude.toFixed(6)
+  );
+
+  safeSet(
+    "practiceLongitude",
+    "value",
+    longitude.toFixed(6)
+  );
+
+  if(!locationMap){
+
+    locationMap =
+      L.map(
+        "locationMap"
+      ).setView(
+        [latitude, longitude],
+        16
+      );
+
+    L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution:
+          "© OpenStreetMap contributors"
       }
-    },
-    err=>{
-      // ── Show specific error message ──
-      const msgs = {
-        1: "❌ Permission denied — please allow location access in your browser settings.",
-        2: "❌ Position unavailable — check your device GPS.",
-        3: "❌ Location request timed out — please try again."
-      };
-      safeSet("locationStatus","textContent", msgs[err.code]||"❌ Could not get location.");
-      // ── If denied, stop sharing ──
-      if(err.code===1){
-        isSharingLocation = false;
-        clearInterval(locationInterval);
-        locationInterval = null;
-        const btn = el("locBtn");
-        if(btn){
-          btn.textContent = "📍 Share My Location";
-          btn.classList.remove("active");
-        }
+    ).addTo(
+      locationMap
+    );
+
+    locationMap.on(
+      "click",
+      event => {
+
+        setPracticeLocationPin(
+          event.latlng.lat,
+          event.latlng.lng,
+          true
+        );
       }
-    },
-    {enableHighAccuracy:true, timeout:10000, maximumAge:0}
+    );
+  }
+
+  if(locationMarker){
+
+    locationMarker.setLatLng(
+      [latitude, longitude]
+    );
+
+  }else{
+
+    locationMarker =
+      L.marker(
+        [latitude, longitude]
+      )
+        .addTo(
+          locationMap
+        );
+  }
+
+  const label =
+    el("practiceLocationName")
+      ?.value
+      ?.trim() ||
+    DOCTOR_NAME ||
+    "Practice location";
+
+  locationMarker.bindPopup(
+    `<b>${healthEscape(label)}</b><br>Physical visit location`
+  );
+
+  if(openPopup){
+    locationMarker.openPopup();
+  }
+
+  locationMap.setView(
+    [latitude, longitude],
+    16
   );
 }
-// ── Location map preview ──
-let locationMap = null, locationMarker = null;
 
-function initLocationMap(lat, lng){
-  if(!locationMap){
-    locationMap = L.map("locationMap").setView([lat, lng], 14);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
-      attribution:"© OpenStreetMap contributors"
-    }).addTo(locationMap);
+
+async function loadPracticeLocation(){
+
+  if(!DOCTOR_ID){
+    return;
   }
-  if(locationMarker){
-    locationMarker.setLatLng([lat, lng]);
-  } else {
-    locationMarker = L.marker([lat, lng])
-      .addTo(locationMap)
-      .bindPopup(`<b>${DOCTOR_NAME}</b><br>Your current shared location`)
-      .openPopup();
+
+  const {
+    data,
+    error
+  } =
+    await client
+      .from("doctors")
+      .select(
+        "practice_location_name,practice_address,lat,lng,practice_location_updated_at"
+      )
+      .eq(
+        "id",
+        DOCTOR_ID
+      )
+      .single();
+
+
+  if(error){
+
+    console.error(
+      "Could not load practice location:",
+      error
+    );
+
+    safeSet(
+      "locationStatus",
+      "textContent",
+      "Could not load saved practice location."
+    );
+
+    return;
   }
-  locationMap.setView([lat, lng], 14);
-}
-function toggleShareLocation(){
-  const btn = el("locBtn");
-  if(!isSharingLocation){
-    isSharingLocation=true;
-    btn.textContent="🔴 Stop Sharing";btn.classList.add("active");
-    shareLocation();
-    locationInterval=setInterval(shareLocation,10000);
+
+
+  doctorPracticeLocation = {
+    name:
+      data?.practice_location_name ||
+      "",
+    address:
+      data?.practice_address ||
+      "",
+    lat:
+      data?.lat ?? null,
+    lng:
+      data?.lng ?? null
+  };
+
+
+  safeSet(
+    "practiceLocationName",
+    "value",
+    doctorPracticeLocation.name
+  );
+
+  safeSet(
+    "practiceAddress",
+    "value",
+    doctorPracticeLocation.address
+  );
+
+
+  if(
+    doctorPracticeLocation.lat != null &&
+    doctorPracticeLocation.lng != null
+  ){
+
+    setPracticeLocationPin(
+      doctorPracticeLocation.lat,
+      doctorPracticeLocation.lng
+    );
+
+    safeSet(
+      "locationStatus",
+      "textContent",
+      "✅ Practice location saved and ready for physical-visit invoices."
+    );
+
   }else{
-    isSharingLocation=false;clearInterval(locationInterval);locationInterval=null;
-    btn.textContent="📍 Share My Location";btn.classList.remove("active");
-    safeSet("locationStatus","textContent","Location sharing stopped.");
+
+    safeSet(
+      "locationStatus",
+      "textContent",
+      "No exact practice pin saved yet."
+    );
   }
 }
+
+
+function useCurrentPracticeLocation(){
+
+  if(!navigator.geolocation){
+
+    safeSet(
+      "locationStatus",
+      "textContent",
+      "❌ Geolocation is not supported by this browser."
+    );
+
+    return;
+  }
+
+  safeSet(
+    "locationStatus",
+    "textContent",
+    "Finding your current position..."
+  );
+
+  navigator.geolocation.getCurrentPosition(
+
+    position => {
+
+      setPracticeLocationPin(
+        position.coords.latitude,
+        position.coords.longitude,
+        true
+      );
+
+      safeSet(
+        "locationStatus",
+        "textContent",
+        "📍 Pin updated. Check the map, enter the practice address, then Save."
+      );
+    },
+
+    error => {
+
+      const messages = {
+        1:
+          "❌ Location permission denied. Allow browser location access or click the map manually.",
+        2:
+          "❌ Position unavailable. You can click the exact location on the map manually.",
+        3:
+          "❌ Location request timed out. Try again or click the map manually."
+      };
+
+      safeSet(
+        "locationStatus",
+        "textContent",
+        messages[
+          error.code
+        ] ||
+        "❌ Could not get your current position."
+      );
+    },
+
+    {
+      enableHighAccuracy:
+        true,
+      timeout:
+        10000,
+      maximumAge:
+        0
+    }
+  );
+}
+
+
+async function savePracticeLocation(){
+
+  const name =
+    el("practiceLocationName")
+      ?.value
+      ?.trim();
+
+  const address =
+    el("practiceAddress")
+      ?.value
+      ?.trim();
+
+  const latitude =
+    Number(
+      el("practiceLatitude")
+        ?.value
+    );
+
+  const longitude =
+    Number(
+      el("practiceLongitude")
+        ?.value
+    );
+
+
+  if(
+    !name ||
+    !address ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ){
+
+    showToast(
+      "Enter a practice name and address, then choose an exact map pin.",
+      "warn"
+    );
+
+    return;
+  }
+
+
+  safeSet(
+    "locationStatus",
+    "textContent",
+    "Saving practice location..."
+  );
+
+
+  const {
+    data,
+    error
+  } =
+    await client.rpc(
+      "doctor_save_practice_location",
+      {
+        p_location_name:
+          name,
+        p_address:
+          address,
+        p_latitude:
+          latitude,
+        p_longitude:
+          longitude
+      }
+    );
+
+
+  if(error){
+
+    console.error(
+      "Practice location save error:",
+      error
+    );
+
+    safeSet(
+      "locationStatus",
+      "textContent",
+      "❌ " +
+      (
+        error.message ||
+        "Could not save practice location."
+      )
+    );
+
+    return;
+  }
+
+
+  doctorPracticeLocation = {
+    name:
+      name,
+    address:
+      address,
+    lat:
+      latitude,
+    lng:
+      longitude
+  };
+
+
+  setPracticeLocationPin(
+    latitude,
+    longitude,
+    true
+  );
+
+
+  safeSet(
+    "locationStatus",
+    "textContent",
+    "✅ Saved. New physical-visit invoices will use this exact location."
+  );
+
+
+  showToast(
+    "Practice location saved.",
+    "success"
+  );
+}
+
 
 async function loadAppointmentRecords() {
   const tbody = el("recordsTableBody");
@@ -3243,25 +6402,8 @@ async function initPage(){
   await loadProfile();
   await checkSubscription();
   await loadDashboard();
+  await loadPracticeLocation();
   listenForIncomingCalls();
-  // ── Check if doctor already has location saved ──
-  await checkExistingLocation();
-}
-
-async function checkExistingLocation(){
-  if(!DOCTOR_ID) return;
-  const {data} = await client
-    .from("doctors")
-    .select("lat, lng")
-    .eq("id", DOCTOR_ID)
-    .single();
-  if(data?.lat && data?.lng){
-    safeSet("locationStatus","textContent",
-      `📍 Your location is saved — patients can find you. Click to update.`);
-  } else {
-    safeSet("locationStatus","textContent",
-      "Location not shared yet. Click the button to share your location with patients.");
-  }
 }
 
 // ── SUBSCRIPTION GATE ────
@@ -3611,163 +6753,1199 @@ function subPrintHistorySlip(index){
 
 //  PRESCRIPTION PAGE LOGIC
 
+let rxMedicationDetails = {};
+let rxSignatureData = "";
+let rxStampData = "";
+
 
 async function initPrescriptionPage(){
-  if(!DOCTOR_ID) return;
 
-  // Reset form state
+  if(!DOCTOR_ID){
+    return;
+  }
+
   rxClearAll();
 
-  // Load patients with confirmed appointments
-  const {data:appts} = await client
-    .from("appointments")
-    .select("patient_id,patient_name,status")
-    .eq("doctor_id",DOCTOR_ID);
+  await rxLoadPrescriptionCredentials();
 
-  const select = document.getElementById("rxPatientSelect");
-  if(!appts||appts.length===0){
-    select.innerHTML="<option value=''>No patients yet</option>";
+
+  const {data:appts,error:apptError} =
+    await client
+      .from("appointments")
+      .select("patient_id,patient_name,status")
+      .eq("doctor_id",DOCTOR_ID);
+
+
+  const select =
+    document.getElementById(
+      "rxPatientSelect"
+    );
+
+
+  if(apptError){
+
+    console.error(
+      "Prescription patient load error:",
+      apptError
+    );
+
+    select.innerHTML =
+      "<option value=''>Could not load patients</option>";
+
     return;
   }
 
-  const cancelledIds = new Set(
-    appts.filter(a=>a.status==="cancelled"&&a.patient_id).map(a=>a.patient_id)
-  );
-  const seen = new Set();
-  const unique = appts.filter(a=>{
-    if(!a.patient_id||!a.patient_name) return false;
-    if(a.status!=="confirmed") return false;
-    if(cancelledIds.has(a.patient_id)) return false;
-    if(seen.has(a.patient_id)) return false;
-    seen.add(a.patient_id); return true;
-  });
 
-  select.innerHTML = unique.length===0
-    ? "<option value=''>No confirmed patients</option>"
-    : "<option value=''>Select a patient</option>";
+  if(!appts || appts.length===0){
+
+    select.innerHTML =
+      "<option value=''>No patients yet</option>";
+
+    return;
+  }
+
+
+  const seen =
+    new Set();
+
+
+  /*
+   * Official prescriptions may be issued to patients with a confirmed
+   * or completed appointment with this doctor. This keeps the web portal
+   * aligned with the treatment relationship enforced again by the RPC.
+   */
+  const unique =
+    appts.filter(a=>{
+
+      if(
+        !a.patient_id ||
+        !a.patient_name
+      ){
+        return false;
+      }
+
+      const status =
+        String(
+          a.status ||
+          ""
+        ).toLowerCase();
+
+      if(
+        ![
+          "confirmed",
+          "completed"
+        ].includes(
+          status
+        )
+      ){
+        return false;
+      }
+
+      if(
+        seen.has(
+          a.patient_id
+        )
+      ){
+        return false;
+      }
+
+      seen.add(
+        a.patient_id
+      );
+
+      return true;
+    });
+
+
+  select.innerHTML =
+    unique.length===0
+      ? "<option value=''>No eligible patients</option>"
+      : "<option value=''>Select a patient</option>";
+
 
   unique.forEach(a=>{
-    const opt = document.createElement("option");
-    opt.value = a.patient_id;
-    opt.textContent = a.patient_name;
-    select.appendChild(opt);
+
+    const opt =
+      document.createElement(
+        "option"
+      );
+
+    opt.value =
+      a.patient_id;
+
+    opt.textContent =
+      a.patient_name;
+
+    select.appendChild(
+      opt
+    );
   });
 
-  // Attach checkbox listeners
-  document.querySelectorAll(".rx-med-item input[type='checkbox']").forEach(cb=>{
-    cb.addEventListener("change", ()=>{
-      cb.closest(".rx-med-item").classList.toggle("checked", cb.checked);
-      rxUpdateSelectedList();
+
+  document
+    .querySelectorAll(
+      ".rx-med-item input[type='checkbox']"
+    )
+    .forEach(cb=>{
+
+      cb.onchange =
+        ()=>{
+
+          cb.closest(
+            ".rx-med-item"
+          )
+            .classList
+            .toggle(
+              "checked",
+              cb.checked
+            );
+
+
+          if(
+            cb.checked &&
+            !rxMedicationDetails[
+              cb.value
+            ]
+          ){
+
+            rxMedicationDetails[
+              cb.value
+            ] = {
+              dosage:"",
+              frequency:"",
+              duration:"",
+              instructions:""
+            };
+          }
+
+
+          rxUpdateSelectedList();
+        };
     });
-  });
 }
 
-function rxUpdateSelectedList(){
-  const list = document.getElementById("rxSelectedList");
-  const checked = Array.from(
-    document.querySelectorAll(".rx-med-item input[type='checkbox']:checked")
-  ).map(cb=>cb.value);
 
-  if(checked.length===0){
-    list.innerHTML=`<span style="font-size:12px;color:rgba(255,255,255,0.3);">None selected</span>`;
+async function rxLoadPrescriptionCredentials(){
+
+  const {
+    data,
+    error
+  } =
+    await client
+      .from("doctors")
+      .select(
+        "prescription_signature_data,prescription_stamp_data,prescription_credentials_updated_at"
+      )
+      .eq(
+        "id",
+        DOCTOR_ID
+      )
+      .single();
+
+
+  if(error){
+
+    console.error(
+      "Prescription credential load error:",
+      error
+    );
+
+    safeSet(
+      "rxCredentialsStatus",
+      "textContent",
+      "Could not load signature/stamp."
+    );
+
     return;
   }
-  list.innerHTML = checked.map(med=>`
-    <div class="rx-selected-tag">
-      <span>${med}</span>
-      <button onclick="rxRemoveMed('${med.replace(/'/g,"\\'")}')">×</button>
-    </div>`).join("");
+
+
+  rxSignatureData =
+    data?.prescription_signature_data ||
+    "";
+
+  rxStampData =
+    data?.prescription_stamp_data ||
+    "";
+
+
+  rxShowCredentialPreview(
+    "rxSignaturePreview",
+    rxSignatureData
+  );
+
+  rxShowCredentialPreview(
+    "rxStampPreview",
+    rxStampData
+  );
+
+
+  safeSet(
+    "rxCredentialsStatus",
+    "textContent",
+    rxSignatureData &&
+    rxStampData
+      ? "✅ Signature and stamp are ready."
+      : "Upload both a signature and a stamp before issuing an official prescription."
+  );
 }
 
-function rxRemoveMed(value){
-  const cb = document.querySelector(`.rx-med-item input[value="${value}"]`);
-  if(cb){ cb.checked=false; cb.closest(".rx-med-item").classList.remove("checked"); }
+
+function rxShowCredentialPreview(
+  elementId,
+  dataUrl
+){
+
+  const image =
+    el(
+      elementId
+    );
+
+  if(!image){
+    return;
+  }
+
+
+  if(dataUrl){
+
+    image.src =
+      dataUrl;
+
+    image.style.display =
+      "block";
+
+  }else{
+
+    image.removeAttribute(
+      "src"
+    );
+
+    image.style.display =
+      "none";
+  }
+}
+
+
+async function rxHandleCredentialFile(
+  event,
+  type
+){
+
+  const file =
+    event
+      .target
+      .files?.[0];
+
+
+  if(!file){
+    return;
+  }
+
+
+  if(
+    !file.type
+      .startsWith(
+        "image/"
+      )
+  ){
+
+    showToast(
+      "Please choose an image file.",
+      "warn"
+    );
+
+    return;
+  }
+
+
+  try{
+
+    const dataUrl =
+      await rxResizeImage(
+        file
+      );
+
+
+    if(
+      type==="signature"
+    ){
+
+      rxSignatureData =
+        dataUrl;
+
+      rxShowCredentialPreview(
+        "rxSignaturePreview",
+        dataUrl
+      );
+
+    }else{
+
+      rxStampData =
+        dataUrl;
+
+      rxShowCredentialPreview(
+        "rxStampPreview",
+        dataUrl
+      );
+    }
+
+
+    safeSet(
+      "rxCredentialsStatus",
+      "textContent",
+      "Image ready. Save signature & stamp."
+    );
+
+  }catch(err){
+
+    console.error(
+      "Credential image error:",
+      err
+    );
+
+    showToast(
+      "Could not prepare that image.",
+      "error"
+    );
+  }
+}
+
+
+function rxResizeImage(
+  file
+){
+
+  return new Promise(
+    (
+      resolve,
+      reject
+    )=>{
+
+      const reader =
+        new FileReader();
+
+
+      reader.onerror =
+        reject;
+
+
+      reader.onload =
+        ()=>{
+
+          const image =
+            new Image();
+
+
+          image.onerror =
+            reject;
+
+
+          image.onload =
+            ()=>{
+
+              const maxWidth =
+                900;
+
+              const maxHeight =
+                500;
+
+
+              const scale =
+                Math.min(
+                  1,
+                  maxWidth /
+                    image.width,
+                  maxHeight /
+                    image.height
+                );
+
+
+              const canvas =
+                document.createElement(
+                  "canvas"
+                );
+
+
+              canvas.width =
+                Math.max(
+                  1,
+                  Math.round(
+                    image.width *
+                    scale
+                  )
+                );
+
+              canvas.height =
+                Math.max(
+                  1,
+                  Math.round(
+                    image.height *
+                    scale
+                  )
+                );
+
+
+              const context =
+                canvas.getContext(
+                  "2d"
+                );
+
+
+              context.clearRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+              );
+
+
+              context.drawImage(
+                image,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+              );
+
+
+              resolve(
+                canvas.toDataURL(
+                  "image/png"
+                )
+              );
+            };
+
+
+          image.src =
+            reader.result;
+        };
+
+
+      reader.readAsDataURL(
+        file
+      );
+    }
+  );
+}
+
+
+async function rxSaveCredentials(){
+
+  if(
+    !rxSignatureData ||
+    !rxStampData
+  ){
+
+    showToast(
+      "Upload both the doctor's signature and practice stamp.",
+      "warn"
+    );
+
+    return;
+  }
+
+
+  const button =
+    el(
+      "rxSaveCredentialsBtn"
+    );
+
+
+  button.disabled =
+    true;
+
+  button.textContent =
+    "Saving...";
+
+
+  const {
+    error
+  } =
+    await client.rpc(
+      "doctor_save_prescription_credentials",
+      {
+        p_signature_data:
+          rxSignatureData,
+        p_stamp_data:
+          rxStampData
+      }
+    );
+
+
+  button.disabled =
+    false;
+
+  button.textContent =
+    "Save signature & stamp";
+
+
+  if(error){
+
+    console.error(
+      "Save prescription credentials error:",
+      error
+    );
+
+    safeSet(
+      "rxCredentialsStatus",
+      "textContent",
+      "❌ " +
+      (
+        error.message ||
+        "Could not save signature/stamp."
+      )
+    );
+
+    return;
+  }
+
+
+  safeSet(
+    "rxCredentialsStatus",
+    "textContent",
+    "✅ Signature and stamp saved."
+  );
+
+
+  showToast(
+    "Doctor signature and stamp saved.",
+    "success"
+  );
+}
+
+
+function rxUpdateSelectedList(){
+
+  const list =
+    document.getElementById(
+      "rxSelectedList"
+    );
+
+
+  const checked =
+    Array.from(
+      document.querySelectorAll(
+        ".rx-med-item input[type='checkbox']:checked"
+      )
+    )
+      .map(cb=>
+        cb.value
+      );
+
+
+  if(
+    checked.length===0
+  ){
+
+    list.innerHTML =
+      `<span style="font-size:12px;color:rgba(255,255,255,0.3);">None selected</span>`;
+
+    return;
+  }
+
+
+  checked.forEach(med=>{
+
+    if(
+      !rxMedicationDetails[
+        med
+      ]
+    ){
+
+      rxMedicationDetails[
+        med
+      ] = {
+        dosage:"",
+        frequency:"",
+        duration:"",
+        instructions:""
+      };
+    }
+  });
+
+
+  list.innerHTML =
+    checked
+      .map(med=>{
+
+        const detail =
+          rxMedicationDetails[
+            med
+          ];
+
+        return `
+          <div
+            class="rx-selected-detail"
+            data-med="${healthEscape(med)}"
+          >
+            <div class="rx-selected-detail-head">
+              <span>${healthEscape(med)}</span>
+              <button
+                type="button"
+                onclick='rxRemoveMed(${JSON.stringify(med)})'
+                title="Remove medication"
+              >×</button>
+            </div>
+
+            <div class="rx-detail-grid">
+              <input
+                class="rx-mini-input"
+                data-field="dosage"
+                placeholder="Dosage e.g. 1 tablet"
+                value="${healthEscape(detail.dosage)}"
+              />
+
+              <input
+                class="rx-mini-input"
+                data-field="frequency"
+                placeholder="Frequency e.g. twice daily"
+                value="${healthEscape(detail.frequency)}"
+              />
+
+              <input
+                class="rx-mini-input"
+                data-field="duration"
+                placeholder="Duration e.g. 7 days"
+                value="${healthEscape(detail.duration)}"
+              />
+
+              <input
+                class="rx-mini-input"
+                data-field="instructions"
+                placeholder="Short instruction"
+                value="${healthEscape(detail.instructions)}"
+              />
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+
+  list
+    .querySelectorAll(
+      ".rx-selected-detail"
+    )
+    .forEach(card=>{
+
+      const med =
+        card.dataset.med;
+
+
+      card
+        .querySelectorAll(
+          "[data-field]"
+        )
+        .forEach(input=>{
+
+          input.oninput =
+            ()=>{
+
+              const field =
+                input.dataset.field;
+
+              rxMedicationDetails[
+                med
+              ][
+                field
+              ] =
+                input.value;
+            };
+        });
+    });
+}
+
+
+function rxRemoveMed(
+  value
+){
+
+  const cb =
+    Array.from(
+      document.querySelectorAll(
+        ".rx-med-item input[type='checkbox']"
+      )
+    )
+      .find(input=>
+        input.value ===
+        value
+      );
+
+
+  if(cb){
+
+    cb.checked =
+      false;
+
+    cb.closest(
+      ".rx-med-item"
+    )
+      .classList
+      .remove(
+        "checked"
+      );
+  }
+
+
+  delete rxMedicationDetails[
+    value
+  ];
+
+
   rxUpdateSelectedList();
 }
 
-function rxFilterMeds(q){
-  const query = q.toLowerCase();
-  document.querySelectorAll(".rx-cat-group").forEach(group=>{
-    let anyVisible = false;
-    group.querySelectorAll(".rx-med-item").forEach(item=>{
-      const text = item.textContent.toLowerCase();
-      const show = !query || text.includes(query);
-      item.style.display = show ? "" : "none";
-      if(show) anyVisible = true;
+
+function rxFilterMeds(
+  q
+){
+
+  const query =
+    q.toLowerCase();
+
+
+  document
+    .querySelectorAll(
+      ".rx-cat-group"
+    )
+    .forEach(group=>{
+
+      let anyVisible =
+        false;
+
+
+      group
+        .querySelectorAll(
+          ".rx-med-item"
+        )
+        .forEach(item=>{
+
+          const text =
+            item.textContent
+              .toLowerCase();
+
+          const show =
+            !query ||
+            text.includes(
+              query
+            );
+
+
+          item.style.display =
+            show
+              ? ""
+              : "none";
+
+
+          if(show){
+            anyVisible =
+              true;
+          }
+        });
+
+
+      group
+        .classList
+        .toggle(
+          "hidden",
+          !anyVisible &&
+          !!query
+        );
     });
-    group.classList.toggle("hidden", !anyVisible && !!query);
-  });
 }
+
 
 function rxClearAll(){
-  document.querySelectorAll(".rx-med-item input[type='checkbox']").forEach(cb=>{
-    cb.checked=false;
-    cb.closest(".rx-med-item").classList.remove("checked");
-  });
-  const list = document.getElementById("rxSelectedList");
-  if(list) list.innerHTML=`<span style="font-size:12px;color:rgba(255,255,255,0.3);">None selected</span>`;
-  const status = document.getElementById("rxStatus");
-  if(status){ status.textContent=""; status.className="rx-status"; }
-  const search = document.getElementById("rxSearch");
-  if(search){ search.value=""; rxFilterMeds(""); }
+
+  rxMedicationDetails =
+    {};
+
+
+  document
+    .querySelectorAll(
+      ".rx-med-item input[type='checkbox']"
+    )
+    .forEach(cb=>{
+
+      cb.checked =
+        false;
+
+      cb.closest(
+        ".rx-med-item"
+      )
+        .classList
+        .remove(
+          "checked"
+        );
+    });
+
+
+  const list =
+    document.getElementById(
+      "rxSelectedList"
+    );
+
+
+  if(list){
+
+    list.innerHTML =
+      `<span style="font-size:12px;color:rgba(255,255,255,0.3);">None selected</span>`;
+  }
+
+
+  const status =
+    document.getElementById(
+      "rxStatus"
+    );
+
+
+  if(status){
+
+    status.textContent =
+      "";
+
+    status.className =
+      "rx-status";
+  }
+
+
+  const search =
+    document.getElementById(
+      "rxSearch"
+    );
+
+
+  if(search){
+
+    search.value =
+      "";
+
+    rxFilterMeds(
+      ""
+    );
+  }
+
+
+  const general =
+    document.getElementById(
+      "rxGeneralInstructions"
+    );
+
+
+  if(general){
+    general.value =
+      "";
+  }
 }
 
-function rxShowStatus(msg, type){
-  const el2 = document.getElementById("rxStatus");
-  if(!el2) return;
-  el2.textContent = msg;
-  el2.className = "rx-status " + type;
+
+function rxShowStatus(
+  msg,
+  type
+){
+
+  const el2 =
+    document.getElementById(
+      "rxStatus"
+    );
+
+
+  if(!el2){
+    return;
+  }
+
+
+  el2.textContent =
+    msg;
+
+  el2.className =
+    "rx-status " +
+    type;
 }
+
 
 async function rxSubmit(){
-  const patientId = document.getElementById("rxPatientSelect").value;
-  if(!patientId){ rxShowStatus("Please select a patient.","error"); return; }
 
-  const selected = Array.from(
-    document.querySelectorAll(".rx-med-item input[type='checkbox']:checked")
-  ).map(cb=>cb.value);
+  const patientId =
+    document.getElementById(
+      "rxPatientSelect"
+    )
+      .value;
 
-  if(selected.length===0){ rxShowStatus("Please select at least one medication.","error"); return; }
 
-  const btn = document.getElementById("rxConfirmBtn");
-  btn.disabled=true; btn.textContent="Saving...";
+  if(!patientId){
 
-  const rows = selected.map(med=>({
-    doctor_id:DOCTOR_ID, patient_id:patientId, medication:med
-  }));
+    rxShowStatus(
+      "Please select a patient.",
+      "error"
+    );
 
-  const {error:prescErr} = await client.from("prescriptions").insert(rows);
+    return;
+  }
+
+
+  if(
+    !rxSignatureData ||
+    !rxStampData
+  ){
+
+    rxShowStatus(
+      "Save your doctor signature and practice stamp first.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  const selected =
+    Array.from(
+      document.querySelectorAll(
+        ".rx-med-item input[type='checkbox']:checked"
+      )
+    )
+      .map(cb=>
+        cb.value
+      );
+
+
+  if(
+    selected.length===0
+  ){
+
+    rxShowStatus(
+      "Please select at least one medication.",
+      "error"
+    );
+
+    return;
+  }
+
+
+  const items =
+    selected.map(med=>{
+
+      const detail =
+        rxMedicationDetails[
+          med
+        ] || {};
+
+
+      return {
+        medication:
+          med,
+        dosage:
+          String(
+            detail.dosage ||
+            ""
+          ).trim(),
+        frequency:
+          String(
+            detail.frequency ||
+            ""
+          ).trim(),
+        duration:
+          String(
+            detail.duration ||
+            ""
+          ).trim(),
+        instructions:
+          String(
+            detail.instructions ||
+            ""
+          ).trim() ||
+          null
+      };
+    });
+
+
+  const incomplete =
+    items.find(item=>
+      !item.dosage ||
+      !item.frequency ||
+      !item.duration
+    );
+
+
+  if(incomplete){
+
+    rxShowStatus(
+      `Complete dosage, frequency and duration for ${incomplete.medication}.`,
+      "error"
+    );
+
+    return;
+  }
+
+
+  const generalInstructions =
+    document.getElementById(
+      "rxGeneralInstructions"
+    )
+      ?.value
+      ?.trim() ||
+    null;
+
+
+  const btn =
+    document.getElementById(
+      "rxConfirmBtn"
+    );
+
+
+  btn.disabled =
+    true;
+
+  btn.textContent =
+    "Issuing official prescription...";
+
+
+  const {
+    data,
+    error:prescErr
+  } =
+    await client.rpc(
+      "doctor_issue_web_prescription",
+      {
+        p_patient_id:
+          patientId,
+        p_items:
+          items,
+        p_general_instructions:
+          generalInstructions
+      }
+    );
+
+
   if(prescErr){
-      rxShowStatus("❌ Failed to save prescription.","error");
-      showToast("❌ Failed to save prescription","error");
-      btn.disabled=false; btn.textContent="✓ Confirm Prescription";
-      return;
-    }
 
-  const {error:recErr} = await client.from("medical_records").insert([{
-    patient_id:patientId, doctor_id:DOCTOR_ID,
-    record_type:"prescription", medications:selected,
-    notes:`Prescribed ${selected.length} medication(s)`
-  }]);
+    console.error(
+      "Official prescription error:",
+      prescErr
+    );
+
+    rxShowStatus(
+      "❌ " +
+      (
+        prescErr.message ||
+        "Failed to issue prescription."
+      ),
+      "error"
+    );
+
+    showToast(
+      "Failed to issue prescription",
+      "error"
+    );
+
+    btn.disabled =
+      false;
+
+    btn.textContent =
+      "✓ Confirm Prescription";
+
+    return;
+  }
+
+
+  const medicationNames =
+    items.map(item=>
+      item.medication
+    );
+
+
+  const {
+    error:recErr
+  } =
+    await client
+      .from(
+        "medical_records"
+      )
+      .insert(
+        [
+          {
+            patient_id:
+              patientId,
+            doctor_id:
+              DOCTOR_ID,
+            record_type:
+              "prescription",
+            medications:
+              medicationNames,
+            notes:
+              `Official signed prescription: ${medicationNames.join(", ")}`
+          }
+        ]
+      );
+
+
+  const result =
+    Array.isArray(
+      data
+    )
+      ? data[0]
+      : data;
+
+
   if(recErr){
-      rxShowStatus("⚠️ Prescription saved but medical record failed.","error");
-      showToast("⚠️ Prescription saved but record failed","warn");
-    } else {
-      rxShowStatus("✅ Prescription saved successfully!","success");
-      showToast("✅ Prescription saved successfully!","success");
-    }
 
-    btn.disabled=false; btn.textContent="✓ Confirm Prescription";
+    rxShowStatus(
+      `✅ Prescription ${result?.prescription_reference || ""} issued. Medical-record copy could not be added.`,
+      "success"
+    );
 
-    document.getElementById("rxPatientSelect").value="";
-    rxClearAll();
+  }else{
 
-    setTimeout(()=>{
-      const s=document.getElementById("rxStatus");
-      if(s){ s.textContent=""; s.className="rx-status"; }
-    }, 3500);
+    rxShowStatus(
+      `✅ Official prescription ${result?.prescription_reference || ""} issued successfully.`,
+      "success"
+    );
+  }
 
+
+  showToast(
+    "✅ Signed prescription issued and patient notified.",
+    "success"
+  );
+
+
+  btn.disabled =
+    false;
+
+  btn.textContent =
+    "✓ Confirm Prescription";
+
+
+  document.getElementById(
+    "rxPatientSelect"
+  ).value =
+    "";
+
+
+  rxClearAll();
+
+
+  setTimeout(
+    ()=>{
+
+      const s =
+        document.getElementById(
+          "rxStatus"
+        );
+
+      if(s){
+
+        s.textContent =
+          "";
+
+        s.className =
+          "rx-status";
+      }
+    },
+    5000
+  );
 }
+
 </script>
 </body>
 </html>
