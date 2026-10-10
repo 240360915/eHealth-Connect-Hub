@@ -1297,18 +1297,23 @@
 </div>
 
 
-    <!-- ADMIN VIRTUAL FINANCES: read-only figures from an admin-only Supabase RPC. -->
+    <!-- ADMIN VIRTUAL FINANCES: admin-only report and simulated refund RPC. -->
     <div class="tab-content" id="tab-finances">
         <p class="finance-hint">
             💡 <strong>DemoPay simulation only.</strong> Gross paid transactions are not the same as earned commission.
             EHealthy commission and doctor earnings become earned only after an eligible consultation is completed.
-            Cancelled paid appointments need a simulated refund review; this page does not issue refunds or transfer money.
+            An authorized admin can record a <strong>simulated refund</strong> for a cancelled paid appointment. No real money moves.
         </p>
         <div class="finance-metrics">
             <div class="finance-metric">
-                <div class="metric-label">Gross successful DemoPay payments</div>
+                <div class="metric-label">Historical gross DemoPay payments</div>
                 <div class="metric-value" id="financeGrossPaid">—</div>
-                <div class="metric-note">Includes paid appointments awaiting completion and paid cancelled appointments</div>
+                <div class="metric-note">Original successful payments, including subsequently refunded ones</div>
+            </div>
+            <div class="finance-metric">
+                <div class="metric-label">Net simulated collections</div>
+                <div class="metric-value" id="financeNetCollected">—</div>
+                <div class="metric-note">Historical gross minus processed demo refunds</div>
             </div>
             <div class="finance-metric metric-earned">
                 <div class="metric-label">EHealthy earned commission</div>
@@ -1331,9 +1336,9 @@
                 <div class="metric-note" id="financeCancelledCount">No cancellations pending review</div>
             </div>
             <div class="finance-metric">
-                <div class="metric-label">Payments marked refunded</div>
+                <div class="metric-label">Simulated refunds recorded</div>
                 <div class="metric-value" id="financeMarkedRefunded">—</div>
-                <div class="metric-note">Status-based tracking only; no automated refund integration yet</div>
+                <div class="metric-note">Refunds recorded in the demo ledger; no real bank transfer</div>
             </div>
         </div>
         <div class="section">
@@ -1350,7 +1355,7 @@
                         <option value="released">Earnings released</option>
                         <option value="cancelled">Needs refund review</option>
                         <option value="failed">Failed payments</option>
-                        <option value="refunded">Marked refunded</option>
+                        <option value="refunded">Refunded (demo)</option>
                     </select>
                     <button class="btn btn-lg btn-primary" id="financeRefreshButton" onclick="loadDemoFinances()">↻ Refresh</button>
                 </div>
@@ -1367,10 +1372,11 @@
                             <th>Appointment</th>
                             <th>EHealthy Earned</th>
                             <th>Review</th>
+                            <th>Refund / Action</th>
                         </tr>
                     </thead>
                     <tbody id="financeHistoryTable">
-                        <tr class="empty-row"><td colspan="7">Not loaded yet.</td></tr>
+                        <tr class="empty-row"><td colspan="8">Not loaded yet.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -2551,7 +2557,7 @@ async function rejectPayment(paymentId, doctorId) {
 }
 
 
-// ── Finances & Earnings: a READ-ONLY admin-only server report ────────────────
+// ── Finances & Earnings: admin-only reporting + DEMO refund RPC ───────────────
 // Never query demo_earnings or demo_platform_settings directly from the browser.
 // The Supabase SQL function validates auth.uid() against public.admins.
 let demoFinanceReport = null;
@@ -2570,7 +2576,7 @@ function demoFinanceSetText(id, content) {
 
 function demoFinanceReviewState(entry) {
     if (entry.needs_refund_review) return ['Refund review needed', 'status-error', 'cancelled'];
-    if (entry.payment_status === 'refunded') return ['Marked refunded', 'status-good', 'refunded'];
+    if (entry.payment_status === 'refunded') return ['Refunded (demo)', 'status-good', 'refunded'];
     if (entry.payment_status === 'failed') return ['Failed', 'status-error', 'failed'];
     if (entry.released_at) return ['Earnings released', 'status-good', 'released'];
     if (entry.payment_status === 'paid' &&
@@ -2595,7 +2601,8 @@ async function loadDemoFinances() {
         }
         demoFinanceReport = data;
         const summary = data.summary;
-        demoFinanceSetText('financeGrossPaid', demoMoney(summary.gross_paid_minor));
+        demoFinanceSetText('financeGrossPaid', demoMoney(summary.historical_gross_minor ?? summary.gross_paid_minor));
+        demoFinanceSetText('financeNetCollected', demoMoney(summary.net_collected_minor));
         demoFinanceSetText('financeEarnedPlatform', demoMoney(summary.earned_platform_minor));
         demoFinanceSetText('financeReleasedDoctor', demoMoney(summary.released_doctor_minor));
         demoFinanceSetText('financePendingPlatform', demoMoney(summary.potential_platform_minor));
@@ -2605,7 +2612,7 @@ async function loadDemoFinances() {
         demoFinanceSetText('financeCancelledCount', `${n} paid cancelled appointment${n === 1 ? '' : 's'} awaiting review`);
         const pct = (Number(data.commission_bps ?? 0) / 100).toFixed(2).replace(/\.00$/, '');
         const generated = data.generated_at ? new Date(data.generated_at).toLocaleString('en-ZA') : 'Unknown';
-        demoFinanceSetText('financeReportMeta', `Commission setting: ${pct}% for future releases. Latest 100 transactions shown. Report generated: ${generated}. This page is read-only.`);
+        demoFinanceSetText('financeReportMeta', `Commission setting: ${pct}% for future releases. Latest 100 transactions shown. Report generated: ${generated}. Refunds are simulations only.`);
         if (stateEl) stateEl.textContent = '';
         filterDemoFinanceHistory();
     } catch (error) {
@@ -2634,7 +2641,7 @@ function filterDemoFinanceHistory() {
     body.replaceChildren(); // Build DOM nodes with textContent to avoid HTML injection.
     if (!transactions.length) {
         const tr = document.createElement('tr'); tr.className = 'empty-row';
-        const td = document.createElement('td'); td.colSpan = 7; td.textContent = 'No transactions match the current filter.';
+        const td = document.createElement('td'); td.colSpan = 8; td.textContent = 'No transactions match the current filter.';
         tr.appendChild(td); body.appendChild(tr); return;
     }
     for (const entry of transactions) {
@@ -2656,7 +2663,49 @@ function filterDemoFinanceHistory() {
             if (index === 6) td.className = `finance-status ${state[1]}`;
             tr.appendChild(td);
         });
+        // Action cell: no unsafe HTML interpolation of payment IDs or references.
+        const action = document.createElement('td');
+        if (entry.needs_refund_review && entry.payment_id) {
+            const refundBtn = document.createElement('button');
+            refundBtn.type = 'button';
+            refundBtn.className = 'btn btn-approve';
+            refundBtn.textContent = '↩ Refund (demo)';
+            refundBtn.setAttribute('aria-label', `Simulate refund for ${entry.payment_reference || 'payment'}`);
+            refundBtn.disabled = demoRefundLoading;
+            refundBtn.addEventListener('click', () => refundDemoPayment(entry.payment_id, entry.payment_reference, entry.amount_minor));
+            action.appendChild(refundBtn);
+        } else if (entry.payment_status === 'refunded') {
+            const txt = document.createElement('span');
+            txt.textContent = entry.refund_reference || 'Refunded';
+            txt.className = 'finance-status status-good';
+            action.appendChild(txt);
+        } else {
+            action.textContent = '—';
+        }
+        tr.appendChild(action);
         body.appendChild(tr);
+    }
+}
+
+let demoRefundLoading = false;
+async function refundDemoPayment(paymentId, reference, amountMinor) {
+    if (demoRefundLoading || !paymentId) return;
+    const question = `Record a simulated refund of ${demoMoney(amountMinor)} for ${reference || 'this payment'}?\n\nOnly a cancelled, paid DemoPay appointment is eligible. This does not transfer real money.`;
+    if (!window.confirm(question)) return;
+    demoRefundLoading = true;
+    try {
+        const { data, error } = await client.rpc('admin_refund_cancelled_demo_payment', {
+            p_payment_id: paymentId
+        });
+        if (error) throw error;
+        showToast(`Demo refund ${data?.status === 'already_refunded' ? 'already recorded' : 'recorded'}: ${data?.refund_reference || reference || ''}`, 'success');
+        await loadDemoFinances();
+    } catch (error) {
+        console.error('Admin DemoPay refund:', error);
+        showToast('Demo refund failed: ' + (error?.message || 'Unknown error'), 'error');
+    } finally {
+        demoRefundLoading = false;
+        filterDemoFinanceHistory();
     }
 }
 
