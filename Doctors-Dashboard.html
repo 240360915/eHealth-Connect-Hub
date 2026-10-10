@@ -2843,6 +2843,15 @@ tbody tr:hover{
           <select class="rx-patient-select" id="rxPatientSelect">
             <option value="">Loading patients...</option>
           </select>
+          <div style="margin-top:12px;">
+            <label for="rxAppointmentSelect" style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;">Related appointment</label>
+            <select class="rx-patient-select" id="rxAppointmentSelect" required>
+              <option value="">Select a patient first</option>
+            </select>
+            <small style="display:block;margin-top:7px;color:#cbd5e1;line-height:1.5;">
+              Each official prescription must be linked to a confirmed or completed appointment.
+            </small>
+          </div>
 
           <div class="rx-selected-box">
             <div class="rx-selected-title">Selected Medications</div>
@@ -2861,6 +2870,10 @@ tbody tr:hover{
 
           <button class="rx-confirm-btn" id="rxConfirmBtn" onclick="rxSubmit()">
             ✓ Confirm Prescription
+          </button>
+          <button class="rx-confirm-btn" id="rxRetryLinkBtn"
+            onclick="rxRetryPrescriptionLink()" style="display:none;background:#b45309;">
+            Retry linking issued prescription
           </button>
           <div class="rx-status" id="rxStatus"></div>
         </div>
@@ -6756,6 +6769,52 @@ function subPrintHistorySlip(index){
 let rxMedicationDetails = {};
 let rxSignatureData = "";
 let rxStampData = "";
+let rxEligibleAppointments = [];
+let rxPendingPrescriptionLink = null;
+
+function rxUpdateAppointmentSelect(){
+  const patientId = document.getElementById("rxPatientSelect")?.value || "";
+  const select = document.getElementById("rxAppointmentSelect");
+  if(!select) return;
+  select.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = patientId ? "Select the consultation" : "Select a patient first";
+  select.appendChild(placeholder);
+  const appointments = rxEligibleAppointments
+    .filter(a => a.patient_id === patientId)
+    .sort((a,b) => String(b.date||"").localeCompare(String(a.date||"")));
+  for(const a of appointments){
+    const option = document.createElement("option");
+    option.value = a.id;
+    option.textContent = `${a.date||"Date pending"} ${String(a.time||"").slice(0,5)} • ${a.status}`;
+    select.appendChild(option);
+  }
+  if(patientId && appointments.length === 0){
+    placeholder.textContent = "No eligible appointments for this patient";
+  }
+}
+
+async function rxRetryPrescriptionLink(){
+  const pending = rxPendingPrescriptionLink;
+  if(!pending) return;
+  const button = document.getElementById("rxRetryLinkBtn");
+  button.disabled = true;
+  try {
+    const {error} = await client.rpc("doctor_link_prescription_to_appointment", {
+      p_prescription_reference: pending.reference,
+      p_appointment_id: pending.appointmentId
+    });
+    if(error) throw error;
+    rxPendingPrescriptionLink = null;
+    button.style.display = "none";
+    rxShowStatus("✅ Existing prescription successfully linked to its appointment.", "success");
+    showToast("Prescription linked", "success");
+  } catch(e){
+    rxShowStatus("The prescription exists, but linking still failed: " + (e.message||e), "error");
+  } finally {button.disabled = false;}
+}
+
 
 
 async function initPrescriptionPage(){
@@ -6772,7 +6831,7 @@ async function initPrescriptionPage(){
   const {data:appts,error:apptError} =
     await client
       .from("appointments")
-      .select("patient_id,patient_name,status")
+      .select("id,patient_id,patient_name,status,date,time")
       .eq("doctor_id",DOCTOR_ID);
 
 
@@ -6857,6 +6916,10 @@ async function initPrescriptionPage(){
     });
 
 
+  rxEligibleAppointments = appts.filter(a =>
+    a.id && a.patient_id && ["confirmed", "completed"].includes(String(a.status||"").toLowerCase())
+  );
+
   select.innerHTML =
     unique.length===0
       ? "<option value=''>No eligible patients</option>"
@@ -6881,6 +6944,8 @@ async function initPrescriptionPage(){
     );
   });
 
+  select.onchange = rxUpdateAppointmentSelect;
+  rxUpdateAppointmentSelect();
 
   document
     .querySelectorAll(
@@ -7555,7 +7620,7 @@ function rxFilterMeds(
 }
 
 
-function rxClearAll(){
+function rxClearAll(preserveStatus=false){
 
   rxMedicationDetails =
     {};
@@ -7599,7 +7664,7 @@ function rxClearAll(){
     );
 
 
-  if(status){
+  if(status && !preserveStatus){
 
     status.textContent =
       "";
@@ -7666,6 +7731,11 @@ function rxShowStatus(
 
 async function rxSubmit(){
 
+  if(rxPendingPrescriptionLink){
+    rxShowStatus("An issued prescription still needs linking. Use Retry linking before issuing another prescription.", "error");
+    return;
+  }
+
   const patientId =
     document.getElementById(
       "rxPatientSelect"
@@ -7682,6 +7752,14 @@ async function rxSubmit(){
 
     return;
   }
+
+  const appointmentId = document.getElementById("rxAppointmentSelect")?.value || "";
+  if(!appointmentId || !rxEligibleAppointments.some(a =>
+      a.id === appointmentId && a.patient_id === patientId)) {
+    rxShowStatus("Select the confirmed/completed appointment this prescription is for.", "error");
+    return;
+  }
+
 
 
   if(
@@ -7848,6 +7926,30 @@ async function rxSubmit(){
   }
 
 
+  // Issuance uses the EXISTING RPC. Only after issuance succeeds do we link
+  // that specific reference to the selected appointment (protected by SQL).
+  const issuedResult = Array.isArray(data) ? data[0] : data;
+  const issuedReference = issuedResult?.prescription_reference || "";
+  let prescriptionLinkError = null;
+  if(!issuedReference) {
+    prescriptionLinkError = new Error("The issue RPC did not return a prescription reference.");
+  } else {
+    const {error} = await client.rpc("doctor_link_prescription_to_appointment", {
+      p_prescription_reference: issuedReference,
+      p_appointment_id: appointmentId
+    });
+    prescriptionLinkError = error;
+  }
+  if(prescriptionLinkError && issuedReference){
+    rxPendingPrescriptionLink = {reference:issuedReference, appointmentId};
+    const retry = document.getElementById("rxRetryLinkBtn");
+    if(retry) retry.style.display = "block";
+  } else if(!prescriptionLinkError){
+    rxPendingPrescriptionLink = null;
+    const retry = document.getElementById("rxRetryLinkBtn");
+    if(retry) retry.style.display = "none";
+  }
+
   const medicationNames =
     items.map(item=>
       item.medication
@@ -7887,7 +7989,15 @@ async function rxSubmit(){
       : data;
 
 
-  if(recErr){
+  if(prescriptionLinkError){
+    // Do not invite the doctor to reissue; that would create a duplicate.
+    rxShowStatus(
+      "⚠️ Prescription was issued, but could not be linked to the appointment. " +
+      (prescriptionLinkError.message || "Use Retry linking; do not issue it again."),
+      "error"
+    );
+    showToast("Prescription issued; appointment link failed", "warn");
+  } else if(recErr){
 
     rxShowStatus(
       `✅ Prescription ${result?.prescription_reference || ""} issued. Medical-record copy could not be added.`,
@@ -7903,10 +8013,9 @@ async function rxSubmit(){
   }
 
 
-  showToast(
-    "✅ Signed prescription issued and patient notified.",
-    "success"
-  );
+  if(!prescriptionLinkError){
+    showToast("✅ Prescription issued, linked to appointment, and patient notified.", "success");
+  }
 
 
   btn.disabled =
@@ -7922,12 +8031,12 @@ async function rxSubmit(){
     "";
 
 
-  rxClearAll();
-
+  rxClearAll(true);
+  rxUpdateAppointmentSelect();
 
   setTimeout(
     ()=>{
-
+      if(rxPendingPrescriptionLink) return;
       const s =
         document.getElementById(
           "rxStatus"

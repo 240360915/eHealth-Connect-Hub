@@ -940,6 +940,29 @@
     .toggle-switch.on::after { 
         transform: translateX(16px); 
     }
+
+        /* Finances & Earnings — independent of the existing subscriptions section. */
+        .finance-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-bottom:20px; }
+        .finance-metric { background:var(--card); padding:20px; border:1px solid var(--border); border-radius:12px; }
+        .finance-metric .metric-label { color:var(--muted); font-size:12px; font-weight:600; line-height:1.4; }
+        .finance-metric .metric-value { color:var(--navy); font-size:26px; font-weight:700; margin-top:7px; font-variant-numeric:tabular-nums; }
+        .finance-metric .metric-note { color:var(--muted); font-size:11px; margin-top:6px; line-height:1.45; }
+        .finance-metric.metric-warning { border-left:4px solid var(--warning); }
+        .finance-metric.metric-earned { border-left:4px solid var(--success); }
+        .finance-hint { color:var(--muted); font-size:13px; margin:0 0 18px; line-height:1.65; }
+        .finance-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .finance-toolbar select { padding:9px 12px; border:1px solid var(--border); border-radius:8px; background:white; color:var(--text); }
+        .finance-table-wrap { width:100%; overflow-x:auto; }
+        #financeHistoryTable td { font-size:12px; }
+        #financeHistoryTable td:nth-child(2) { font-family:monospace; white-space:nowrap; }
+        .finance-status { font-weight:700; }
+        .finance-status.status-error { color:#b91c1c; }
+        .finance-status.status-good { color:#047857; }
+        .finance-status.status-warning { color:#9a6700; }
+        .finance-state { margin:12px 0; color:var(--muted); font-size:13px; }
+        .finance-state.error { color:#b91c1c; }
+        @media (max-width: 1024px) { .finance-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+        @media (max-width: 600px) { .finance-metrics { grid-template-columns:1fr; } .finance-toolbar .search-input { width:100%; } }
     </style>
 </head>
 <body>
@@ -973,6 +996,9 @@
         </a>
 
         <div class="menu-label">System</div>
+        <a onclick="showTab('finances', this)">
+            <span class="icon">💰</span> Finances &amp; Earnings
+        </a>
         <a onclick="showTab('subscriptions', this)">
             <span class="icon">💳</span> Subscriptions
             <span class="tab-badge" id="subPendingCount">0</span>
@@ -1270,6 +1296,88 @@
 
 </div>
 
+
+    <!-- ADMIN VIRTUAL FINANCES: read-only figures from an admin-only Supabase RPC. -->
+    <div class="tab-content" id="tab-finances">
+        <p class="finance-hint">
+            💡 <strong>DemoPay simulation only.</strong> Gross paid transactions are not the same as earned commission.
+            EHealthy commission and doctor earnings become earned only after an eligible consultation is completed.
+            Cancelled paid appointments need a simulated refund review; this page does not issue refunds or transfer money.
+        </p>
+        <div class="finance-metrics">
+            <div class="finance-metric">
+                <div class="metric-label">Gross successful DemoPay payments</div>
+                <div class="metric-value" id="financeGrossPaid">—</div>
+                <div class="metric-note">Includes paid appointments awaiting completion and paid cancelled appointments</div>
+            </div>
+            <div class="finance-metric metric-earned">
+                <div class="metric-label">EHealthy earned commission</div>
+                <div class="metric-value" id="financeEarnedPlatform">—</div>
+                <div class="metric-note">Only from the virtual earnings release ledger</div>
+            </div>
+            <div class="finance-metric metric-earned">
+                <div class="metric-label">Released doctor earnings</div>
+                <div class="metric-value" id="financeReleasedDoctor">—</div>
+                <div class="metric-note">Doctor shares already recorded after consultation completion</div>
+            </div>
+            <div class="finance-metric">
+                <div class="metric-label">Potential pending platform commission</div>
+                <div class="metric-value" id="financePendingPlatform">—</div>
+                <div class="metric-note">Estimate at current commission rate, not earned revenue</div>
+            </div>
+            <div class="finance-metric metric-warning">
+                <div class="metric-label">Paid cancellations needing refund review</div>
+                <div class="metric-value" id="financeCancelledPaid">—</div>
+                <div class="metric-note" id="financeCancelledCount">No cancellations pending review</div>
+            </div>
+            <div class="finance-metric">
+                <div class="metric-label">Payments marked refunded</div>
+                <div class="metric-value" id="financeMarkedRefunded">—</div>
+                <div class="metric-note">Status-based tracking only; no automated refund integration yet</div>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-header" style="gap:12px;flex-wrap:wrap;">
+                <div>
+                    <h2>💳 DemoPay transaction history</h2>
+                    <p id="financeHistorySubtitle">The 100 most recent scheduled online DemoPay transactions</p>
+                </div>
+                <div class="finance-toolbar">
+                    <input type="search" class="search-input" id="financeSearch" placeholder="Search payment reference..." oninput="filterDemoFinanceHistory()">
+                    <select id="financeFilter" aria-label="Filter DemoPay transactions" onchange="filterDemoFinanceHistory()">
+                        <option value="all">All transactions</option>
+                        <option value="pending">Awaiting consultation</option>
+                        <option value="released">Earnings released</option>
+                        <option value="cancelled">Needs refund review</option>
+                        <option value="failed">Failed payments</option>
+                        <option value="refunded">Marked refunded</option>
+                    </select>
+                    <button class="btn btn-lg btn-primary" id="financeRefreshButton" onclick="loadDemoFinances()">↻ Refresh</button>
+                </div>
+            </div>
+            <div id="financeLoadingState" class="finance-state" role="status" style="padding:0 22px;">Open this tab to load the virtual finance report.</div>
+            <div class="finance-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Payment Reference</th>
+                            <th>Demo Amount</th>
+                            <th>Payment</th>
+                            <th>Appointment</th>
+                            <th>EHealthy Earned</th>
+                            <th>Review</th>
+                        </tr>
+                    </thead>
+                    <tbody id="financeHistoryTable">
+                        <tr class="empty-row"><td colspan="7">Not loaded yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="finance-hint" id="financeReportMeta">Commission rate and report time appear after loading.</p>
+    </div>
+
     <!--  MESSAGES  -->
     <div class="tab-content" id="tab-messages">
 
@@ -1513,6 +1621,7 @@ function showTab(name, el) {
         patients:     ['All Patients',          'Manage registered patients'],
         appointments: ['Appointments',          'All bookings across the platform'],
         subscriptions:['Subscription Payments', 'Manage doctor subscriptions and payments'],
+        finances:     ['Finances & Earnings', 'Admin-only DemoPay reports, virtual commissions and refund review'],
         messages:     ['Messages',              'Platform messages'],
     };
 
@@ -1528,6 +1637,7 @@ function showTab(name, el) {
     if (name === 'appointments') loadAppointments();
     if (name === 'messages')     loadMessages();
     if (name === 'subscriptions') loadSubscriptions();
+    if (name === 'finances')      loadDemoFinances();
     if (name === 'dashboard')    { loadStats(); loadGraphs(); }
     
 }
@@ -2438,6 +2548,116 @@ async function rejectPayment(paymentId, doctorId) {
     showToast("❌ Payment rejected.", "error");
     loadSubscriptions();
     loadStats();
+}
+
+
+// ── Finances & Earnings: a READ-ONLY admin-only server report ────────────────
+// Never query demo_earnings or demo_platform_settings directly from the browser.
+// The Supabase SQL function validates auth.uid() against public.admins.
+let demoFinanceReport = null;
+let demoFinanceLoading = false;
+
+function demoMoney(minor) {
+    const integerMinor = Number(minor ?? 0);
+    const value = Number.isFinite(integerMinor) ? integerMinor / 100 : 0;
+    return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(value);
+}
+
+function demoFinanceSetText(id, content) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(content);
+}
+
+function demoFinanceReviewState(entry) {
+    if (entry.needs_refund_review) return ['Refund review needed', 'status-error', 'cancelled'];
+    if (entry.payment_status === 'refunded') return ['Marked refunded', 'status-good', 'refunded'];
+    if (entry.payment_status === 'failed') return ['Failed', 'status-error', 'failed'];
+    if (entry.released_at) return ['Earnings released', 'status-good', 'released'];
+    if (entry.payment_status === 'paid' &&
+        ['pending', 'confirmed'].includes(entry.appointment_status)) {
+        return ['Awaiting consultation', 'status-warning', 'pending'];
+    }
+    return ['Requires review', 'status-warning', 'other'];
+}
+
+async function loadDemoFinances() {
+    if (demoFinanceLoading) return;
+    demoFinanceLoading = true;
+    const refreshBtn = document.getElementById('financeRefreshButton');
+    if (refreshBtn) refreshBtn.disabled = true;
+    const stateEl = document.getElementById('financeLoadingState');
+    if (stateEl) { stateEl.textContent = 'Loading simulated finance report…'; stateEl.className = 'finance-state'; }
+    try {
+        const { data, error } = await client.rpc('admin_get_demo_finance_report');
+        if (error) throw error;
+        if (!data || typeof data !== 'object' || !data.summary || !Array.isArray(data.transactions)) {
+            throw new Error('Unexpected response from admin finance function');
+        }
+        demoFinanceReport = data;
+        const summary = data.summary;
+        demoFinanceSetText('financeGrossPaid', demoMoney(summary.gross_paid_minor));
+        demoFinanceSetText('financeEarnedPlatform', demoMoney(summary.earned_platform_minor));
+        demoFinanceSetText('financeReleasedDoctor', demoMoney(summary.released_doctor_minor));
+        demoFinanceSetText('financePendingPlatform', demoMoney(summary.potential_platform_minor));
+        demoFinanceSetText('financeCancelledPaid', demoMoney(summary.cancelled_paid_minor));
+        demoFinanceSetText('financeMarkedRefunded', demoMoney(summary.marked_refunded_minor));
+        const n = Number(summary.cancelled_paid_count ?? 0);
+        demoFinanceSetText('financeCancelledCount', `${n} paid cancelled appointment${n === 1 ? '' : 's'} awaiting review`);
+        const pct = (Number(data.commission_bps ?? 0) / 100).toFixed(2).replace(/\.00$/, '');
+        const generated = data.generated_at ? new Date(data.generated_at).toLocaleString('en-ZA') : 'Unknown';
+        demoFinanceSetText('financeReportMeta', `Commission setting: ${pct}% for future releases. Latest 100 transactions shown. Report generated: ${generated}. This page is read-only.`);
+        if (stateEl) stateEl.textContent = '';
+        filterDemoFinanceHistory();
+    } catch (error) {
+        console.error('Admin DemoPay finance report:', error);
+        if (stateEl) {
+            stateEl.className = 'finance-state error';
+            stateEl.textContent = 'Could not load finances. Confirm the SQL migration is installed and your account is in the admins table. Details: ' + (error?.message || 'Unknown error');
+        }
+    } finally {
+        demoFinanceLoading = false;
+        if (refreshBtn) refreshBtn.disabled = false;
+    }
+}
+
+function filterDemoFinanceHistory() {
+    if (!demoFinanceReport) return;
+    const query = (document.getElementById('financeSearch')?.value ?? '').trim().toLowerCase();
+    const filter = document.getElementById('financeFilter')?.value ?? 'all';
+    const transactions = demoFinanceReport.transactions.filter(entry => {
+        const matchText = [entry.payment_reference || '', entry.payment_id || '', entry.appointment_id || ''].some(v => String(v).toLowerCase().includes(query));
+        return matchText && (filter === 'all' || demoFinanceReviewState(entry)[2] === filter);
+    });
+    demoFinanceSetText('financeHistorySubtitle', `${transactions.length} of ${demoFinanceReport.transactions.length} recent DemoPay transaction(s) displayed`);
+    const body = document.getElementById('financeHistoryTable');
+    if (!body) return;
+    body.replaceChildren(); // Build DOM nodes with textContent to avoid HTML injection.
+    if (!transactions.length) {
+        const tr = document.createElement('tr'); tr.className = 'empty-row';
+        const td = document.createElement('td'); td.colSpan = 7; td.textContent = 'No transactions match the current filter.';
+        tr.appendChild(td); body.appendChild(tr); return;
+    }
+    for (const entry of transactions) {
+        const tr = document.createElement('tr');
+        const state = demoFinanceReviewState(entry);
+        const dateText = entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-ZA') : '—';
+        const cells = [
+            dateText,
+            entry.payment_reference || '—',
+            demoMoney(entry.amount_minor),
+            entry.payment_status || '—',
+            entry.appointment_status || '—',
+            entry.released_at ? demoMoney(entry.platform_minor) : demoMoney(0),
+            state[0]
+        ];
+        cells.forEach((value, index) => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            if (index === 6) td.className = `finance-status ${state[1]}`;
+            tr.appendChild(td);
+        });
+        body.appendChild(tr);
+    }
 }
 
 // ── Load Appointments ──
