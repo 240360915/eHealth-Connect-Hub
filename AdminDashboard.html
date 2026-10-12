@@ -1716,7 +1716,7 @@ async function loadPendingDoctors() {
 async function loadDoctors() {
     const { data, error } = await client
         .from("doctors")
-        .select("id, name, surname, email, discipline, practice_number, verification_status, created_at")
+        .select("id, name, surname, email, discipline, practice_number, verification_status, is_deactivated, created_at")
         .order("created_at", { ascending: false });
 
     if (error) { console.error(error); return; }
@@ -1729,9 +1729,12 @@ async function loadDoctors() {
         return;
     }
 
-    data.forEach(doc => {
-        const date   = new Date(doc.created_at).toLocaleDateString("en-ZA");
-        const status = doc.verification_status || 'pending';
+        data.forEach(doc => {
+        const date         = new Date(doc.created_at).toLocaleDateString("en-ZA");
+        const status       = doc.is_deactivated ? 'deactivated' : (doc.verification_status || 'pending');
+        const badgeClass   = doc.is_deactivated ? 'badge-rejected' : `badge-${doc.verification_status || 'pending'}`;
+        const toggleLabel  = doc.is_deactivated ? 'Reactivate' : 'Deactivate';
+        const toggleClass  = doc.is_deactivated ? 'btn-approve' : 'btn-delete';
         table.innerHTML += `
             <tr>
                 <td><div class="doctor-name">${doc.name} ${doc.surname}</div></td>
@@ -1739,11 +1742,11 @@ async function loadDoctors() {
                 <td>${doc.discipline || '—'}</td>
                 <td><code>${doc.practice_number || '—'}</code></td>
                 <td>${date}</td>
-                <td><span class="badge badge-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
+                <td><span class="badge ${badgeClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</span></td>
                 <td>
                     <div class="btn-group">
-                        <button class="btn btn-view"   onclick="openReviewModal('${doc.id}')">View</button>
-                        <button class="btn btn-delete" onclick="deleteDoctor('${doc.id}')">Delete</button>
+                        <button class="btn btn-view" onclick="openReviewModal('${doc.id}')">View</button>
+                        <button class="btn ${toggleClass}" onclick="toggleDoctorActive('${doc.id}', ${doc.is_deactivated ? 'true' : 'false'})">${toggleLabel}</button>
                     </div>
                 </td>
             </tr>`;
@@ -1936,11 +1939,18 @@ async function verifyDoctor(status) {
 }
 
 
-async function deleteDoctor(id) {
-    if (!confirm("Delete this doctor? This cannot be undone.")) return;
-    const { error } = await client.from("doctors").delete().eq("id", id);
-    if (error) { showToast("Delete failed: " + error.message, "error"); return; }
-    showToast("Doctor deleted.", "success");
+async function toggleDoctorActive(id, isCurrentlyDeactivated) {
+    const action = isCurrentlyDeactivated ? "reactivate" : "deactivate";
+    if (!confirm(`Are you sure you want to ${action} this doctor?`)) return;
+
+    const updates = isCurrentlyDeactivated
+        ? { is_deactivated: false, verification_status: "approved" }
+        : { is_deactivated: true,  verification_status: "suspended" };
+
+    const { error } = await client.from("doctors").update(updates).eq("id", id);
+    if (error) { showToast(`Failed to ${action}: ` + error.message, "error"); return; }
+
+    showToast(`Doctor ${action}d.`, "success");
     loadDoctors();
     loadStats();
 }

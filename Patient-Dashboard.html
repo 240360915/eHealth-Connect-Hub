@@ -472,7 +472,7 @@
         <div class="messages-box">
         <div class="messages-header" style="display:flex;align-items:center;justify-content:space-between;">
           <span>💬 Chat with <span id="chatDoctorName">your doctor</span></span>
-          <button class="call-icon-btn" id="chatVideoBtn" onclick="startCall()" style="display:none;">📹 Video Call</button>
+          <button class="call-icon-btn" id="chatVideoBtn" onclick="startCall()" style="display:none;">📹 Join Consultation</button>
         </div>
           <div id="messagesList"><div class="no-doctor-msg">Select a doctor above to start chatting.</div></div>
           <div class="msg-input-row">
@@ -514,6 +514,11 @@
           </div>
           <div class="call-quality" id="callQuality">🟢 Connected</div>
         </div>
+        <div style="position:absolute;top:64px;left:18px;right:18px;z-index:31;
+            color:#ffedd5;background:rgba(124,45,18,.80);padding:8px 12px;
+            border-radius:9px;font-size:11px;line-height:1.4;text-align:center;">
+          Recording is not allowed unless both participants consent.
+        </div>
         <div class="call-bottom-bar">
           <button class="ctrl" id="muteBtn" onclick="toggleMute()" title="Mute">🎤</button>
           <button class="ctrl" id="camBtn" onclick="toggleCam()" title="Camera">📷</button>
@@ -552,8 +557,7 @@
   function safeSet(id, prop, val) { const n = el(id); if (n) n[prop] = val; }
 
   let selectedDoctorId = null, selectedDoctorName = "", allDoctorsData = [];
-  let messageChannel = null, localStream = null, peerConnection = null;
-  let currentCallId = null, callChannel = null, isMuted = false, isCamOff = false;
+  let messageChannel = null;
 
 
 
@@ -858,240 +862,310 @@ function onDoctorSelected() {
 
   
 
-  //  ICE ──
-  const ICE = { iceServers:[
-    {urls:"stun:stun.l.google.com:19302"},
-    {urls:"stun:stun1.l.google.com:19302"}
-  ]};
+  // ============================================================
+  // EHEALTHY PATIENT SCHEDULED CONSULTATIONS — STREAM VIDEO
+  // Android joins type="default", id=appointment UUID.
+  // Doctor Website joins the identical Stream room.
+  // Camera/microphone require HTTPS or localhost.
+  // ============================================================
+  const PATIENT_STREAM_API_KEY = '67jj8rzevh48'; // public key, NOT API secret
+  const PATIENT_STREAM_SDK_URL = 'https://esm.sh/@stream-io/video-client';
+  let patientStreamSDKPromise = null;
+  let patientStreamClient = null;
+  let patientStreamCall = null;
+  let patientStreamParticipantsSubscription = null;
+  let patientRemoteVideoUnbind = null;
+  let patientRemoteAudioUnbind = null;
+  let patientLocalVideoUnbind = null;
+  let patientRemoteSession = null;
+  let patientLocalSession = null;
+  let patientRemoteAudio = null;
+  let patientStreamBusy = false;
+  let patientStreamGeneration = 0;
+  let patientCurrentAppointmentId = null;
+  let patientMuted = false;
+  let patientCameraOff = false;
+  let patientCallTimerInterval = null;
+  let patientCallSeconds = 0;
 
-  // ──  showToast ──
-  function showToast(msg, type="success") {
-    let toast = el("toast");
+  function showToast(msg, type='success') {
+    let toast = el('toast');
     if (!toast) {
-      toast = document.createElement("div");
-      toast.id = "toast";
-      toast.style.cssText = `
-        position:fixed;bottom:24px;right:24px;z-index:9999;
-        padding:12px 20px;border-radius:10px;font-size:14px;
-        font-weight:600;color:white;box-shadow:0 4px 20px rgba(0,0,0,0.2);
-        transition:opacity 0.3s;opacity:0;pointer-events:none;
-      `;
+      toast = document.createElement('div');
+      toast.id = 'toast';
+      toast.style.cssText = `position:fixed;bottom:24px;right:24px;z-index:9999;
+        padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;
+        color:white;box-shadow:0 4px 20px rgba(0,0,0,.2);
+        transition:opacity .3s;opacity:0;pointer-events:none;max-width:90vw;`;
       document.body.appendChild(toast);
     }
-    const colors = { success:"#10b981", error:"#ef4444", warn:"#f59e0b" };
+    const colors = { success:'#10b981', error:'#ef4444', warn:'#f59e0b' };
     toast.style.background = colors[type] || colors.success;
     toast.textContent = msg;
-    toast.style.opacity = "1";
-    setTimeout(() => { toast.style.opacity = "0"; }, 3000);
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 3800);
   }
 
-
-  let callPanelOpen = true;
-
-
-  function toggleCallPanel(forceOpen) {
-    callPanelOpen = true;
-  }
-
-  function setCallStatus(msg, state="") {
-    safeSet("callStatus","textContent", msg);
-    const p = el("callPill");
-    if (p) {
-      p.textContent = state 
-        ? state.charAt(0).toUpperCase() + state.slice(1) 
-        : msg;
-      p.className = "call-pill" + (state ? " " + state : "");
+  function patientStreamSDK() {
+    if (!patientStreamSDKPromise) {
+      patientStreamSDKPromise = import(PATIENT_STREAM_SDK_URL).catch(error => {
+        patientStreamSDKPromise = null;
+        throw error;
+      });
     }
+    return patientStreamSDKPromise;
   }
 
-  function showVideoPlaceholder(show, pulsing=false) {
-    const p = el("videoPlaceholder");
-    if (p) p.style.display = show ? "flex" : "none";
-  }
-
-
- 
-let callTimerInterval = null, callSeconds = 0;
-function startCallTimer(){
-  callSeconds=0; clearInterval(callTimerInterval);
-  callTimerInterval=setInterval(()=>{
-    callSeconds++;
-    const m=Math.floor(callSeconds/60),s=callSeconds%60;
-    safeSet("callTimer","textContent",`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`);
-  },1000);
-}
-function stopCallTimer(){ clearInterval(callTimerInterval); callTimerInterval=null; safeSet("callTimer","textContent","00:00"); }
-
-async function startCall() {
-  const { data:{user}, error:authErr } = await client.auth.getUser();
-  if (authErr || !user) { alert("Please log in."); return; }
-  if (!selectedDoctorId) { alert("Please select a doctor first."); return; }
-
-  safeSet("outgoingDoctorName","textContent", selectedDoctorName);
-  safeSet("callDoctorLabel","textContent", selectedDoctorName);
-  el("outgoingOverlay").classList.add("show");
-
-  try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
-    el("localVideo").srcObject = localStream;
-
-    peerConnection = new RTCPeerConnection(ICE);
-    localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
-    peerConnection.ontrack = (e) => {
-      el("remoteVideo").srcObject = e.streams[0];
-      safeSet("callQuality","textContent","🟢 Connected");
-    };
-
-    const iceCandidates = [];
-    peerConnection.onicecandidate = (e) => { if (e.candidate) iceCandidates.push(e.candidate); };
-
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    await waitForIce(peerConnection);
-
-    const { data:callData, error:ie } = await client.from("calls").insert([{
-      patient_id: user.id, doctor_id: selectedDoctorId,
-      offer: JSON.stringify(offer), caller_ice: JSON.stringify(iceCandidates),
-      status: "calling", initiated_by: "patient"
-    }]).select().single();
-
-    if (ie) { showToast("Failed to start call","error"); el("outgoingOverlay").classList.remove("show"); cleanupCall(); return; }
-
-    currentCallId = callData.id;
-    subscribeCallUpdates(currentCallId);
-
-  } catch(err) {
-    el("outgoingOverlay").classList.remove("show");
-    showToast(err.name==="NotAllowedError" ? "Allow camera/mic access." : "Call failed: "+err.message, "error");
-    cleanupCall();
-  }
-}
-
-function subscribeCallUpdates(callId) {
-  callChannel = client.channel(`call-p-${callId}`)
-    .on("postgres_changes",{ event:"UPDATE", schema:"public", table:"calls", filter:`id=eq.${callId}` },
-    (payload) => {
-      const u = payload.new;
-      if (u.status==="connected" && u.answer) {
-        applyAnswer(u);
-        el("outgoingOverlay").classList.remove("show");
-        el("activeCallOverlay").classList.add("show");
-        startCallTimer();
-      } else if (u.status==="rejected") {
-        showToast("Doctor is unavailable right now.","warn");
-        el("outgoingOverlay").classList.remove("show");
-        cleanupCall();
-      } else if (u.status==="ended") {
-        showToast("Call ended by doctor.","warn");
-        el("activeCallOverlay").classList.remove("show");
-        stopCallTimer();
-        cleanupCall();
-      }
-    }).subscribe();
-}
-
-async function applyAnswer(cd) {
-  if (!peerConnection) return;
-  try {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(cd.answer)));
-    if (cd.callee_ice)
-      for (const c of JSON.parse(cd.callee_ice))
-        await peerConnection.addIceCandidate(new RTCIceCandidate(c));
-  } catch(err) { showToast("Could not connect the call.","error"); }
-}
-
-async function endCall() {
-  if (currentCallId) await client.from("calls").update({ status:"ended" }).eq("id", currentCallId);
-  el("outgoingOverlay").classList.remove("show");
-  el("activeCallOverlay").classList.remove("show");
-  stopCallTimer();
-  cleanupCall();
-  showToast("Call ended.","success");
-}
-
-function cleanupCall() {
-  if (callChannel) { client.removeChannel(callChannel); callChannel = null; }
-  if (peerConnection) { peerConnection.close(); peerConnection = null; }
-  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  el("localVideo").srcObject = null;
-  el("remoteVideo").srcObject = null;
-  currentCallId = null; isMuted = false; isCamOff = false;
-}
-
-function toggleMute() {
-  if (!localStream) return;
-  isMuted = !isMuted;
-  localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
-  el("muteBtn").textContent = isMuted ? "🔇" : "🎤";
-  el("muteBtn").classList.toggle("active", isMuted);
-}
-
-function toggleCam() {
-  if (!localStream) return;
-  isCamOff = !isCamOff;
-  localStream.getVideoTracks().forEach(t => t.enabled = !isCamOff);
-  el("camBtn").textContent = isCamOff ? "🚫" : "📷";
-  el("camBtn").classList.toggle("active", isCamOff);
-}
-
-
-
-  async function applyAnswer(cd) {
-    if (!peerConnection) return;
-    try {
-      await peerConnection.setRemoteDescription(
-        new RTCSessionDescription(JSON.parse(cd.answer))
-      );
-      if (cd.callee_ice) {
-        for (const c of JSON.parse(cd.callee_ice)) {
-          await peerConnection.addIceCandidate(new RTCIceCandidate(c));
-        }
-      }
-      setCallStatus("Connected", "connected");
-      showVideoPlaceholder(false);
-    } catch(err) {
-      console.error("applyAnswer:", err);
-      setCallStatus("Connection error.");
-      showToast("Could not connect the call.", "error");
-    }
-  }
-
-
-
-
-
-
-  function resetCallUI() {
-    const startBtn = el("startCallBtn");
-    const endBtn   = el("endCallBtn");
-    const muteBtn  = el("muteBtn");
-    const camBtn   = el("camBtn");
-    if (startBtn) { startBtn.disabled = false; startBtn.style.display = "inline-flex"; }
-    if (endBtn)   { endBtn.style.display = "none"; }
-    if (muteBtn)  { muteBtn.disabled = true; muteBtn.textContent = "🎤"; muteBtn.style.background = "rgba(255,255,255,0.1)"; }
-    if (camBtn)   { camBtn.disabled  = true; camBtn.textContent  = "📷"; camBtn.style.background  = "rgba(255,255,255,0.1)"; }
-    isMuted  = false;
-    isCamOff = false;
-  }
-
-
-
-
-
-
-  function waitForIce(pc) {
-    return new Promise(resolve => {
-      if (pc.iceGatheringState === "complete") return resolve();
-      const timeout = setTimeout(resolve, 5000);
-      pc.onicegatheringstatechange = () => {
-        if (pc.iceGatheringState === "complete") {
-          clearTimeout(timeout);
-          resolve();
-        }
-      };
+  async function getPatientStreamCredentials(appointmentId) {
+    // The Edge Function validates the signed-in PATIENT, confirmed online
+    // appointment and eligible paid transaction before issuing a short token.
+    const { data, error } = await client.functions.invoke('patient-scheduled-stream-token', {
+      body: { appointmentId }
     });
+    if (error) {
+      // Supabase's FunctionsHttpError can contain a JSON explanation.
+      let details = 'Could not authorize this consultation. Check that the patient Edge Function is deployed.';
+      try {
+        const body = await error.context?.json();
+        if (body?.error) details = body.error;
+      } catch (_) {}
+      throw new Error(details);
+    }
+    if (!data?.token || !data?.userId || data?.apiKey !== PATIENT_STREAM_API_KEY ||
+        data?.appointmentId !== appointmentId || data?.callType !== 'default') {
+      throw new Error('The video service returned unexpected credentials.');
+    }
+    return data;
   }
 
+  async function resolvePatientProfileId() {
+    const { data: { user }, error } = await client.auth.getUser();
+    if (error || !user) throw new Error('Please sign in as a patient.');
+    const { data: patient, error: profileError } = await client.from('patients')
+      .select('id,user_id').eq('user_id', user.id).maybeSingle();
+    if (profileError) throw new Error('Could not load your patient profile.');
+    if (!patient?.id) throw new Error('Patient profile not found.');
+    return { profileId: patient.id, authId: user.id };
+  }
+
+  async function startCall() {
+    if (!selectedDoctorId) return showToast('Please select a doctor first.', 'warn');
+    if (patientStreamBusy || patientStreamCall) return showToast('A consultation is already open.', 'warn');
+    try {
+      const { profileId, authId } = await resolvePatientProfileId();
+      const { data, error } = await client.from('appointments')
+        .select('id,doctor_id,status,appointment_type,date,time')
+        .in('patient_id', [...new Set([profileId, authId])])
+        .eq('doctor_id', selectedDoctorId)
+        .eq('status', 'confirmed')
+        .eq('appointment_type', 'online')
+        .order('date', { ascending: false }).limit(30);
+      if (error) throw new Error('Could not check your online appointments.');
+      const appointments = data || [];
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Johannesburg' });
+      const future = appointments.filter(a => a.date >= today).sort((a,b) =>
+        `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+      const appointment = future[0] || appointments[0];
+      if (!appointment) return showToast('A confirmed online appointment with this doctor is required.', 'warn');
+      await joinPatientScheduledCall(appointment.id, selectedDoctorName);
+    } catch (error) {
+      showToast(error?.message || 'Could not find an appointment.', 'error');
+    }
+  }
+
+  async function joinPatientScheduledCall(appointmentId, doctorName = 'Doctor') {
+    if (patientStreamBusy || patientStreamCall) return;
+    const id = String(appointmentId || '');
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      return showToast('Invalid appointment ID.', 'error');
+    }
+    patientStreamBusy = true;
+    patientCurrentAppointmentId = id;
+    const generation = ++patientStreamGeneration;
+    safeSet('outgoingDoctorName', 'textContent', doctorName || 'Doctor');
+    safeSet('callDoctorLabel', 'textContent', doctorName || 'Doctor');
+    safeSet('callQuality', 'textContent', '⏳ Connecting securely...');
+    el('outgoingOverlay').classList.add('show');
+    const cancelled = () => generation !== patientStreamGeneration;
+    let thisClient = null;
+    let thisCall = null;
+    const cleanupAbortedJoin = async () => {
+      try { await thisCall?.leave(); } catch (_) {}
+      try { await thisClient?.disconnectUser(); } catch (_) {}
+    };
+    try {
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera and microphone access requires HTTPS (or localhost).');
+      }
+      const [credentials, sdk] = await Promise.all([
+        getPatientStreamCredentials(id), patientStreamSDK()
+      ]);
+      if (cancelled()) return;
+      thisClient = new sdk.StreamVideoClient({
+        apiKey: credentials.apiKey,
+        token: credentials.token,
+        user: { id: credentials.userId, name: el('patientName')?.textContent?.trim() || 'Patient' }
+      });
+      patientStreamClient = thisClient;
+      thisCall = thisClient.call('default', id);
+      patientStreamCall = thisCall;
+      // Must match the Android scheduled CallScreen and doctor website.
+      await thisCall.join({ create: true });
+      if (cancelled()) { await cleanupAbortedJoin(); return; }
+      patientStreamParticipantsSubscription = patientStreamCall.state.participants$
+        .subscribe(renderPatientStreamParticipants);
+      el('outgoingOverlay').classList.remove('show');
+      el('activeCallOverlay').classList.add('show');
+      safeSet('callQuality', 'textContent', '⏳ Waiting for doctor...');
+      startCallTimer();
+      try {
+        await Promise.all([patientStreamCall.camera.enable(), patientStreamCall.microphone.enable()]);
+      } catch (mediaError) {
+        // Keep an established audio-only / listening session available.
+        showToast('Check your camera and microphone permissions.', 'warn');
+      }
+      if (cancelled()) { await cleanupAbortedJoin(); return; }
+      // Notify the doctor website after a successful Stream join. The SQL RPC
+      // checks ownership; the timestamp is NOT proof of completed attendance.
+      const { error } = await client.rpc('patient_mark_scheduled_call_joined', {
+        p_appointment_id: id
+      });
+      if (error) {
+        console.warn('Patient join notification failed:', error.message);
+        showToast('Connected, but the doctor alert could not be sent. Ask the doctor to use Join Call.', 'warn');
+      }
+    } catch (error) {
+      if (!cancelled()) {
+        console.error('Patient Stream Video error:', error);
+        showToast(error?.message || 'Could not join the video consultation.', 'error');
+      }
+      if (cancelled()) {
+        await cleanupAbortedJoin();
+      } else {
+        await cleanupPatientStreamCall();
+      }
+    } finally {
+      if (generation === patientStreamGeneration) patientStreamBusy = false;
+    }
+  }
+
+  function clearPatientStreamMedia() {
+    for (const unbind of [patientRemoteVideoUnbind, patientRemoteAudioUnbind, patientLocalVideoUnbind]) {
+      try { unbind?.(); } catch (_) {}
+    }
+    patientRemoteVideoUnbind = patientRemoteAudioUnbind = patientLocalVideoUnbind = null;
+    patientRemoteSession = patientLocalSession = null;
+    patientRemoteAudio?.remove();
+    patientRemoteAudio = null;
+    el('remoteVideo').srcObject = null;
+    el('localVideo').srcObject = null;
+  }
+
+  function renderPatientStreamParticipants(participants) {
+    if (!patientStreamCall || !Array.isArray(participants)) return;
+    const local = participants.find(p => p.isLocalParticipant);
+    const remote = participants.find(p => !p.isLocalParticipant);
+    if (local && local.sessionId !== patientLocalSession) {
+      try { patientLocalVideoUnbind?.(); } catch (_) {}
+      patientLocalSession = local.sessionId;
+      patientLocalVideoUnbind = patientStreamCall.bindVideoElement(
+        el('localVideo'), local.sessionId, 'videoTrack');
+      el('localVideo').play().catch(() => {});
+    }
+    if (remote?.sessionId !== patientRemoteSession) {
+      for (const unbind of [patientRemoteVideoUnbind, patientRemoteAudioUnbind]) {
+        try { unbind?.(); } catch (_) {}
+      }
+      patientRemoteVideoUnbind = patientRemoteAudioUnbind = null;
+      patientRemoteAudio?.remove();
+      patientRemoteAudio = null;
+      patientRemoteSession = remote?.sessionId || null;
+      if (remote) {
+        patientRemoteVideoUnbind = patientStreamCall.bindVideoElement(
+          el('remoteVideo'), remote.sessionId, 'videoTrack');
+        patientRemoteAudio = document.createElement('audio');
+        patientRemoteAudio.autoplay = true;
+        patientRemoteAudio.playsInline = true;
+        el('activeCallOverlay').appendChild(patientRemoteAudio);
+        patientRemoteAudioUnbind = patientStreamCall.bindAudioElement(
+          patientRemoteAudio, remote.sessionId, 'audioTrack');
+        el('remoteVideo').play().catch(() => {});
+        patientRemoteAudio.play().catch(() => showToast('Tap the video area to enable sound.', 'warn'));
+      }
+    }
+    safeSet('callQuality', 'textContent', remote ? '🟢 Connected' : '⏳ Waiting for doctor...');
+  }
+
+  async function cleanupPatientStreamCall() {
+    patientStreamParticipantsSubscription?.unsubscribe();
+    patientStreamParticipantsSubscription = null;
+    clearPatientStreamMedia();
+    const oldCall = patientStreamCall;
+    const oldClient = patientStreamClient;
+    patientStreamCall = null;
+    patientStreamClient = null;
+    try { await oldCall?.leave(); } catch (error) { console.warn('Leave call:', error); }
+    try { await oldClient?.disconnectUser(); } catch (error) { console.warn('Disconnect:', error); }
+    patientCurrentAppointmentId = null;
+    patientMuted = false;
+    patientCameraOff = false;
+    el('muteBtn')?.classList.remove('active');
+    el('camBtn')?.classList.remove('active');
+    if (el('muteBtn')) el('muteBtn').textContent = '🎤';
+    if (el('camBtn')) el('camBtn').textContent = '📷';
+    stopCallTimer();
+    el('outgoingOverlay').classList.remove('show');
+    el('activeCallOverlay').classList.remove('show');
+  }
+
+  async function endCall() {
+    ++patientStreamGeneration; // Cancel pending authorization / join attempts.
+    await cleanupPatientStreamCall();
+    patientStreamBusy = false;
+    showToast('You left the consultation.', 'success');
+  }
+
+  async function toggleMute() {
+    if (!patientStreamCall) return;
+    try {
+      await patientStreamCall.microphone.toggle();
+      patientMuted = patientStreamCall.microphone.state.status !== 'enabled';
+      el('muteBtn').textContent = patientMuted ? '🔇' : '🎤';
+      el('muteBtn').classList.toggle('active', patientMuted);
+    } catch (error) { showToast('Could not change microphone.', 'error'); }
+  }
+
+  async function toggleCam() {
+    if (!patientStreamCall) return;
+    try {
+      await patientStreamCall.camera.toggle();
+      patientCameraOff = patientStreamCall.camera.state.status !== 'enabled';
+      el('camBtn').textContent = patientCameraOff ? '🚫' : '📷';
+      el('camBtn').classList.toggle('active', patientCameraOff);
+    } catch (error) { showToast('Could not change camera.', 'error'); }
+  }
+
+  function startCallTimer() {
+    stopCallTimer();
+    patientCallSeconds = 0;
+    patientCallTimerInterval = setInterval(() => {
+      patientCallSeconds++;
+      const m = Math.floor(patientCallSeconds / 60), s = patientCallSeconds % 60;
+      safeSet('callTimer', 'textContent', `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+    }, 1000);
+  }
+  function stopCallTimer() {
+    clearInterval(patientCallTimerInterval);
+    patientCallTimerInterval = null;
+    safeSet('callTimer', 'textContent', '00:00');
+  }
+
+  // The browser must clean up devices when the patient closes the tab.
+  window.addEventListener('pagehide', () => {
+    ++patientStreamGeneration;
+    const call = patientStreamCall;
+    try { call?.leave(); } catch (_) {}
+  });
 
   //  Init 
   document.addEventListener("DOMContentLoaded", async () => {
@@ -1117,11 +1191,16 @@ function toggleCam() {
         return;
     }
 
+    // Scheduled appointments store patients.id (profile ID), not always auth.users.id.
+    const { data: patientProfile, error: profileError } = await client
+        .from('patients').select('id').eq('user_id', user.id).maybeSingle();
+    if (profileError) console.warn('Patient profile lookup:', profileError.message);
+    const patientIds = [...new Set([user.id, patientProfile?.id].filter(Boolean))];
     const { data, error } = await client
-        .from("appointments")
-        .select("*")
-        .eq("patient_id", user.id)
-        .order("date", { ascending: true });
+        .from('appointments')
+        .select('*')
+        .in('patient_id', patientIds)
+        .order('date', { ascending: true });
 
     list.innerHTML = "";
 
@@ -1201,6 +1280,10 @@ function toggleCam() {
                     style="padding:8px 16px;background:#1b2a4e;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
                     🔄 Reschedule
                 </button>` : ""}
+                ${appt.status === 'confirmed' && appt.appointment_type === 'online' ? `
+                <button class="btn" onclick="joinPatientScheduledCall('${appt.id}', 'Doctor')"
+                    title="Join this confirmed online appointment"
+                    style="background:#0d9488;white-space:nowrap;">📹 Join Video Consultation</button>` : ''}
                 ${appt.status === "pending" || appt.status === "rescheduled" ? `
                 <button onclick="cancelAppointmentById('${appt.id}')"
                     style="padding:8px 16px;background:white;color:#ef4444;border:1.5px solid #ef4444;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
@@ -1505,7 +1588,5 @@ function toggleCam() {
   }
 
   </script>
-
-  </html>
-  </body>
+</body>
 </html>

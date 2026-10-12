@@ -916,7 +916,7 @@ tbody tr:hover{
   display:none;
   position:fixed;
   inset:0;
-  z-index:999;
+  z-index:10005;
   background:#000;
   flex-direction:column;
   overflow:hidden;
@@ -997,7 +997,8 @@ tbody tr:hover{
   justify-content:center;
   gap:16px;
   background:linear-gradient(to top,rgba(0,0,0,0.85),transparent);
-  z-index:30;
+  z-index:70;
+  pointer-events:auto;
 }
 .ctrl{
   width:54px;
@@ -1557,6 +1558,35 @@ tbody tr:hover{
   .health-item.full{grid-column:auto;}
 }
 
+
+/* On-demand Broadcast / Private consultations (web doctor) */
+.od-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px}
+.od-toolbar h2{font-size:19px;color:var(--navy);margin-bottom:6px}
+.od-muted{color:var(--muted);font-size:13px;line-height:1.55}
+.od-indicator{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);padding:9px 14px;border-radius:999px;font-size:13px;font-weight:700;background:white;color:var(--muted)}
+.od-indicator.ready{color:#047857;border-color:#6ee7b7;background:#ecfdf5}
+.od-indicator.error{color:#b91c1c;border-color:#fecaca;background:#fef2f2}
+.od-pulse{width:9px;height:9px;border-radius:50%;background:currentColor;display:inline-block}
+.od-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.od-btn{border:1px solid #cbd5e1;background:#fff;color:var(--navy);font-weight:700;border-radius:9px;padding:10px 14px;font-size:13px;cursor:pointer}
+.od-btn:disabled{opacity:.5;cursor:not-allowed}
+.od-btn.primary{background:#0b746d;color:white;border-color:#0b746d}
+.od-btn.danger{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
+.od-card{padding:16px 18px;border:1px solid var(--border);border-radius:14px;background:white;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0}
+.od-card strong{display:block;color:var(--navy);font-size:16px;margin-bottom:5px}
+.od-tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}
+.od-tag{font-size:11px;padding:4px 9px;border-radius:14px;background:#eff6ff;color:#1d4ed8;font-weight:700}
+.od-tag.private{background:#f5f3ff;color:#7c3aed}
+.od-alert{padding:13px 16px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;color:#92400e;font-size:13px;line-height:1.5}
+.od-error{color:#b91c1c;font-size:13px;padding:8px 0}
+.od-empty{padding:24px;text-align:center;color:var(--muted);font-size:14px}
+.od-dashboard-alert{display:none;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;margin-bottom:20px;border:1px solid #99f6e4;background:#ecfdf5;border-radius:12px;color:#065f46;font-weight:600}
+.od-dashboard-alert.visible{display:flex}
+.od-banner-btn{background:#0f766e;color:#fff;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:700}
+.od-count{display:none!important}
+.od-count.visible{display:inline-flex!important;align-items:center;justify-content:center}
+@media(max-width:768px){.od-toolbar{padding:14px}.od-card{align-items:flex-start}.od-actions{width:100%}.od-actions .od-btn{flex:1}}
+
 </style>
 </head>
 <body>
@@ -1581,6 +1611,10 @@ tbody tr:hover{
   <nav>
     <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
       <span class="nav-icon">🏠</span> Dashboard
+    </div>
+    <div class="nav-item" data-page="onDemand" onclick="showPage('onDemand')">
+      <span class="nav-icon">📞</span> Live Consultations
+      <span class="nav-badge od-count" id="onDemandBadge">0</span>
     </div>
     <div class="nav-item" data-page="appointments" onclick="showPage('appointments')">
       <span class="nav-icon">📅</span> Appointments
@@ -1636,6 +1670,11 @@ tbody tr:hover{
 
   <!-- DASHBOARD PAGE  -->
   <div class="page active" id="page-dashboard">
+    <div id="onDemandDashboardAlert" class="od-dashboard-alert" role="status" aria-live="polite">
+      <span id="onDemandDashboardText">A patient is waiting for an on-demand consultation.</span>
+      <button class="od-banner-btn" type="button" onclick="showPage('onDemand')">View request →</button>
+    </div>
+
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-label">Today's Appointments</div><div class="stat-value" id="statToday">0</div><div class="stat-icon">📅</div></div>
       <div class="stat-card"><div class="stat-label">Total Patients</div><div class="stat-value" id="statPatients">0</div><div class="stat-icon">👥</div></div>
@@ -1649,6 +1688,36 @@ tbody tr:hover{
           <thead><tr><th>Time</th><th>Patient</th><th>Reason</th><th>Status</th><th>Action</th></tr></thead>
           <tbody id="todayTable"><tr><td colspan="5" class="empty-state">Loading...</td></tr></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ON-DEMAND: private / broadcast consult requests, independent of scheduled appointments -->
+  <div class="page" id="page-onDemand">
+    <div class="section-block">
+      <div class="od-toolbar">
+        <div>
+          <h2>📞 Live Consultation Requests</h2>
+          <p class="od-muted">Receive Broadcast and Private requests from the EHealthy Android patient app.</p>
+        </div>
+        <div class="od-actions">
+          <span id="onDemandPresence" class="od-indicator"><i class="od-pulse"></i> Checking availability…</span>
+          <button class="od-btn primary" id="onDemandAvailabilityBtn" type="button" onclick="toggleOnDemandAvailability()">Go available</button>
+          <button class="od-btn" type="button" onclick="refreshOnDemandRequests(true)">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="section-body" style="padding:18px 20px">
+        <p class="od-muted">Your availability choice stays saved until you turn it OFF. While this website is open, it automatically reconnects and receives calls. A closed browser cannot receive live requests unless you also have a connected device. Requests expire after 60 seconds; the first eligible doctor to accept a Broadcast request wins.</p>
+        <div id="onDemandStatus" class="od-alert" role="status" aria-live="polite">Waiting for doctor sign-in…</div>
+        <div id="onDemandError" class="od-error" role="alert" style="display:none"></div>
+        <div id="onDemandRequests" aria-live="polite"><div class="od-empty">No pending requests.</div></div>
+        <div id="onDemandRejoin" style="display:none;margin-top:14px" class="od-alert">
+          <span id="onDemandRejoinLabel">Consultation accepted.</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="od-btn primary" type="button" onclick="rejoinOnDemandConsultation()">Rejoin consultation</button>
+            <button class="od-btn danger" type="button" onclick="finishOnDemandFromInbox()">End consultation</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1761,7 +1830,7 @@ tbody tr:hover{
           </div>
         <div class="chat-call-btns">
           <button class="call-icon-btn" title="View patient health profile" onclick="openCurrentPatientHealthProfile()" id="chatHealthBtn" style="display:none;">🩺 Health Profile</button>
-          <button class="call-icon-btn" title="Video call" onclick="initiateCall()" id="chatVideoBtn" style="display:none;">📹 Video Call</button>
+          <button class="call-icon-btn" title="Join a confirmed online consultation" onclick="initiateCall()" id="chatVideoBtn" style="display:none;">📹 Join Consultation</button>
         </div>
         </div>
         <div class="messages-area" id="messagesArea">
@@ -2843,15 +2912,6 @@ tbody tr:hover{
           <select class="rx-patient-select" id="rxPatientSelect">
             <option value="">Loading patients...</option>
           </select>
-          <div style="margin-top:12px;">
-            <label for="rxAppointmentSelect" style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;">Related appointment</label>
-            <select class="rx-patient-select" id="rxAppointmentSelect" required>
-              <option value="">Select a patient first</option>
-            </select>
-            <small style="display:block;margin-top:7px;color:#cbd5e1;line-height:1.5;">
-              Each official prescription must be linked to a confirmed or completed appointment.
-            </small>
-          </div>
 
           <div class="rx-selected-box">
             <div class="rx-selected-title">Selected Medications</div>
@@ -2870,10 +2930,6 @@ tbody tr:hover{
 
           <button class="rx-confirm-btn" id="rxConfirmBtn" onclick="rxSubmit()">
             ✓ Confirm Prescription
-          </button>
-          <button class="rx-confirm-btn" id="rxRetryLinkBtn"
-            onclick="rxRetryPrescriptionLink()" style="display:none;background:#b45309;">
-            Retry linking issued prescription
           </button>
           <div class="rx-status" id="rxStatus"></div>
         </div>
@@ -3007,7 +3063,7 @@ tbody tr:hover{
   <div class="call-card">
     <div class="caller-avatar">👤</div>
     <div class="caller-name" id="incomingCallerName">Patient Name</div>
-    <div class="call-type">Incoming video call...</div>
+    <div class="call-type">Patient has joined a confirmed video consultation</div>
     <div class="call-actions">
       <button class="call-action-btn reject" onclick="rejectCall()" title="Reject">📵</button>
       <button class="call-action-btn accept" onclick="acceptCall()" title="Accept">📞</button>
@@ -3034,12 +3090,15 @@ tbody tr:hover{
     <video id="remoteVideo" autoplay playsinline></video>
     <video id="localVideo"  autoplay playsinline muted></video>
 
+    <div id="callConnectionNotice" role="status" aria-live="polite" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);z-index:35;max-width:min(480px,82vw);padding:16px 20px;text-align:center;border:1px solid rgba(255,255,255,.2);border-radius:16px;background:rgba(9,19,33,.9);color:#fff;font-size:15px;line-height:1.5;pointer-events:none;">Preparing secure video consultation…</div>
+    <button type="button" id="callEmergencyExit" onclick="endCall()" aria-label="Leave consultation" style="position:absolute;right:14px;top:75px;z-index:95;background:#b91c1c;color:white;border:0;border-radius:999px;padding:10px 14px;font-size:14px;font-weight:700;cursor:pointer;">✕ Leave call</button>
+
     <div class="call-top-bar">
       <div class="call-patient-info">
         <div class="call-p-name" id="callPatientNameLabel">Patient</div>
         <div class="call-timer" id="callTimer">00:00</div>
       </div>
-      <div class="call-quality" id="callQuality">🟢 Connected</div>
+      <div class="call-quality" id="callQuality">⏳ Connecting...</div>
     </div>
 
     <div class="call-bottom-bar">
@@ -3207,7 +3266,7 @@ function fmt12(hhmm){
 }
 function fmtDate(d){return new Date(d+"T00:00").toLocaleDateString("en-ZA",{weekday:"short",day:"numeric",month:"short",year:"numeric"});}
 
-const pageTitles = {dashboard:"Dashboard",appointments:"Appointments",physicalRequests:"Physical Visit Requests",prescriptions:"Prescriptions",messages:"Messages",slots:"My Time Slots",records:"Financial Records",location:"Location Sharing",subscriptions:"Subscription"};
+const pageTitles = {dashboard:"Dashboard",appointments:"Appointments",physicalRequests:"Physical Visit Requests",prescriptions:"Prescriptions",messages:"Messages",slots:"My Time Slots",records:"Financial Records",location:"Location Sharing",subscriptions:"Subscription",onDemand:"Live Consultations"};
 
 function showPage(name){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
@@ -3215,6 +3274,7 @@ function showPage(name){
   el("page-"+name).classList.add("active");
   document.querySelector(`[data-page="${name}"]`).classList.add("active");
   safeSet("pageTitle","textContent",pageTitles[name]||name);
+  if(name==="onDemand") { refreshOnDemandPresence(); refreshOnDemandRequests(true); }
   if(name==="appointments") loadAllAppointments();
   if(name==="physicalRequests") loadPhysicalVisitRequests();
   if(name==="messages")     loadAllPatients();
@@ -3384,6 +3444,8 @@ async function loadDashboard(){
         <button class="btn btn-primary btn-sm" onclick="updateApptStatus('${a.id}','confirmed')">✓ Accept & Transfer</button>
         <button class="btn btn-danger btn-sm" onclick="updateApptStatus('${a.id}','cancelled')">✕ Reject & Refund</button>
         `:""}
+        ${a.status === 'confirmed' && a.appointment_type === 'online' ?
+        `<button class="btn btn-primary btn-sm" onclick="joinScheduledCall('${a.id}', 'Patient')" title="Join confirmed online appointment">📹 Join Call</button>` : ''}
         ${!["cancelled","canceled"].includes(String(a.status||"").toLowerCase())?`
         <button class="btn btn-outline btn-sm health-btn" onclick="viewPatientHealthProfile('${a.patient_id}')" title="View patient health profile">🩺 Health</button>
         `:""}
@@ -3424,7 +3486,8 @@ function renderAppointments(list){
       ${!["cancelled","canceled"].includes(String(a.status||"").toLowerCase())?`
       <button class="btn btn-outline btn-sm health-btn" onclick="viewPatientHealthProfile('${a.patient_id}')" title="View patient health profile">🩺 Health</button>
       `:""}
-      <button class="call-mini-btn" onclick="callPatientById('${a.patient_id}','${a.patient_name}')" title="Video call patient">📹</button>  
+      ${a.status === 'confirmed' && a.appointment_type === 'online' ?
+        `<button class="call-mini-btn" onclick="joinScheduledCall('${a.id}', 'Patient')" title="Join confirmed video appointment">📹</button>` : ''}  
       </td>
     </tr>`;
   });
@@ -5799,180 +5862,373 @@ async function saveSlots(){
   loadSlotsForDate();
 }
 
-function listenForIncomingCalls(){
-  incomingChannel = client.channel(`incoming-doc-${DOCTOR_ID}`)
-    .on("postgres_changes",{event:"INSERT",schema:"public",table:"calls",filter:`doctor_id=eq.${DOCTOR_ID}`},
-      async payload=>{
-        const call = payload.new;
-        if(currentCallId||call.status!=="calling") return;
-        currentCallId = call.id;
-        isOutgoing = false;
-        const {data:pat} = await client.from("patients").select("name,surname").eq("user_id",call.patient_id).maybeSingle();
-        const pname = pat ? `${pat.name} ${pat.surname}` : "A patient";
-        safeSet("incomingCallerName","textContent",pname);
-        el("incomingOverlay").classList.add("show");
-        playRingtone(true);
-      }).subscribe();
-}
+// ---- Stream Video bridge replaces the legacy calls-table WebRTC client ----
+// EHealthy scheduled appointment bridge: Stream Video in the doctor website.
+// Keep in sync with Android ui/call/Callscreen.kt: type="default", id=appointment.id.
+const STREAM_WEB_API_KEY = "67jj8rzevh48"; // Public API key, never the Stream secret.
+const STREAM_SDK_MODULE = "https://esm.sh/@stream-io/video-client";
+let streamSdkModulePromise = null;
+let streamVideoClient = null;
+let streamActiveCall = null;
+let streamRemoteSubscription = null;
+let streamAudioUnbind = null;
+let streamRemoteAudioUnbind = null;
+let streamCameraSubscription = null;
+let streamConnectionGeneration = 0;
+let streamVideoUnbind = null;
+let streamLocalUnbind = null;
+let streamRemoteSession = null;
+let streamLocalSession = null;
+let streamIncomingTimer = null;
+let streamIncomingBusy = false;
+let streamJoining = false;
+let streamSpeakerMuted = false;
+let streamRemoteAudio = null;
+let incomingAppointment = null;
+const streamDismissedRings = new Set();
 
-async function initiateCall(){
-  if(!currentPatientId){showToast("Select a patient first","warn");return;}
-  const pname = el("chatPatientName")?.textContent||"Patient";
-  callPatientById(currentPatientId, pname);
-}
-
-async function callPatientById(patientUserId, patientName){
-  if(currentCallId){showToast("Already in a call","warn");return;}
-  isOutgoing = true;
-  currentPatientId = patientUserId;
-  safeSet("outgoingPatientName","textContent",patientName);
-  safeSet("callPatientNameLabel","textContent",patientName);
-
-  try{
-    // ── Get camera FIRST before showing overlay ──
-    localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-    el("localVideo").srcObject = localStream;
-    // ── Only show overlay once camera is confirmed ──
-    el("outgoingOverlay").classList.add("show");
-    el("localVideo").srcObject = localStream;
-    peerConnection = new RTCPeerConnection(ICE_SERVERS);
-    localStream.getTracks().forEach(t=>peerConnection.addTrack(t,localStream));
-    peerConnection.ontrack = e=>{el("remoteVideo").srcObject=e.streams[0];setCallQuality("🟢 Connected");};
-    const iceCandidates=[];
-    peerConnection.onicecandidate = e=>{if(e.candidate)iceCandidates.push(e.candidate);};
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-    await waitForIce(peerConnection);
-    const {data:callData,error} = await client.from("calls").insert([{
-      patient_id:patientUserId, doctor_id:DOCTOR_ID,
-      offer:JSON.stringify(offer), caller_ice:JSON.stringify(iceCandidates),
-      status:"calling", initiated_by:"doctor"
-    }]).select().single();
-    if(error){showToast("Failed to start call","error");cleanupCall();return;}
-    currentCallId = callData.id;
-    subscribeActiveCall(currentCallId);
-  }catch(err){
-    console.error(err);showToast("Camera/mic error","error");
-    el("outgoingOverlay").classList.remove("show");
-    cleanupCall();
+const streamSDK = () => {
+  if (!streamSdkModulePromise) {
+    streamSdkModulePromise = import(STREAM_SDK_MODULE).catch(e => {
+      streamSdkModulePromise = null;
+      throw e;
+    });
   }
+  return streamSdkModulePromise;
+};
+
+// Timestamps may come back from Postgres without a timezone. All joins written
+// by the Android app use an Instant (UTC), so interpret naive values as UTC.
+function streamTimestampMs(value) {
+  if (!value) return NaN;
+  let valueText = String(value).trim().replace(' ', 'T');
+  if (!/(?:Z|[+-]\d\d(?::?\d\d)?)$/i.test(valueText)) valueText += 'Z';
+  return Date.parse(valueText);
 }
 
-async function acceptCall(){
-  if(!currentCallId) return;
-  playRingtone(false);
-  el("incomingOverlay").classList.remove("show");
-  setCallQuality("⏳ Connecting...");
-  try{
-    const {data:callData} = await client.from("calls").select("*").eq("id",currentCallId).single();
-    if(!callData?.offer){showToast("Call data missing","error");cleanupCall();return;}
-    localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-    el("localVideo").srcObject = localStream;
-    peerConnection = new RTCPeerConnection(ICE_SERVERS);
-    localStream.getTracks().forEach(t=>peerConnection.addTrack(t,localStream));
-    peerConnection.ontrack = e=>{el("remoteVideo").srcObject=e.streams[0];setCallQuality("🟢 Connected");};
-    const iceCandidates=[];
-    peerConnection.onicecandidate = e=>{if(e.candidate)iceCandidates.push(e.candidate);};
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(callData.offer)));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-    await waitForIce(peerConnection);
-    await client.from("calls").update({answer:JSON.stringify(answer),callee_ice:JSON.stringify(iceCandidates),status:"connected"}).eq("id",currentCallId);
-    if(callData.caller_ice)
-      for(const c of JSON.parse(callData.caller_ice))
-        await peerConnection.addIceCandidate(new RTCIceCandidate(c));
-    const {data:pat} = await client.from("patients").select("name,surname").eq("user_id",callData.patient_id).maybeSingle();
-    if(pat) safeSet("callPatientNameLabel","textContent",`${pat.name} ${pat.surname}`);
-    showActiveCall();
-    subscribeActiveCall(currentCallId);
-  }catch(err){
-    console.error(err);showToast("Connection error","error");
-    await rejectCall();
-  }
-}
-
-async function rejectCall(){
-  playRingtone(false);
-  if(currentCallId) await client.from("calls").update({status:"rejected"}).eq("id",currentCallId);
-  el("incomingOverlay").classList.remove("show");
-  cleanupCall();
-}
-
-async function cancelOutgoingCall(){
-  if(currentCallId) await client.from("calls").update({status:"rejected"}).eq("id",currentCallId);
-  el("outgoingOverlay").classList.remove("show");
-  cleanupCall();
-}
-
-async function endCall(){
-  if(currentCallId) await client.from("calls").update({status:"ended"}).eq("id",currentCallId);
-  hideActiveCall();
-  cleanupCall();
-  showToast("Call ended");
-}
-
-function subscribeActiveCall(callId){
-  activeChannel = client.channel(`doc-active-${callId}`)
-    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"calls",filter:`id=eq.${callId}`},
-      async payload=>{
-        const u = payload.new;
-        if(isOutgoing && u.status==="connected" && u.answer && peerConnection.remoteDescription===null){
-          await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(u.answer)));
-          if(u.callee_ice)
-            for(const c of JSON.parse(u.callee_ice))
-              await peerConnection.addIceCandidate(new RTCIceCandidate(c));
-          el("outgoingOverlay").classList.remove("show");
-          showActiveCall();
-          setCallQuality("🟢 Connected");
-        }
-        if(u.status==="rejected"){showToast("Call declined","warn");el("outgoingOverlay").classList.remove("show");cleanupCall();}
-        if(u.status==="ended"){showToast("Call ended");hideActiveCall();cleanupCall();}
-      }).subscribe();
-}
-
-function showActiveCall(){el("activeCallOverlay").classList.add("show");startCallTimer();}
-function hideActiveCall(){el("activeCallOverlay").classList.remove("show");stopCallTimer();}
-
-function cleanupCall(){
-  if(activeChannel){client.removeChannel(activeChannel);activeChannel=null;}
-  if(peerConnection){peerConnection.close();peerConnection=null;}
-  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null;}
-  el("localVideo").srcObject=null;el("remoteVideo").srcObject=null;
-  currentCallId=null;isOutgoing=false;isMuted=false;isCamOff=false;
-  el("muteBtn").classList.remove("active");el("camBtn").classList.remove("active");
-}
-
-function toggleMute(){
-  if(!localStream) return;
-  isMuted=!isMuted;
-  localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted);
-  el("muteBtn").textContent = isMuted?"🔇":"🎤";
-  el("muteBtn").classList.toggle("active",isMuted);
-}
-function toggleCam(){
-  if(!localStream) return;
-  isCamOff=!isCamOff;
-  localStream.getVideoTracks().forEach(t=>t.enabled=!isCamOff);
-  el("camBtn").textContent = isCamOff?"🚫":"📷";
-  el("camBtn").classList.toggle("active",isCamOff);
-}
-function toggleSpeaker(){const btn=el("speakerBtn");btn.textContent=btn.textContent==="🔊"?"🔈":"🔊";}
-function setCallQuality(msg){safeSet("callQuality","textContent",msg);}
-function startCallTimer(){
-  callSeconds=0;stopCallTimer();
-  callTimerInterval=setInterval(()=>{
-    callSeconds++;
-    const m=Math.floor(callSeconds/60),s=callSeconds%60;
-    safeSet("callTimer","textContent",`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`);
-  },1000);
-}
-function stopCallTimer(){clearInterval(callTimerInterval);callTimerInterval=null;safeSet("callTimer","textContent","00:00");}
-function waitForIce(pc){
-  return new Promise(res=>{
-    if(pc.iceGatheringState==="complete") return res();
-    const t=setTimeout(res,5000);
-    pc.onicegatheringstatechange=()=>{if(pc.iceGatheringState==="complete"){clearTimeout(t);res();}};
+function listenForIncomingCalls() {
+  if (streamIncomingTimer || !DOCTOR_ID) return;
+  checkForWaitingPatients();
+  streamIncomingTimer = setInterval(checkForWaitingPatients, 5000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) checkForWaitingPatients();
   });
+}
+
+async function checkForWaitingPatients() {
+  if (streamIncomingBusy || currentCallId || streamActiveCall || !DOCTOR_ID) return;
+  streamIncomingBusy = true;
+  try {
+    const { data, error } = await client.from('appointments')
+      .select('id,patient_name,date,time,status,appointment_type,call_joined_patient_at')
+      .eq('doctor_id', DOCTOR_ID)
+      .eq('status', 'confirmed')
+      .eq('appointment_type', 'online')
+      .not('call_joined_patient_at', 'is', null)
+      .order('call_joined_patient_at', { ascending: false })
+      .limit(15);
+    if (error) throw error;
+    const now = Date.now();
+    const ringing = (data || []).find(a => {
+      const joinedMs = streamTimestampMs(a.call_joined_patient_at);
+      const ringKey = `${a.id}:${a.call_joined_patient_at}`;
+      return Number.isFinite(joinedMs) && joinedMs <= now + 10000 &&
+             now - joinedMs <= 90000 && !streamDismissedRings.has(ringKey);
+    });
+    if (!ringing) return;
+    incomingAppointment = ringing;
+    currentCallId = ringing.id;
+    safeSet('incomingCallerName', 'textContent', ringing.patient_name || 'Patient');
+    el('incomingOverlay').classList.add('show');
+    playRingtone(true);
+  } catch (err) {
+    // If doctor RLS hides call_joined_patient_at, a manual Join button remains available.
+    console.warn('Incoming consultation check:', err?.message || err);
+  } finally {
+    streamIncomingBusy = false;
+  }
+}
+
+async function fetchDoctorStreamCredentials(appointmentId) {
+  const { data, error } = await client.functions.invoke('doctor-scheduled-stream-token', {
+    body: { appointmentId }
+  });
+  if (error) throw new Error('Unable to authorize this appointment. Confirm the doctor call function is deployed.');
+  if (!data?.token || !data?.userId || data?.appointmentId !== appointmentId ||
+      data?.callType !== 'default' || data?.apiKey !== STREAM_WEB_API_KEY) {
+    throw new Error('Unexpected video credentials received.');
+  }
+  return data;
+}
+
+async function initiateCall() {
+  if (!currentPatientId) return showToast('Select a patient first', 'warn');
+  await callPatientById(currentPatientProfileId || currentPatientId,
+    el('chatPatientName')?.textContent || 'Patient');
+}
+
+async function callPatientById(patientIdOrUserId, patientName) {
+  if (currentCallId || streamJoining) return showToast('Another consultation is already open', 'warn');
+  const patient = allPatients.find(p => p.id === patientIdOrUserId || p.user_id === patientIdOrUserId);
+  const profileId = patient?.id || patientIdOrUserId;
+  const { data, error } = await client.from('appointments')
+    .select('id,patient_name,date,time,status,appointment_type')
+    .eq('doctor_id', DOCTOR_ID)
+    .eq('patient_id', profileId)
+    .eq('status', 'confirmed')
+    .eq('appointment_type', 'online')
+    .order('date', { ascending: false }).limit(30);
+  if (error) return showToast('Could not find a confirmed appointment', 'error');
+  const appts = data || [];
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Africa/Johannesburg' });
+  const matching = appts.filter(a => a.date >= today).sort((a, b) =>
+    `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+  const appointment = matching[0] || appts[0];
+  if (!appointment) return showToast('No confirmed online appointment for this patient', 'warn');
+  await joinScheduledCall(appointment.id, patientName || appointment.patient_name);
+}
+
+async function joinScheduledCall(appointmentId, patientName = 'Patient') {
+  if (streamJoining || streamActiveCall) return;
+  const id = String(appointmentId || '');
+  if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id)) {
+    return showToast('An appointment ID is required', 'error');
+  }
+  streamJoining = true;
+  currentCallId = id;
+  playRingtone(false);
+  el('incomingOverlay').classList.remove('show');
+  safeSet('callPatientNameLabel', 'textContent', patientName || 'Patient');
+  try {
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      throw new Error('Camera and microphone require HTTPS (or localhost).');
+    }
+    setCallQuality('⏳ Connecting...');
+    showActiveCall();
+    const [credentials, videoSdk] = await Promise.all([
+      fetchDoctorStreamCredentials(id), streamSDK()
+    ]);
+    // The user ID must match the server-issued Stream JWT, not doctors.id.
+    streamVideoClient = new videoSdk.StreamVideoClient({
+      apiKey: credentials.apiKey,
+      token: credentials.token,
+      user: { id: credentials.userId, name: DOCTOR_NAME || 'Doctor' }
+    });
+    streamActiveCall = streamVideoClient.call('default', id);
+    // Android joins the same type & ID with create=true.
+    await streamActiveCall.join({ create: true });
+    streamRemoteSubscription = streamActiveCall.state.participants$.subscribe(renderStreamParticipants);
+    attachStreamLocalPreview(streamActiveCall);
+    await Promise.all([streamActiveCall.camera.enable(), streamActiveCall.microphone.enable()]);
+    await recordDoctorWebCallJoin(id);
+    // Prompt was triggered by a patient's join; no duplicated ring for the same join.
+    if (incomingAppointment?.id === id) {
+      streamDismissedRings.add(`${id}:${incomingAppointment.call_joined_patient_at}`);
+    }
+    incomingAppointment = null;
+  } catch (err) {
+    console.error('EHealthy Stream join failed:', err);
+    showToast(err?.message || 'Could not join the consultation', 'error');
+    await cleanupCall();
+    hideActiveCall();
+  } finally {
+    streamJoining = false;
+  }
+}
+
+async function recordDoctorWebCallJoin(appointmentId) {
+  const { error } = await client.rpc('doctor_mark_scheduled_call_joined', {
+    p_appointment_id: appointmentId
+  });
+  if (error) console.warn('Doctor joined video, but join timestamp was not recorded:', error.message);
+}
+
+function attachStreamLocalPreview(call) {
+  streamCameraSubscription?.unsubscribe();
+  const video = el('localVideo');
+  if (!video) return;
+  // Stream's camera preview works before a call is joined, and remains active
+  // while the other participant is connecting. No second getUserMedia stream.
+  streamCameraSubscription = call.camera.state.mediaStream$.subscribe(mediaStream => {
+    const next = mediaStream || null;
+    if (video.srcObject !== next) video.srcObject = next;
+    if (next) video.play().catch(() => console.warn('Doctor video autoplay was blocked'));
+  });
+}
+function clearStreamMediaBindings() {
+  try { streamCameraSubscription?.unsubscribe(); } catch (_) {}
+  streamCameraSubscription = null;
+  for (const unbind of [streamRemoteAudioUnbind, streamVideoUnbind, streamLocalUnbind]) {
+    try { unbind?.(); } catch (_) {}
+  }
+  streamRemoteAudioUnbind = streamVideoUnbind = streamLocalUnbind = null;
+  streamRemoteSession = streamLocalSession = null;
+  if (streamRemoteAudio) { streamRemoteAudio.remove(); streamRemoteAudio = null; }
+  el('remoteVideo').srcObject = null;
+  el('localVideo').srcObject = null;
+}
+
+function renderStreamParticipants(participants) {
+  const call = streamActiveCall;
+  if (!call) return;
+  const local = participants.find(p => p.isLocalParticipant);
+  const remote = participants.find(p => !p.isLocalParticipant);
+  // Local video uses call.camera.state.mediaStream$ via attachStreamLocalPreview.
+  // Binding the local participant videoTrack a second time can hide the preview.
+  if (local) streamLocalSession = local.sessionId;
+  if (remote?.sessionId !== streamRemoteSession) {
+    for (const unbind of [streamVideoUnbind, streamRemoteAudioUnbind]) {
+      try { unbind?.(); } catch (_) {}
+    }
+    streamVideoUnbind = streamRemoteAudioUnbind = null;
+    streamRemoteAudio?.remove(); streamRemoteAudio = null;
+    streamRemoteSession = remote?.sessionId || null;
+    if (remote) {
+      streamVideoUnbind = call.bindVideoElement(el('remoteVideo'), remote.sessionId, 'videoTrack');
+      streamRemoteAudio = document.createElement('audio');
+      streamRemoteAudio.autoplay = true;
+      el('activeCallOverlay').appendChild(streamRemoteAudio);
+      streamRemoteAudioUnbind = call.bindAudioElement(streamRemoteAudio, remote.sessionId, 'audioTrack');
+      el('remoteVideo').play().catch(() => {});
+      streamRemoteAudio.play().catch(() => showToast('Click the video area to enable sound', 'warn'));
+    }
+  }
+  setCallQuality(remote ? '🟢 Connected' : '⏳ Waiting for patient...');
+}
+
+async function acceptCall() {
+  const appointment = incomingAppointment;
+  if (!appointment) return;
+  await joinScheduledCall(appointment.id, appointment.patient_name || 'Patient');
+}
+
+function rejectCall() {
+  playRingtone(false);
+  if (incomingAppointment) {
+    streamDismissedRings.add(`${incomingAppointment.id}:${incomingAppointment.call_joined_patient_at}`);
+  }
+  incomingAppointment = null;
+  currentCallId = null;
+  el('incomingOverlay').classList.remove('show');
+  showToast('Call invitation dismissed. Appointment not cancelled.', 'warn');
+}
+
+async function cancelOutgoingCall() { await endCall(); }
+
+// Mark the on-demand consultation ended in Supabase, not just in Stream.
+// Safe to retry: the server function is idempotent for completed requests.
+async function finishOnDemandRequest(requestId) {
+  if (!ON_DEMAND_UUID.test(String(requestId || ''))) return false;
+  try {
+    const { data, error } = await client.rpc('end_consultation_request', {
+      p_request_id: requestId
+    });
+    if (error) throw error;
+    const result = Array.isArray(data) ? data[0] : data;
+    if (result?.request_status !== 'completed') {
+      throw new Error('The consultation did not close on the server');
+    }
+    if (onDemandClaimed?.requestId === requestId) onDemandClaimed = null;
+    updateOnDemandRejoin();
+    onDemandError('');
+    onDemandStatus('Consultation ended. You can receive another request.');
+    showToast('Consultation ended successfully.', 'success');
+    refreshOnDemandRequests(true).catch(() => {});
+    return true;
+  } catch (_error) {
+    console.warn('End consultation status update failed. Patient and doctor may still appear busy.');
+    onDemandError('Your video has closed, but the consultation status could not be updated. Click End consultation again, or contact support.');
+    showToast('Could not update consultation status. Please retry.', 'error');
+    return false;
+  }
+}
+
+async function finishOnDemandFromInbox() {
+  if (!onDemandClaimed) return;
+  if (streamActiveCall || streamJoining) return endCall();
+  return finishOnDemandRequest(onDemandClaimed.requestId);
+}
+
+async function endCall() {
+  playRingtone(false);
+  const endedRequestId = onDemandClaimed?.requestId;
+  const isOnDemand = Boolean(endedRequestId && currentCallId === endedRequestId);
+  // Hide immediately so the doctor is never trapped behind a call overlay.
+  ++streamConnectionGeneration;
+  streamJoining = false;
+  hideActiveCall();
+  // Start local cleanup and server termination independently. A slow Stream
+  // disconnect must never prevent releasing the consultation lock.
+  const cleanupPromise = cleanupCall();
+  if (isOnDemand) {
+    await finishOnDemandRequest(endedRequestId);
+  } else {
+    showToast('You left the scheduled consultation.');
+  }
+  try { await cleanupPromise; } catch (_) {}
+}
+function showActiveCall() {
+  el('activeCallOverlay').classList.add('show');
+  setCallQuality('⏳ Preparing video…');
+  startCallTimer();
+}
+function hideActiveCall() {
+  el('activeCallOverlay').classList.remove('show');
+  stopCallTimer();
+}
+async function cleanupCall() {
+  streamRemoteSubscription?.unsubscribe(); streamRemoteSubscription = null;
+  clearStreamMediaBindings();
+  const oldCall = streamActiveCall; streamActiveCall = null;
+  const oldClient = streamVideoClient; streamVideoClient = null;
+  try { await oldCall?.leave(); } catch (e) { console.warn('Call leave failed', e); }
+  try { await oldClient?.disconnectUser(); } catch (e) { console.warn('Video disconnect failed', e); }
+  currentCallId = null;
+  isMuted = isCamOff = false;
+  streamSpeakerMuted = false;
+  el('muteBtn').classList.remove('active');
+  el('camBtn').classList.remove('active');
+}
+async function toggleMute() {
+  if (!streamActiveCall) return;
+  await streamActiveCall.microphone.toggle();
+  isMuted = streamActiveCall.microphone.state.status !== 'enabled';
+  el('muteBtn').textContent = isMuted ? '🔇' : '🎤';
+  el('muteBtn').classList.toggle('active', isMuted);
+}
+async function toggleCam() {
+  if (!streamActiveCall) return;
+  await streamActiveCall.camera.toggle();
+  isCamOff = streamActiveCall.camera.state.status !== 'enabled';
+  el('camBtn').textContent = isCamOff ? '🚫' : '📷';
+  el('camBtn').classList.toggle('active', isCamOff);
+}
+function toggleSpeaker() {
+  if (!streamActiveCall) return;
+  streamSpeakerMuted = !streamSpeakerMuted;
+  streamActiveCall.speaker.setVolume(streamSpeakerMuted ? 0 : 1);
+  el('speakerBtn').textContent = streamSpeakerMuted ? '🔈' : '🔊';
+}
+function setCallQuality(msg) {
+  safeSet('callQuality', 'textContent', msg);
+  const notice = el('callConnectionNotice');
+  if (notice) {
+    notice.textContent = msg;
+    notice.style.display = /🟢 Connected/i.test(msg) ? 'none' : 'block';
+    notice.style.borderColor = /error|fail|unavailable|could not|permission|denied|⛔/i.test(msg) ? '#f87171' : 'rgba(255,255,255,.2)';
+  }
+}
+function startCallTimer() {
+  stopCallTimer(); callSeconds = 0;
+  callTimerInterval = setInterval(() => {
+    callSeconds++;
+    const m = Math.floor(callSeconds / 60), s = callSeconds % 60;
+    safeSet('callTimer','textContent',`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`);
+  }, 1000);
+}
+function stopCallTimer() {
+  clearInterval(callTimerInterval); callTimerInterval = null;
+  safeSet('callTimer', 'textContent', '00:00');
 }
 
 let audioCtx=null,ringtoneOscillator=null;
@@ -6411,12 +6667,405 @@ async function loadAppointmentRecords() {
   });
 }
 
+
+// -----------------------------------------------------------------------------
+// Live consultations: broadcast and private requests from Android.
+// NEVER use `appointments` or `calls` for these requests. They use
+// consultation_requests + consultation_recipients and Stream type `consultation`.
+// The *server* enforces claim ownership, expiry, doctor eligibility and video access.
+// -----------------------------------------------------------------------------
+let onDemandPollingTimer = null;
+let onDemandHeartbeatTimer = null;
+let onDemandPollingBusy = false;
+let onDemandPresenceBusy = false;
+let onDemandOnlineOwnedByWeb = false;
+let onDemandChangingAvailability = false;
+let onDemandPreviousIds = new Set();
+let onDemandInitialized = false;
+let onDemandClaimed = null;
+let onDemandAcceptingId = null;
+const ON_DEMAND_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const onDemandWait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+function onDemandError(message) {
+  const node = el('onDemandError');
+  if (!node) return;
+  node.style.display = message ? 'block' : 'none';
+  node.textContent = message || '';
+}
+function onDemandStatus(message) {
+  safeSet('onDemandStatus', 'textContent', message);
+}
+// Doctor's choice (ON/OFF) persists in Supabase. Heartbeats only prove that
+// this particular browser/device can *currently* receive a live request.
+// A closed browser never pretends to be online: the server's 2-minute freshness
+// check excludes it until the doctor returns, or the Android app checks in.
+let onDemandHeartbeatFailures = 0;
+
+function onDemandPresenceState(presence) {
+  const enabled = presence?.is_available === true;
+  const heartbeatMs = streamTimestampMs(presence?.last_heartbeat);
+  const fresh = enabled && Number.isFinite(heartbeatMs)
+    && Date.now() - heartbeatMs < 120000 && Date.now() - heartbeatMs > -12000;
+  const status = el('onDemandPresence');
+  const button = el('onDemandAvailabilityBtn');
+  if (status) {
+    status.className = 'od-indicator' + (fresh ? ' ready' : enabled ? ' error' : '');
+    status.innerHTML = '<i class="od-pulse"></i>' + (fresh
+      ? 'Available ON — online and receiving requests'
+      : enabled ? 'Available ON — reconnecting (not reachable yet)'
+                : 'Availability OFF');
+  }
+  if (button) {
+    // The toggle follows the saved server preference, NEVER heartbeat freshness.
+    button.textContent = enabled ? 'Go unavailable' : 'Go available';
+    button.className = enabled ? 'od-btn danger' : 'od-btn primary';
+    button.disabled = onDemandChangingAvailability;
+  }
+  if (!onDemandPollingBusy) {
+    onDemandStatus(fresh
+      ? 'Your availability is saved ON. This browser is connected and checking for requests.'
+      : enabled
+        ? 'Your availability is saved ON. Reconnecting automatically. Requests are sent only when a device is reachable.'
+        : 'Availability is OFF. Switch it ON once; your preference will be saved until you turn it off.');
+  }
+}
+
+function stopOnDemandHeartbeatLoop() {
+  onDemandOnlineOwnedByWeb = false;
+  clearInterval(onDemandHeartbeatTimer);
+  onDemandHeartbeatTimer = null;
+  onDemandHeartbeatFailures = 0;
+}
+
+function ensureOnDemandHeartbeatLoop() {
+  if (!DOCTOR_ID || onDemandHeartbeatTimer) return;
+  onDemandOnlineOwnedByWeb = true;
+  // Browser timers may be throttled/suspended. A fresh check also happens
+  // immediately whenever the doctor returns to this website.
+  onDemandHeartbeatTimer = setInterval(() => { void heartbeatOnDemand(); }, 40000);
+  void heartbeatOnDemand();
+}
+
+async function refreshOnDemandPresence() {
+  if (!DOCTOR_ID || onDemandPresenceBusy) return;
+  onDemandPresenceBusy = true;
+  let resultPresence;
+  try {
+    const { data, error } = await client.rpc('get_my_doctor_presence');
+    if (error) throw error;
+    resultPresence = Array.isArray(data) ? data[0] : data;
+    onDemandPresenceState(resultPresence);
+    onDemandError('');
+  } catch (err) {
+    // Transient network failure must NOT silently flip the saved preference.
+    onDemandError('Cannot verify online status. We will retry: ' + (err?.message || String(err)));
+  } finally {
+    onDemandPresenceBusy = false;
+  }
+  if (resultPresence?.is_available === true) {
+    ensureOnDemandHeartbeatLoop();
+  } else if (resultPresence?.is_available === false) {
+    stopOnDemandHeartbeatLoop();
+  }
+}
+
+async function heartbeatOnDemand() {
+  if (!onDemandOnlineOwnedByWeb || !DOCTOR_ID || onDemandChangingAvailability) return;
+  try {
+    // IMPORTANT: public.doctor_heartbeat() returns BOOLEAN, not a presence row.
+    const { data, error } = await client.rpc('doctor_heartbeat');
+    if (error) throw error;
+    const accepted = Array.isArray(data) ? data[0] : data;
+    if (accepted !== true) {
+      // OFF on another device, or account no longer eligible.
+      stopOnDemandHeartbeatLoop();
+      await refreshOnDemandPresence();
+      return;
+    }
+    onDemandHeartbeatFailures = 0;
+    // Show the updated server heartbeat and keep the browser opted in.
+    await refreshOnDemandPresence();
+  } catch (err) {
+    onDemandHeartbeatFailures++;
+    // Retry at the next 40-second tick. Do NOT call availability(false).
+    onDemandError('Connection interrupted. Automatic availability check will retry. ('
+      + (err?.message || String(err)) + ')');
+    onDemandStatus('Your availability preference is still ON, but you may be unreachable until the connection returns.');
+  }
+}
+
+async function toggleOnDemandAvailability() {
+  if (!DOCTOR_ID || onDemandChangingAvailability) return;
+  onDemandChangingAvailability = true;
+  const btn = el('onDemandAvailabilityBtn');
+  if (btn) btn.disabled = true;
+  onDemandError('');
+  try {
+    const { data: stateData, error: stateError } = await client.rpc('get_my_doctor_presence');
+    if (stateError) throw stateError;
+    const state = Array.isArray(stateData) ? stateData[0] : stateData;
+    // Switch based solely on the saved ON/OFF preference, not on heartbeat age.
+    const enabling = state?.is_available !== true;
+    const { data, error } = await client.rpc('set_doctor_availability', {
+      p_is_available: enabling,
+      p_service_scope: ['general']
+    });
+    if (error) throw error;
+    onDemandPresenceState(Array.isArray(data) ? data[0] : data);
+    if (enabling) ensureOnDemandHeartbeatLoop();
+    else stopOnDemandHeartbeatLoop();
+    showToast(enabling
+      ? 'Availability is ON and saved. This website will reconnect automatically whenever you open it.'
+      : 'Availability is OFF until you turn it on again.', 'success');
+    await refreshOnDemandRequests(true);
+  } catch (err) {
+    onDemandError('Could not change availability: ' + (err?.message || String(err)));
+  } finally {
+    onDemandChangingAvailability = false;
+    if (btn) btn.disabled = false;
+    await refreshOnDemandPresence();
+    // The first heartbeat cannot run while the toggle is still marked busy.
+    // Send it now, rather than waiting 40 seconds for the interval.
+    if (onDemandOnlineOwnedByWeb && onDemandHeartbeatTimer) {
+      await heartbeatOnDemand();
+    }
+  }
+}
+
+function onDemandTimeLeft(expiresAt) {
+  const t = streamTimestampMs(expiresAt);
+  return Number.isFinite(t) ? Math.max(0, Math.ceil((t - Date.now()) / 1000)) : 0;
+}
+function onDemandText(tag, className, content) {
+  const item = document.createElement(tag);
+  if (className) item.className = className;
+  item.textContent = String(content ?? '');
+  return item;
+}
+function renderOnDemandRequests(rows) {
+  const list = el('onDemandRequests');
+  if (!list) return;
+  list.replaceChildren();
+  for (const request of rows) {
+    const card = onDemandText('div', 'od-card', '');
+    const info = document.createElement('div');
+    info.appendChild(onDemandText('strong', '', request.patient_name?.trim() || 'Patient'));
+    info.appendChild(onDemandText('p', 'od-muted', `Waiting for a doctor • ${onDemandTimeLeft(request.expires_at)}s remaining`));
+    const tags = onDemandText('div', 'od-tags', '');
+    const mode = onDemandText('span', 'od-tag' + (request.request_mode === 'private' ? ' private' : ''),
+      request.request_mode === 'private' ? 'PRIVATE' : 'BROADCAST');
+    tags.appendChild(mode);
+    tags.appendChild(onDemandText('span', 'od-tag', (request.service || 'general').toUpperCase()));
+    tags.appendChild(onDemandText('span', 'od-tag', `R ${Number(request.price_minor || 0) / 100}`));
+    info.appendChild(tags);
+    card.appendChild(info);
+    const actions = onDemandText('div', 'od-actions', '');
+    const accept = onDemandText('button', 'od-btn primary', onDemandAcceptingId === request.request_id ? 'Accepting…' : '📞 Accept & Join');
+    accept.type = 'button';
+    accept.disabled = Boolean(onDemandAcceptingId || streamActiveCall || streamJoining);
+    accept.addEventListener('click', () => acceptOnDemandConsultation(request));
+    const decline = onDemandText('button', 'od-btn danger', 'Decline');
+    decline.type = 'button';
+    decline.disabled = Boolean(onDemandAcceptingId);
+    decline.addEventListener('click', () => declineOnDemandConsultation(request.request_id));
+    actions.append(accept, decline);
+    card.append(actions);
+    list.appendChild(card);
+  }
+  if (!rows.length) list.appendChild(onDemandText('div', 'od-empty', 'No current requests. New Broadcast or Private requests will appear automatically.'));
+}
+
+function updateOnDemandBadge(rows) {
+  const badge = el('onDemandBadge');
+  if (badge) {
+    badge.textContent = String(rows.length);
+    badge.classList.toggle('visible', rows.length > 0);
+  }
+  const banner = el('onDemandDashboardAlert');
+  if (banner) banner.classList.toggle('visible', rows.length > 0);
+  safeSet('onDemandDashboardText', 'textContent', rows.length === 1
+    ? `${rows[0].patient_name || 'A patient'} is waiting for a ${rows[0].request_mode || 'live'} consultation.`
+    : `${rows.length} patients are waiting for consultations.`);
+}
+
+async function refreshOnDemandRequests(manual = false) {
+  if (!DOCTOR_ID || onDemandPollingBusy) return;
+  onDemandPollingBusy = true;
+  try {
+    const { data, error } = await client.rpc('doctor_get_live_consultation_requests');
+    if (error) throw error;
+    const requests = (Array.isArray(data) ? data : [])
+      .filter(r => r.request_status === 'pending' && r.recipient_status === 'pending' && onDemandTimeLeft(r.expires_at) > 0);
+    updateOnDemandBadge(requests);
+    renderOnDemandRequests(requests);
+    if (!onDemandClaimed || streamActiveCall) onDemandError('');
+    const ids = new Set(requests.map(r => r.request_id));
+    if (onDemandInitialized && requests.some(r => !onDemandPreviousIds.has(r.request_id))) {
+      showToast(`New on-demand consultation request (${requests.length})`, 'success');
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try { new Notification('EHealthy: Incoming consultation', { body: 'Open the Live Consultations section to accept.' }); } catch (_) {}
+      }
+    }
+    onDemandPreviousIds = ids;
+    onDemandInitialized = true;
+    if (manual) onDemandStatus(`${requests.length} active consultation request${requests.length === 1 ? '' : 's'} found.`);
+  } catch (err) {
+    if (manual || el('page-onDemand')?.classList.contains('active')) onDemandError('Could not load live consultation requests: ' + (err?.message || String(err)));
+    console.error('Doctor live consultation fetch failed:', err);
+  } finally {
+    onDemandPollingBusy = false;
+  }
+}
+
+async function acceptOnDemandConsultation(request) {
+  if (onDemandAcceptingId || streamActiveCall || streamJoining || !request?.request_id) return;
+  const requestId = request.request_id;
+  if (!ON_DEMAND_UUID.test(requestId)) return onDemandError('Invalid consultation request ID.');
+  onDemandAcceptingId = requestId;
+  onDemandError('');
+  onDemandStatus(`Accepting ${request.request_mode} consultation…`);
+  try {
+    const idempotency = crypto.randomUUID();
+    const { data, error } = await client.rpc('claim_consultation_request', {
+      p_request_id: requestId,
+      p_idempotency_key: idempotency
+    });
+    if (error) throw error;
+    const result = Array.isArray(data) ? data[0] : data;
+    if (!result || !['claimed', 'already_claimed_by_you'].includes(result.claim_result)) {
+      throw new Error('This request is no longer available or another doctor accepted it.');
+    }
+    // Persist a rejoin control in this tab even when a video join fails.
+    onDemandClaimed = { requestId, patientName: request.patient_name || 'Patient' };
+    updateOnDemandRejoin();
+    await joinOnDemandConsultation(requestId, onDemandClaimed.patientName);
+  } catch (err) {
+    onDemandError(err?.message || 'Could not claim consultation.');
+    showToast('Could not accept consultation.', 'error');
+  } finally {
+    onDemandAcceptingId = null;
+    await refreshOnDemandRequests(true);
+  }
+}
+
+async function declineOnDemandConsultation(requestId) {
+  if (!ON_DEMAND_UUID.test(requestId)) return;
+  if (!confirm('Decline this consultation invitation?')) return;
+  const { data, error } = await client.rpc('decline_consultation_request', { p_request_id: requestId });
+  if (error) onDemandError('Could not decline: ' + error.message);
+  else await refreshOnDemandRequests(true);
+}
+
+async function fetchOnDemandStreamCredentials(requestId) {
+  // This wrapper adds CORS for the web; the existing `stream-token` function
+  // still authenticates the caller and only authorizes the winning doctor.
+  const { data, error } = await client.functions.invoke('doctor-ondemand-stream-token', {
+    body: { consultationRequestId: requestId }
+  });
+  if (error) {
+    let detail = error.message || 'Stream authorization failed.';
+    try {
+      const body = await error.context?.json?.();
+      if (body?.error) detail = body.error;
+    } catch (_) {}
+    throw new Error(detail);
+  }
+  if (!data?.token || !data?.userId || !(typeof data?.callId === 'string' && /^consultation-[0-9a-f-]{36}$/i.test(data.callId)) || data.callType !== 'consultation' || data.requestId !== requestId) {
+    throw new Error('Invalid consultation video credentials.');
+  }
+  return data;
+}
+async function joinOnDemandConsultation(requestId, patientName) {
+  if (streamJoining || streamActiveCall) return onDemandError('Another video consultation is already open.');
+  const generation = ++streamConnectionGeneration;
+  const ensureActive = () => {
+    if (generation !== streamConnectionGeneration) throw new Error('Call cancelled');
+  };
+  streamJoining = true;
+  currentCallId = requestId;
+  try {
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      throw new Error('A secure HTTPS website is required for camera and microphone access.');
+    }
+    showPage('onDemand');
+    setCallQuality('⏳ Joining private consultation…');
+    safeSet('callPatientNameLabel', 'textContent', patientName || 'Patient');
+    showActiveCall();
+    setCallQuality('⏳ Authorizing the consultation video room…');
+    // The Android call type is `consultation`, and the room id comes from the
+    // consultation_sessions table, not appointments.id or this request id.
+    let credentials;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try { credentials = await fetchOnDemandStreamCredentials(requestId); break; }
+      catch (err) { if (attempt === 3 || !/prepared|prepar|409/i.test(err?.message || '')) throw err; await onDemandWait(600); }
+    }
+    ensureActive();
+    setCallQuality('⏳ Loading video connection…');
+    const videoSdk = await streamSDK();
+    ensureActive();
+    streamVideoClient = new videoSdk.StreamVideoClient({
+      apiKey: STREAM_WEB_API_KEY,
+      token: credentials.token,
+      user: { id: credentials.userId, name: DOCTOR_NAME || 'Doctor' }
+    });
+    streamActiveCall = streamVideoClient.call('consultation', credentials.callId);
+    // Show camera immediately while connecting, rather than a black screen.
+    attachStreamLocalPreview(streamActiveCall);
+    setCallQuality('⏳ Asking for camera permission…');
+    await streamActiveCall.camera.enable();
+    ensureActive();
+    setCallQuality('⏳ Connecting to secure Stream consultation…');
+    await streamActiveCall.join({ create: false });
+    ensureActive();
+    streamRemoteSubscription = streamActiveCall.state.participants$.subscribe(renderStreamParticipants);
+    await streamActiveCall.microphone.enable();
+    ensureActive();
+    onDemandError('');
+    updateOnDemandRejoin();
+  } catch (err) {
+    if (generation !== streamConnectionGeneration) return;
+    console.error('On-demand Stream video join failed:', err);
+    const message = err?.message || String(err);
+    const detail = /room could not be created|video room|authorization|fetch/i.test(message)
+      ? message + ' Check that the Stream Video call type "consultation" exists.' : message;
+    onDemandError('Consultation accepted, but video join failed: ' + detail + '. Use Rejoin to retry.');
+    setCallQuality('⛔ ' + detail + ' — click Leave call to return.');
+    await cleanupCall();
+    // Keep a visible error on this screen until the doctor chooses to leave.
+  } finally {
+    if (generation === streamConnectionGeneration) streamJoining = false;
+  }
+}
+function updateOnDemandRejoin() {
+  const area = el('onDemandRejoin');
+  if (area) area.style.display = onDemandClaimed ? 'flex' : 'none';
+  if (area && onDemandClaimed) {
+    area.style.alignItems = 'center';area.style.justifyContent = 'space-between';area.style.gap = '12px';area.style.flexWrap = 'wrap';
+    safeSet('onDemandRejoinLabel','textContent',`Accepted consultation with ${onDemandClaimed.patientName}.`);
+  }
+}
+function rejoinOnDemandConsultation() {
+  if (onDemandClaimed) joinOnDemandConsultation(onDemandClaimed.requestId, onDemandClaimed.patientName);
+}
+function listenForOnDemandConsultations() {
+  if (onDemandPollingTimer || !DOCTOR_ID) return;
+  refreshOnDemandPresence();
+  refreshOnDemandRequests(true);
+  onDemandPollingTimer = setInterval(refreshOnDemandRequests, 3000);
+  setInterval(refreshOnDemandPresence, 45000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { refreshOnDemandPresence(); refreshOnDemandRequests(true); }
+  });
+}
+
 async function initPage(){
   await loadProfile();
   await checkSubscription();
   await loadDashboard();
   await loadPracticeLocation();
   listenForIncomingCalls();
+  listenForOnDemandConsultations();
 }
 
 // ── SUBSCRIPTION GATE ────
@@ -6769,52 +7418,6 @@ function subPrintHistorySlip(index){
 let rxMedicationDetails = {};
 let rxSignatureData = "";
 let rxStampData = "";
-let rxEligibleAppointments = [];
-let rxPendingPrescriptionLink = null;
-
-function rxUpdateAppointmentSelect(){
-  const patientId = document.getElementById("rxPatientSelect")?.value || "";
-  const select = document.getElementById("rxAppointmentSelect");
-  if(!select) return;
-  select.innerHTML = "";
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = patientId ? "Select the consultation" : "Select a patient first";
-  select.appendChild(placeholder);
-  const appointments = rxEligibleAppointments
-    .filter(a => a.patient_id === patientId)
-    .sort((a,b) => String(b.date||"").localeCompare(String(a.date||"")));
-  for(const a of appointments){
-    const option = document.createElement("option");
-    option.value = a.id;
-    option.textContent = `${a.date||"Date pending"} ${String(a.time||"").slice(0,5)} • ${a.status}`;
-    select.appendChild(option);
-  }
-  if(patientId && appointments.length === 0){
-    placeholder.textContent = "No eligible appointments for this patient";
-  }
-}
-
-async function rxRetryPrescriptionLink(){
-  const pending = rxPendingPrescriptionLink;
-  if(!pending) return;
-  const button = document.getElementById("rxRetryLinkBtn");
-  button.disabled = true;
-  try {
-    const {error} = await client.rpc("doctor_link_prescription_to_appointment", {
-      p_prescription_reference: pending.reference,
-      p_appointment_id: pending.appointmentId
-    });
-    if(error) throw error;
-    rxPendingPrescriptionLink = null;
-    button.style.display = "none";
-    rxShowStatus("✅ Existing prescription successfully linked to its appointment.", "success");
-    showToast("Prescription linked", "success");
-  } catch(e){
-    rxShowStatus("The prescription exists, but linking still failed: " + (e.message||e), "error");
-  } finally {button.disabled = false;}
-}
-
 
 
 async function initPrescriptionPage(){
@@ -6831,7 +7434,7 @@ async function initPrescriptionPage(){
   const {data:appts,error:apptError} =
     await client
       .from("appointments")
-      .select("id,patient_id,patient_name,status,date,time")
+      .select("patient_id,patient_name,status")
       .eq("doctor_id",DOCTOR_ID);
 
 
@@ -6916,10 +7519,6 @@ async function initPrescriptionPage(){
     });
 
 
-  rxEligibleAppointments = appts.filter(a =>
-    a.id && a.patient_id && ["confirmed", "completed"].includes(String(a.status||"").toLowerCase())
-  );
-
   select.innerHTML =
     unique.length===0
       ? "<option value=''>No eligible patients</option>"
@@ -6944,8 +7543,6 @@ async function initPrescriptionPage(){
     );
   });
 
-  select.onchange = rxUpdateAppointmentSelect;
-  rxUpdateAppointmentSelect();
 
   document
     .querySelectorAll(
@@ -7620,7 +8217,7 @@ function rxFilterMeds(
 }
 
 
-function rxClearAll(preserveStatus=false){
+function rxClearAll(){
 
   rxMedicationDetails =
     {};
@@ -7664,7 +8261,7 @@ function rxClearAll(preserveStatus=false){
     );
 
 
-  if(status && !preserveStatus){
+  if(status){
 
     status.textContent =
       "";
@@ -7731,11 +8328,6 @@ function rxShowStatus(
 
 async function rxSubmit(){
 
-  if(rxPendingPrescriptionLink){
-    rxShowStatus("An issued prescription still needs linking. Use Retry linking before issuing another prescription.", "error");
-    return;
-  }
-
   const patientId =
     document.getElementById(
       "rxPatientSelect"
@@ -7752,14 +8344,6 @@ async function rxSubmit(){
 
     return;
   }
-
-  const appointmentId = document.getElementById("rxAppointmentSelect")?.value || "";
-  if(!appointmentId || !rxEligibleAppointments.some(a =>
-      a.id === appointmentId && a.patient_id === patientId)) {
-    rxShowStatus("Select the confirmed/completed appointment this prescription is for.", "error");
-    return;
-  }
-
 
 
   if(
@@ -7926,30 +8510,6 @@ async function rxSubmit(){
   }
 
 
-  // Issuance uses the EXISTING RPC. Only after issuance succeeds do we link
-  // that specific reference to the selected appointment (protected by SQL).
-  const issuedResult = Array.isArray(data) ? data[0] : data;
-  const issuedReference = issuedResult?.prescription_reference || "";
-  let prescriptionLinkError = null;
-  if(!issuedReference) {
-    prescriptionLinkError = new Error("The issue RPC did not return a prescription reference.");
-  } else {
-    const {error} = await client.rpc("doctor_link_prescription_to_appointment", {
-      p_prescription_reference: issuedReference,
-      p_appointment_id: appointmentId
-    });
-    prescriptionLinkError = error;
-  }
-  if(prescriptionLinkError && issuedReference){
-    rxPendingPrescriptionLink = {reference:issuedReference, appointmentId};
-    const retry = document.getElementById("rxRetryLinkBtn");
-    if(retry) retry.style.display = "block";
-  } else if(!prescriptionLinkError){
-    rxPendingPrescriptionLink = null;
-    const retry = document.getElementById("rxRetryLinkBtn");
-    if(retry) retry.style.display = "none";
-  }
-
   const medicationNames =
     items.map(item=>
       item.medication
@@ -7989,15 +8549,7 @@ async function rxSubmit(){
       : data;
 
 
-  if(prescriptionLinkError){
-    // Do not invite the doctor to reissue; that would create a duplicate.
-    rxShowStatus(
-      "⚠️ Prescription was issued, but could not be linked to the appointment. " +
-      (prescriptionLinkError.message || "Use Retry linking; do not issue it again."),
-      "error"
-    );
-    showToast("Prescription issued; appointment link failed", "warn");
-  } else if(recErr){
+  if(recErr){
 
     rxShowStatus(
       `✅ Prescription ${result?.prescription_reference || ""} issued. Medical-record copy could not be added.`,
@@ -8013,9 +8565,10 @@ async function rxSubmit(){
   }
 
 
-  if(!prescriptionLinkError){
-    showToast("✅ Prescription issued, linked to appointment, and patient notified.", "success");
-  }
+  showToast(
+    "✅ Signed prescription issued and patient notified.",
+    "success"
+  );
 
 
   btn.disabled =
@@ -8031,12 +8584,12 @@ async function rxSubmit(){
     "";
 
 
-  rxClearAll(true);
-  rxUpdateAppointmentSelect();
+  rxClearAll();
+
 
   setTimeout(
     ()=>{
-      if(rxPendingPrescriptionLink) return;
+
       const s =
         document.getElementById(
           "rxStatus"
