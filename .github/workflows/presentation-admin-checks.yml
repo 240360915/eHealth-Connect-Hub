@@ -1,0 +1,21 @@
+name: Admin portal presentation checks
+on:
+  push:
+    branches:
+      - fix/admin-demopay-commission-completion-20261015
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-admin-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify admin JavaScript syntax and finance wiring
+        run: python3 scripts/verify_admin_dashboard.py

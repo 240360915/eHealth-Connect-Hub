@@ -1302,7 +1302,7 @@
         <p class="finance-hint">
             💡 <strong>DemoPay simulation only.</strong> Gross paid transactions are not the same as earned commission.
             EHealthy commission and doctor earnings become earned only after an eligible consultation is completed.
-            An authorized admin can record a <strong>simulated refund</strong> for a cancelled paid appointment. No real money moves.
+            An authorized admin can record a <strong>simulated refund</strong> for a cancelled or expired paid scheduled appointment. Unverified completions are not counted as earned. No real money moves.
         </p>
         <div class="finance-metrics">
             <div class="finance-metric">
@@ -1335,6 +1335,11 @@
                 <div class="metric-value" id="financeCancelledPaid">—</div>
                 <div class="metric-note" id="financeCancelledCount">No cancellations pending review</div>
             </div>
+            <div class="finance-metric metric-warning">
+                <div class="metric-label">Completed appointments needing clinical verification</div>
+                <div class="metric-value" id="financeUnverifiedCompleted">—</div>
+                <div class="metric-note" id="financeUnverifiedCount">Not counted as released earnings</div>
+            </div>
             <div class="finance-metric">
                 <div class="metric-label">Simulated refunds recorded</div>
                 <div class="metric-value" id="financeMarkedRefunded">—</div>
@@ -1345,7 +1350,7 @@
             <div class="section-header" style="gap:12px;flex-wrap:wrap;">
                 <div>
                     <h2>💳 DemoPay transaction history</h2>
-                    <p id="financeHistorySubtitle">The 100 most recent scheduled online DemoPay transactions</p>
+                    <p id="financeHistorySubtitle">The 100 most recent scheduled and on-demand DemoPay transactions</p>
                 </div>
                 <div class="finance-toolbar">
                     <input type="search" class="search-input" id="financeSearch" placeholder="Search payment reference..." oninput="filterDemoFinanceHistory()">
@@ -1353,6 +1358,7 @@
                         <option value="all">All transactions</option>
                         <option value="pending">Awaiting consultation</option>
                         <option value="released">Earnings released</option>
+                        <option value="review">Completion needs verification</option>
                         <option value="cancelled">Needs refund review</option>
                         <option value="failed">Failed payments</option>
                         <option value="refunded">Refunded (demo)</option>
@@ -1367,16 +1373,17 @@
                         <tr>
                             <th>Date</th>
                             <th>Payment Reference</th>
+                            <th>Service Type</th>
                             <th>Demo Amount</th>
                             <th>Payment</th>
-                            <th>Appointment</th>
+                            <th>Consultation</th>
                             <th>EHealthy Earned</th>
                             <th>Review</th>
                             <th>Refund / Action</th>
                         </tr>
                     </thead>
                     <tbody id="financeHistoryTable">
-                        <tr class="empty-row"><td colspan="8">Not loaded yet.</td></tr>
+                        <tr class="empty-row"><td colspan="9">Not loaded yet.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -2586,11 +2593,12 @@ function demoFinanceSetText(id, content) {
 
 function demoFinanceReviewState(entry) {
     if (entry.needs_refund_review) return ['Refund review needed', 'status-error', 'cancelled'];
+    if (entry.needs_completion_review) return ['Verify clinical completion', 'status-warning', 'review'];
     if (entry.payment_status === 'refunded') return ['Refunded (demo)', 'status-good', 'refunded'];
     if (entry.payment_status === 'failed') return ['Failed', 'status-error', 'failed'];
     if (entry.released_at) return ['Earnings released', 'status-good', 'released'];
     if (entry.payment_status === 'paid' &&
-        ['pending', 'confirmed'].includes(entry.appointment_status)) {
+        ['pending', 'confirmed', 'accepted', 'claimed'].includes(entry.appointment_status)) {
         return ['Awaiting consultation', 'status-warning', 'pending'];
     }
     return ['Requires review', 'status-warning', 'other'];
@@ -2604,7 +2612,7 @@ async function loadDemoFinances() {
     const stateEl = document.getElementById('financeLoadingState');
     if (stateEl) { stateEl.textContent = 'Loading simulated finance report…'; stateEl.className = 'finance-state'; }
     try {
-        const { data, error } = await client.rpc('admin_get_demo_finance_report');
+        const { data, error } = await client.rpc('admin_get_demo_finance_report_v2');
         if (error) throw error;
         if (!data || typeof data !== 'object' || !data.summary || !Array.isArray(data.transactions)) {
             throw new Error('Unexpected response from admin finance function');
@@ -2618,11 +2626,14 @@ async function loadDemoFinances() {
         demoFinanceSetText('financePendingPlatform', demoMoney(summary.potential_platform_minor));
         demoFinanceSetText('financeCancelledPaid', demoMoney(summary.cancelled_paid_minor));
         demoFinanceSetText('financeMarkedRefunded', demoMoney(summary.marked_refunded_minor));
+        demoFinanceSetText('financeUnverifiedCompleted', demoMoney(summary.unverified_completed_minor));
+        demoFinanceSetText('financeUnverifiedCount',
+            `${Number(summary.unverified_completed_count || 0)} paid completed service(s) require verification before earnings release`);
         const n = Number(summary.cancelled_paid_count ?? 0);
-        demoFinanceSetText('financeCancelledCount', `${n} paid cancelled appointment${n === 1 ? '' : 's'} awaiting review`);
+        demoFinanceSetText('financeCancelledCount', `${n} cancelled/expired paid appointment${n === 1 ? '' : 's'} awaiting refund review`);
         const pct = (Number(data.commission_bps ?? 0) / 100).toFixed(2).replace(/\.00$/, '');
         const generated = data.generated_at ? new Date(data.generated_at).toLocaleString('en-ZA') : 'Unknown';
-        demoFinanceSetText('financeReportMeta', `Commission setting: ${pct}% for future releases. Latest 100 transactions shown. Report generated: ${generated}. Refunds are simulations only.`);
+        demoFinanceSetText('financeReportMeta', `Commission setting: ${pct}% per verified completed paid service (scheduled or on-demand). Latest 100 transactions shown. Report generated: ${generated}. All amounts are simulated, not bank transfers.`);
         if (stateEl) stateEl.textContent = '';
         filterDemoFinanceHistory();
     } catch (error) {
@@ -2642,7 +2653,7 @@ function filterDemoFinanceHistory() {
     const query = (document.getElementById('financeSearch')?.value ?? '').trim().toLowerCase();
     const filter = document.getElementById('financeFilter')?.value ?? 'all';
     const transactions = demoFinanceReport.transactions.filter(entry => {
-        const matchText = [entry.payment_reference || '', entry.payment_id || '', entry.appointment_id || ''].some(v => String(v).toLowerCase().includes(query));
+        const matchText = [entry.payment_reference || '', entry.payment_id || '', entry.appointment_id || '', entry.consultation_request_id || '', entry.payment_type || ''].some(v => String(v).toLowerCase().includes(query));
         return matchText && (filter === 'all' || demoFinanceReviewState(entry)[2] === filter);
     });
     demoFinanceSetText('financeHistorySubtitle', `${transactions.length} of ${demoFinanceReport.transactions.length} recent DemoPay transaction(s) displayed`);
@@ -2651,7 +2662,7 @@ function filterDemoFinanceHistory() {
     body.replaceChildren(); // Build DOM nodes with textContent to avoid HTML injection.
     if (!transactions.length) {
         const tr = document.createElement('tr'); tr.className = 'empty-row';
-        const td = document.createElement('td'); td.colSpan = 8; td.textContent = 'No transactions match the current filter.';
+        const td = document.createElement('td'); td.colSpan = 9; td.textContent = 'No transactions match the current filter.';
         tr.appendChild(td); body.appendChild(tr); return;
     }
     for (const entry of transactions) {
@@ -2661,6 +2672,11 @@ function filterDemoFinanceHistory() {
         const cells = [
             dateText,
             entry.payment_reference || '—',
+            ({
+                scheduled_online: 'Scheduled video',
+                broadcast_consultation: 'Broadcast',
+                private_consultation: 'Private'
+            })[entry.payment_type] || entry.payment_type || '—',
             demoMoney(entry.amount_minor),
             entry.payment_status || '—',
             entry.appointment_status || '—',
@@ -2670,7 +2686,7 @@ function filterDemoFinanceHistory() {
         cells.forEach((value, index) => {
             const td = document.createElement('td');
             td.textContent = value;
-            if (index === 6) td.className = `finance-status ${state[1]}`;
+            if (index === 7) td.className = `finance-status ${state[1]}`;
             tr.appendChild(td);
         });
         // Action cell: no unsafe HTML interpolation of payment IDs or references.
@@ -2700,7 +2716,7 @@ function filterDemoFinanceHistory() {
 let demoRefundLoading = false;
 async function refundDemoPayment(paymentId, reference, amountMinor) {
     if (demoRefundLoading || !paymentId) return;
-    const question = `Record a simulated refund of ${demoMoney(amountMinor)} for ${reference || 'this payment'}?\n\nOnly a cancelled, paid DemoPay appointment is eligible. This does not transfer real money.`;
+    const question = `Record a simulated refund of ${demoMoney(amountMinor)} for ${reference || 'this payment'}?\n\nOnly a cancelled or expired paid scheduled DemoPay appointment is eligible. This does not transfer real money.`;
     if (!window.confirm(question)) return;
     demoRefundLoading = true;
     try {
