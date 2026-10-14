@@ -2630,7 +2630,7 @@ async function loadDemoFinances() {
         demoFinanceSetText('financeUnverifiedCount',
             `${Number(summary.unverified_completed_count || 0)} paid completed service(s) require verification before earnings release`);
         const n = Number(summary.cancelled_paid_count ?? 0);
-        demoFinanceSetText('financeCancelledCount', `${n} paid cancelled appointment${n === 1 ? '' : 's'} awaiting review`);
+        demoFinanceSetText('financeCancelledCount', `${n} cancelled/expired paid appointment${n === 1 ? '' : 's'} awaiting refund review`);
         const pct = (Number(data.commission_bps ?? 0) / 100).toFixed(2).replace(/\.00$/, '');
         const generated = data.generated_at ? new Date(data.generated_at).toLocaleString('en-ZA') : 'Unknown';
         demoFinanceSetText('financeReportMeta', `Commission setting: ${pct}% per verified completed paid service (scheduled or on-demand). Latest 100 transactions shown. Report generated: ${generated}. All amounts are simulated, not bank transfers.`);
